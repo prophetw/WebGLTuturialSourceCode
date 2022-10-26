@@ -32,3 +32,4 @@ window.spector.startCapture(document.getElementById('canvasId'), commandCount)
 1. use parcel start up
 2. remove all html files
 3. move vert frag to single .glsl file
+4. test 
