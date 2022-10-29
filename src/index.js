@@ -82,8 +82,9 @@ import { LOGLCircle, LOGLPick, LOGLPickComplete, LOGLPickCube, LOGLPickCubeRing,
 import { TWGLPrimitive, TWGLTexRing } from "../learnopengl/TWGLAPI"
 import { TWGLBlendedPlane, TWGLBlendedPlane2, Primitives, MRT } from "../TWGLeg"
 import {TWGLOIT} from '../OIT'
-import {TWGLOITDDP} from '../OITDualDepthPeeling'
+import {TWGLOITDDP, TWGLOITPlane} from '../OITDualDepthPeeling'
 import {Defer} from '../Deffer'
+import {TextureLab} from '../TextureLab'
 
 
 
@@ -137,7 +138,9 @@ ExampleFn = Primitives
 ExampleFn = Defer
 ExampleFn = MRT
 ExampleFn = TWGLOIT
-ExampleFn = TWGLOITDDP
+// ExampleFn = TWGLOITDDP
+// ExampleFn = TWGLOITPlane
+ExampleFn = TextureLab
 
 
 // const ExampleFn = LOGLTexturesTriangle

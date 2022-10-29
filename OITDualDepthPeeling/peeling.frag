@@ -79,7 +79,8 @@ void main() {
   vec3 normal = normalize(vNormal.xyz);
   vec2 uv = vUV;
 
-  vec4 baseColor = vColor * texture(uTexture, uv);
+  // vec4 baseColor = vColor * texture(uTexture, uv);
+  vec4 baseColor = vColor;
   vec3 eyeDirection = normalize(uEyePosition.xyz - position);
   vec3 lightVec = uLightPosition.xyz - position;
   vec3 lightDirection = normalize(lightVec);

@@ -132,26 +132,26 @@ function main() {
 
   var sphere = utils.createSphere({ radius: 0.5 });
   console.log(' geometry ', sphere);
-  var numVertices = sphere.positions.length / 3;
+  var numVertices = sphere.position.length / 3;
 
   var sphereArray = gl.createVertexArray();
   gl.bindVertexArray(sphereArray);
 
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, sphere.positions, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, sphere.position, gl.STATIC_DRAW);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
 
   var uvBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, sphere.uvs, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, sphere.texcoord, gl.STATIC_DRAW);
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(1);
 
   var normalBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, sphere.normals, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, sphere.normal, gl.STATIC_DRAW);
   gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(2);
 

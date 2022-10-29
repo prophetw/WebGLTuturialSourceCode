@@ -14,7 +14,7 @@ function main() {
   const canvas = document.getElementById('webgl') as HTMLCanvasElement;
 
   // Get the rendering context for WebGL
-  const gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
+  const gl = canvas.getContext('webgl') as WebGLRenderingContext;
   const debugFBO = new utils.DebugFrameBuffer(canvas, gl)
   console.log('  --- debgFBO ', debugFBO);
 
@@ -31,30 +31,48 @@ function main() {
   // OBJECT DESCRIPTIONS
   /////////////////////////
 
-  var NUM_SPHERES = 32;
-  var NUM_PER_ROW = 8;
+  var NUM_SPHERES = 2;
+  var NUM_PER_ROW = 1;
   var RADIUS = 0.6;
   var spheres = new Array(NUM_SPHERES);
 
   var colorData = new Float32Array(NUM_SPHERES * 4);
   var modelMatrixData = new Float32Array(NUM_SPHERES * 16);
 
+  const getColor = (index:number)=>{
+    const id = index%3
+    if(id === 0){
+      return [1.0, 0.0, 0.0]
+    }
+    if(id === 1){
+      return [0.0, 1.0, 0.0]
+    }
+    if(id === 2){
+      return [0.0, 0.0, 1.0]
+    }
+    return [1.0, 0.0,0.0]
+
+  }
   for (var i = 0; i < NUM_SPHERES; ++i) {
     var angle = 2 * Math.PI * (i % NUM_PER_ROW) / NUM_PER_ROW;
     var x = Math.sin(angle) * RADIUS;
     var y = Math.floor(i / NUM_PER_ROW) / (NUM_PER_ROW / 4) - 0.75;
     var z = Math.cos(angle) * RADIUS;
+    console.log(x);
     spheres[i] = {
-      scale: [0.8, 0.8, 0.8],
+      scale: [1,1,1],
       rotate: [0, 0, 0], // Will be used for global rotation
-      translate: [x, y, z],
+      // translate: [x, y, z],
+      translate: [i*0.1,i*0.1,0],
       modelMatrix: mat4.identity()
     };
 
+    const color = getColor(i)
     colorData.set([
-      Math.sqrt(Math.random()),
-      Math.sqrt(Math.random()),
-      Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      ...color,
       0.5
     ], i * 4);
   }
@@ -95,6 +113,14 @@ function main() {
 
   var blendBackColorLocation = gl.getUniformLocation(blendBackProgram, "uBackColor");
 
+
+  const tex = twgl.createTextures(gl, {
+    uTexture: {
+      flipY: 1, 
+      type: gl.TEXTURE_2D,
+
+    }
+  })
   ////////////////////////////////
   //  SET UP FRAMEBUFFERS
   ////////////////////////////////
@@ -128,7 +154,7 @@ function main() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RG, gl.FLOAT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, depthTarget, 0);
 
     let frontColorTarget = gl.createTexture();
@@ -182,9 +208,9 @@ function main() {
   // SET UP GEOMETRY
   /////////////////////
 
-  var sphere = utils.createSphere({ radius: 0.5 });
-  var numVertices = sphere.position.length / 3;
-  console.log(' sphere ---- ', sphere);
+  var plane = twgl.primitives.createPlaneVertices()
+  const sphere = plane
+  console.log(' plane ---- ', plane);
 
   var sphereArray = gl.createVertexArray();
   gl.bindVertexArray(sphereArray);
@@ -260,7 +286,7 @@ function main() {
 
   var projMatrix = mat4.perspective(Math.PI / 2, canvas.width / canvas.height, 0.1, 10.0);
 
-  var eyePosition = vec3.create(0, 0.8, 2);
+  var eyePosition = vec3.create(0, 2, 2);
   // var eyePosition = vec3.create(1, 1, 1);
   var cameraMat = mat4.lookAt(eyePosition, vec3.create(0, 0, 0), vec3.create(0, 1, 0));
   const viewMatrix = mat4.inverse(cameraMat)
@@ -321,7 +347,7 @@ function main() {
     var MAX_DEPTH = 1.0;
     var MIN_DEPTH = 0.0;
 
-    var NUM_PASS = 1;   // maximum rendered layer number = NUM_PASS * 2
+    var NUM_PASS = 4;   // maximum rendered layer number = NUM_PASS * 2
     window.spector.startCapture(canvas, 1000)
 
     function draw() {
