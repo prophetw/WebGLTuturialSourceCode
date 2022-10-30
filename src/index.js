@@ -86,6 +86,8 @@ import {TWGLOITDDP, TWGLOITPlane} from '../OITDualDepthPeeling'
 import {Defer} from '../Deffer'
 import {TextureLab} from '../TextureLab'
 
+import * as SPECTOR from "spectorjs"
+window.SPECTOR = SPECTOR
 
 
 const initSpector = (callback = () => {
@@ -138,9 +140,9 @@ ExampleFn = Primitives
 ExampleFn = Defer
 ExampleFn = MRT
 ExampleFn = TWGLOIT
-// ExampleFn = TWGLOITDDP
+ExampleFn = TWGLOITDDP
 // ExampleFn = TWGLOITPlane
-ExampleFn = TextureLab
+// ExampleFn = TextureLab
 
 
 // const ExampleFn = LOGLTexturesTriangle
