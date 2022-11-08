@@ -34,6 +34,7 @@ export class VisualState {
   currentState: {
     [key: string]: any
   }
+  MAXCAPIMGNUM: number
   options: IContextInformation
   img: HTMLImageElement
   imgContainer: HTMLDivElement
@@ -53,7 +54,8 @@ export class VisualState {
   private readonly workingContext2D: CanvasRenderingContext2D;
   private readonly captureContext2D: CanvasRenderingContext2D;
 
-  constructor(options: IContextInformation, imgPosition: Position) {
+  constructor(options: IContextInformation, imgPosition: Position, max_capture_img_num = 30) {
+    this.MAXCAPIMGNUM = max_capture_img_num
     this.position = imgPosition
     this.img = document.createElement('img') as HTMLImageElement
     this.quickCapture = false
@@ -103,6 +105,8 @@ export class VisualState {
     this.statusContainer.style.left = '0px'
     this.statusContainer.style.bottom = '0px'
     this.statusContainer.style.height = '24px'
+    this.statusContainer.style.lineHeight = '24px'
+    this.statusContainer.style.fontSize = '12px'
     this.statusContainer.style.maxWidth = '200px'
     this.statusContainer.style.background = 'rgba(0.5, 0.5, 0.5, 0.5)'
     this.statusContainer.style.color = 'white'
@@ -147,10 +151,10 @@ export class VisualState {
       this.imgContainer.style.bottom = '0px'
     } else if (this.position === 'left-mid') {
       this.imgContainer.style.left = '0px'
-      this.imgContainer.style.top = '50%'
+      this.imgContainer.style.top = '30%'
     } else if (this.position === 'right-mid') {
       this.imgContainer.style.right = '0px'
-      this.imgContainer.style.top = '50%'
+      this.imgContainer.style.top = '30%'
     } else {
       this.imgContainer.style.right = '0px'
       this.imgContainer.style.top = '0px'
@@ -368,6 +372,9 @@ export class VisualState {
     textureLayer: number,
     type = WebGlConstants.UNSIGNED_BYTE.value // 如果tex使用的 float 这个地方需要传float
   ) {
+    if(this.imgSrcAry.length >= this.MAXCAPIMGNUM){
+      return
+    }
     const attachmentVisualState = {
       attachmentName: name,
       src: null as string,

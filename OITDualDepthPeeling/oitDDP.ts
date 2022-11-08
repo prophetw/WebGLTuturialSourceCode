@@ -457,6 +457,7 @@ function main() {
         //                      偶数次  / 奇数次                  偶数次  / 奇数次
         // NOTE: 开启绘制 out => tex345 / tex012 通道  end   in => tex01 / tex34
 
+        debugRM.readFromContext()
         debugRB.getCapture(gl, 'allbuffers-depth', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
         // blend back color separately
         offsetBack = writeId * 3;
