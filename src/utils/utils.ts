@@ -462,9 +462,9 @@ const createBox = (options?: {
   }
 
   return {
-    positions: positions,
-    normals: normals,
-    uvs: uvs
+    position: positions,
+    normal: normals,
+    texcoord: uvs
   };
 
 }
@@ -577,9 +577,9 @@ const createSphere = (options?: {
   }
 
   return {
-    positions: positions,
-    normals: normals,
-    uvs: uvs,
+    position: positions,
+    normal: normals,
+    texcoord: uvs,
     indices: indices
   };
 }

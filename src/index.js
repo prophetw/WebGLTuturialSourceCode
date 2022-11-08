@@ -82,9 +82,12 @@ import { LOGLCircle, LOGLPick, LOGLPickComplete, LOGLPickCube, LOGLPickCubeRing,
 import { TWGLPrimitive, TWGLTexRing } from "../learnopengl/TWGLAPI"
 import { TWGLBlendedPlane, TWGLBlendedPlane2, Primitives, MRT } from "../TWGLeg"
 import {TWGLOIT} from '../OIT'
-import {TWGLOITDDP} from '../OITDualDepthPeeling'
+import {TWGLOITDDP, TWGLOITPlane} from '../OITDualDepthPeeling'
 import {Defer} from '../Deffer'
+import {TextureLab} from '../TextureLab'
 
+import * as SPECTOR from "spectorjs"
+window.SPECTOR = SPECTOR
 
 
 const initSpector = (callback = () => {
@@ -138,6 +141,8 @@ ExampleFn = Defer
 ExampleFn = MRT
 ExampleFn = TWGLOIT
 ExampleFn = TWGLOITDDP
+// ExampleFn = TWGLOITPlane
+// ExampleFn = TextureLab
 
 
 // const ExampleFn = LOGLTexturesTriangle
