@@ -458,7 +458,9 @@ function main() {
         // NOTE: 开启绘制 out => tex345 / tex012 通道  end   in => tex01 / tex34
 
         debugRM.readFromContext()
+        // read from fbo COLOR_ATTACHMENT0
         debugRB.getCapture(gl, 'allbuffers-depth', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
+
         // blend back color separately
         offsetBack = writeId * 3;
         gl.bindFramebuffer(gl.FRAMEBUFFER, blendBackBuffer);
@@ -473,6 +475,7 @@ function main() {
 
         console.log(' one time ');
         debugRT.getCapture(gl, 'blendBackBuffer', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
+        // debugRT.readFromContext()
       }
       // return
 

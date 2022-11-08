@@ -59,7 +59,7 @@ export class VisualState {
     this.position = imgPosition
     this.img = document.createElement('img') as HTMLImageElement
     this.quickCapture = false
-    this.fullCapture = false
+    this.fullCapture = true // true 图片使用原始尺寸
     this.options = options
     this.context = options.context
     this.currentState = {}
@@ -215,7 +215,7 @@ export class VisualState {
   }
 
 
-  readFrameBufferAttachmentFromContext(gl: WebGLRenderingContext | WebGL2RenderingContext,
+  protected readFrameBufferAttachmentFromContext(gl: WebGLRenderingContext | WebGL2RenderingContext,
     frameBuffer: WebGLFramebuffer, webglConstant: WebGlConstant,
     x: number, y: number, width: number, height: number): void {
     const target = WebGlConstants.FRAMEBUFFER.value;
@@ -245,7 +245,7 @@ export class VisualState {
     }
   }
 
-  readFrameBufferAttachmentFromRenderBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext,
+  protected readFrameBufferAttachmentFromRenderBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext,
     frameBuffer: WebGLFramebuffer, webglConstant: WebGlConstant,
     x: number, y: number, width: number, height: number,
     target: number, componentType: number, storage: any): void {
@@ -308,7 +308,7 @@ export class VisualState {
       gl.bindFramebuffer(WebGlConstants.FRAMEBUFFER.value, frameBuffer);
     }
   }
-  readFrameBufferAttachmentFromTexture(
+  protected readFrameBufferAttachmentFromTexture(
     gl: WebGLRenderingContext | WebGL2RenderingContext,
     frameBuffer: WebGLFramebuffer, webglConstant: WebGlConstant,
     x: number, y: number, width: number, height: number,
