@@ -6,6 +6,8 @@ import FSFinal from './final.frag'
 import FSBLENDBACK from './blendBack.frag'
 import VSDRAW from './draw.vert'
 import * as utils from '../src/utils/utils'
+import { VisualState } from '../src/utils/visualState'
+import { WebGlConstants } from '../src/utils/webglConstants'
 
 const mat4 = twgl.m4
 const vec3 = twgl.v3
@@ -16,7 +18,19 @@ function main() {
   // Get the rendering context for WebGL
   const gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
   const debugFBO = new utils.DebugFrameBuffer(canvas, gl)
-  console.log('  --- debgFBO ', debugFBO);
+  const debugRB = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-bottom')
+  const debugRM = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-mid')
+  const debugRT = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-top')
+  console.log(debugRB, debugRT);
 
   gl.enable(gl.BLEND);
   gl.depthMask(false);
@@ -39,6 +53,21 @@ function main() {
   var colorData = new Float32Array(NUM_SPHERES * 4);
   var modelMatrixData = new Float32Array(NUM_SPHERES * 16);
 
+  const getColor = (index: number)=>{
+
+    const id = index % 3
+    if(id === 0){
+      return [1, 0, 0]
+    }
+    if(id === 1){
+      return [0, 1, 0]
+    }
+    if(id === 2){
+      return [0, 0, 1]
+    }
+    return [1, 0, 0]
+
+  }
   for (var i = 0; i < NUM_SPHERES; ++i) {
     var angle = 2 * Math.PI * (i % NUM_PER_ROW) / NUM_PER_ROW;
     var x = Math.sin(angle) * RADIUS;
@@ -51,10 +80,12 @@ function main() {
       modelMatrix: mat4.identity()
     };
 
+    const color = getColor(i)
     colorData.set([
-      Math.sqrt(Math.random()),
-      Math.sqrt(Math.random()),
-      Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      ...color,
       0.5
     ], i * 4);
   }
@@ -73,11 +104,6 @@ function main() {
   var blendBackProgramInfo = twgl.createProgramInfo(gl, [VSDRAW, FSBLENDBACK])
   var blendBackProgram = blendBackProgramInfo.program
 
-  console.log(' --- dualDepthPeelingProgramInfo', dualDepthPeelingProgramInfo);
-  console.log(' --- finalProgramInf ', finalProgramInf);
-  console.log(' --- blendBackProgramInfo ', blendBackProgramInfo);
-
-  console.log(' =======debugFBO======= ', debugFBO);
   /////////////////////////
   // GET UNIFORM LOCATIONS
   /////////////////////////
@@ -111,6 +137,7 @@ function main() {
   // COLOR_ATTACHMENT1 - back color
   var colorBuffers = [gl.createFramebuffer(), gl.createFramebuffer()]; // Frame buffer 2 3
   var blendBackBuffer = gl.createFramebuffer(); // Frame buffer 4
+  // @ts-ignore
   blendBackBuffer.__SPECTOR_Metadata = { name: 'blendBackBuffer' }
 
   for (let i = 0; i < 2; i++) {
@@ -165,6 +192,7 @@ function main() {
   gl.bindFramebuffer(gl.FRAMEBUFFER, blendBackBuffer);
 
   var blendBackTarget = gl.createTexture();
+  // @ts-ignore
   blendBackTarget.__SPECTOR_Metadata = { name: 'blendBackTexture' }
   blendBackTarget && allTextureAry.push(blendBackTarget)
   gl.activeTexture(gl.TEXTURE6);
@@ -184,7 +212,6 @@ function main() {
 
   var sphere = utils.createSphere({ radius: 0.5 });
   var numVertices = sphere.positions.length / 3;
-  console.log(' sphere ---- ', sphere);
 
   var sphereArray = gl.createVertexArray();
   gl.bindVertexArray(sphereArray);
@@ -264,10 +291,8 @@ function main() {
   // var eyePosition = vec3.create(1, 1, 1);
   var cameraMat = mat4.lookAt(eyePosition, vec3.create(0, 0, 0), vec3.create(0, 1, 0));
   const viewMatrix = mat4.inverse(cameraMat)
-  console.log(viewMatrix);
 
   var viewProjMatrix = mat4.multiply(projMatrix, viewMatrix);
-  console.log(viewProjMatrix);
 
   var lightPosition = vec3.create(1, 1, 2);
 
@@ -291,6 +316,7 @@ function main() {
     ///////////////////////
 
     var texture = gl.createTexture();
+    // @ts-ignore
     texture.__SPECTOR_Metadata = { name: "imageTexture " }
     texture && allTextureAry.push(texture)
     gl.activeTexture(gl.TEXTURE9);
@@ -322,10 +348,11 @@ function main() {
     var MIN_DEPTH = 0.0;
 
     var NUM_PASS = 4;   // maximum rendered layer number = NUM_PASS * 2
-    window.spector.startCapture(canvas, 1000)
+    // window.spector.startCapture(canvas, 1000)
 
+    let drawCount = 0
     function draw() {
-
+      drawCount ++
       //////////////////////////////////
       // 1. Initialize min-max depth buffer
       //////////////////////////////////
@@ -338,12 +365,14 @@ function main() {
       gl.bindFramebuffer(gl.FRAMEBUFFER, allBuffers[0]);
       gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
       gl.clearColor(DEPTH_CLEAR_VALUE, DEPTH_CLEAR_VALUE, 0, 0); // allbuf0 depth 初始化
+      // gl.clearColor(-0.2, 0.2, 0, 0); // allbuf0 depth 初始化
       gl.clear(gl.COLOR_BUFFER_BIT);
+
 
       // init depth  allBuf1  tex3
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, allBuffers[1]); // depth gl.RG32F 只有 RG 通道
       // 未使用 drawBuffers 指定通道 默认就是通道0 ？ allBuffers1 通道0是  depth gl.RG32F
-      gl.clearColor(-MIN_DEPTH, MAX_DEPTH, 1, 1);
+      gl.clearColor(-MIN_DEPTH, MAX_DEPTH, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
 
       // init frontColor backColor colorBuf0  tex1 tex2
@@ -358,15 +387,16 @@ function main() {
       gl.clear(gl.COLOR_BUFFER_BIT);
 
 
+
       // set depth to allBuf0 start
       //  draw depth for first pass to peel tex0 接下来的绘制会保存图形的深度信息
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, allBuffers[0]);
-      gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0]);  // out depth 0
       gl.blendEquation(gl.MAX);
 
       gl.useProgram(dualDepthPeelingProgram); // spector program 0
-      gl.uniform1i(dualDepthPeelingDepthLocation, 3);  // allBuf1 tex3 depth  初始化 gl.RG32F (0,1) 绿色
-      gl.uniform1i(dualDepthPeelingFrontColorLocation, 4); // colorBuf1 tex4 backColor
+      gl.uniform1i(dualDepthPeelingDepthLocation, 3);  // in allBuf1 tex3 depth  初始化 gl.RG32F (0,1) 绿色
+      gl.uniform1i(dualDepthPeelingFrontColorLocation, 4); // in colorBuf1 tex4 frontColor  (0,0,0,0)
       gl.bindVertexArray(sphereArray);
 
       for (var i = 0, len = spheres.length; i < len; ++i) {
@@ -391,26 +421,28 @@ function main() {
       let readId, writeId;
       let offsetRead, offsetBack;
 
+      let count = 0
       for (let pass = 0; pass < NUM_PASS; pass++) {
         readId = pass % 2;
         writeId = 1 - readId;  // ping-pong: 0 or 1
+        count+=1
 
         // NOTE: init 深度值到 depth 通道
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, allBuffers[writeId]);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, allBuffers[writeId]);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
         gl.clearColor(DEPTH_CLEAR_VALUE, DEPTH_CLEAR_VALUE, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         // NOTE: 清空 frontcolor backcolor 通道
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, colorBuffers[writeId]);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, colorBuffers[writeId]);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         // NOTE: 开启绘制 到 depth frontColor backColor 通道  start
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, allBuffers[writeId]);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, allBuffers[writeId]);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
-        gl.blendEquation(gl.MAX);
+        gl.blendEquation(gl.MAX); // blendEquation MAX 在赋值的时候 比较并使用最大值
 
         // update texture uniform
         offsetRead = readId * 3;
@@ -421,40 +453,51 @@ function main() {
         // draw geometry 第一次 writeId = 1   readId=0
         gl.bindVertexArray(sphereArray);
         gl.drawElementsInstanced(gl.TRIANGLES, sphere.indices.length, gl.UNSIGNED_SHORT, 0, spheres.length);
-        debugFBO.drawFramebuffer(allTextureAry[5])
-        return
         //                      偶数次  / 奇数次                  偶数次  / 奇数次
         // NOTE: 开启绘制 out => tex345 / tex012 通道  end   in => tex01 / tex34
 
+        debugRB.getCapture(gl, 'allbuffers-depth', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
         // blend back color separately
         offsetBack = writeId * 3;
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, blendBackBuffer);
-        gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, blendBackBuffer);
+        // gl.drawBuffers([gl.COLOR_ATTACHMENT0]); // out tex6 默认输出到 COLOR_ATTACHMENT0 所以除非有多个 输出缓冲区 不然可以不用手动声明
+        // blendEquation 和 blendFuncSeparate 区别
         gl.blendEquation(gl.FUNC_ADD);
         gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.useProgram(blendBackProgram);
-        gl.uniform1i(blendBackColorLocation, offsetBack + 2);
+        gl.uniform1i(blendBackColorLocation, offsetBack + 2); // in tex2 or tex5  back Color
         gl.bindVertexArray(quadArray);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        console.log(' one time ');
+        debugRT.getCapture(gl, 'blendBackBuffer', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
       }
+      // return
 
       //////////////////////////
       // 3. Final
       //////////////////////////
 
-      // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      // gl.clearColor(0, 0, 0, 1);
-      // gl.clear(gl.COLOR_BUFFER_BIT);
-      // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      // gl.useProgram(finalProgram);
-      // gl.uniform1i(finalFrontColorLocation, offsetBack + 1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.useProgram(finalProgram);
+      gl.uniform1i(finalFrontColorLocation, offsetBack + 1);
 
-      // gl.bindVertexArray(quadArray);
-      // gl.drawArrays(gl.TRIANGLES, 0, 6);
-
+      gl.bindVertexArray(quadArray);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      // gl.useProgram(dualDepthPeelingProgram); // spector program 0
       // requestAnimationFrame(draw);
+      // if(drawCount===2){
+      //   allTextureAry.map(tex=>{
+      //     debugFBO.drawFramebuffer(tex)
+      //   })
+      //   // return
+      // }
     }
     draw()
+    // draw()
     // requestAnimationFrame(draw);
 
   }

@@ -20,6 +20,8 @@ layout(location = 0) out vec4 accumColor;
 layout(location = 1) out float accumAlpha;
 
 float weight(float z, float a) {
+  // 权重函数 frag 的深度和 frag 的透明度 计算出一个中间值  可能是深度越深 透明度作用越小 深度越前 透明的作用越大
+  // 返回一个 0.01~3000 直接的值
   return clamp(pow(min(1.0, a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - z * 0.9, 3.0), 1e-2, 3e3);
 }
 
@@ -40,7 +42,11 @@ void main() {
 
   vec4 color = vec4((ambient + diffuse + specular) * baseColor.rgb, vColor.a);
   color.rgb *= color.a;
-  float w = weight(gl_FragCoord.z, color.a);
-  accumColor = vec4(color.rgb * w, color.a);
-  accumAlpha = color.a * w;
+  float w = weight(gl_FragCoord.z, color.a); // 权重函数 根据场景不同做适当调整
+  // gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA)
+  // blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
+  // color(RGB) = (sourceColor * srcRGB) + (destinationColor * dstRGB)
+  // color(A) = (sourceAlpha * srcAlpha) + (destinationAlpha * dstAlpha)
+  accumColor = vec4(color.rgb * w, color.a); // 颜色累加
+  accumAlpha = color.a * w;  // 透明度累加  blend
 }

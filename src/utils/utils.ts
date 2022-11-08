@@ -1,6 +1,9 @@
 import * as twgl from 'twgl.js'
 import { LookAtTrianglesWithKeys } from '../../ch07'
 import { angleToRads } from '../../lib/utils'
+import { IContextInformation } from './contextInformation'
+import { ReadPixelsHelper } from './readPixelsHelper'
+import { WebGlConstant, WebGlConstants, WebGlConstantsByValue } from './webglConstants'
 const Vector3 = twgl.v3
 const Matrix4 = twgl.m4
 
@@ -653,12 +656,23 @@ void main() {
     const gl = this.gl
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     // this.gl.clear(this.gl.COLOR_BUFFER_BIT)
+    this.gl.clearColor(0, 0, 0, 0)
     this.gl.useProgram(this.programInfo.program)
     twgl.setBuffersAndAttributes(this.gl, this.programInfo, this.bufferInfo)
     twgl.setUniforms(this.programInfo, {
       tex0: tex
     })
     twgl.drawBufferInfo(this.gl, this.bufferInfo)
+  }
+  readFromFramebuffer(fbo: WebGLFramebuffer, originFbo?: WebGLFramebuffer) {
+    const gl = this.gl
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+    const pixels = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+    gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    if (originFbo) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, originFbo)
+    }
+    console.log(pixels);
   }
 }
 

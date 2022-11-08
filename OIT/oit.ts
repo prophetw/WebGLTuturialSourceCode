@@ -28,8 +28,23 @@ function main() {
   // OBJECT DESCRIPTIONS
   /////////////////////////
 
-  var NUM_SPHERES = 4;
-  var NUM_PER_ROW = 2;
+  const getColor = (index: number)=>{
+
+    const id = index % 3
+    if(id === 0){
+      return [1, 0, 0]
+    }
+    if(id === 1){
+      return [0, 1, 0]
+    }
+    if(id === 2){
+      return [0, 0, 1]
+    }
+    return [1, 0, 0]
+
+  }
+  var NUM_SPHERES = 1;
+  var NUM_PER_ROW = 1;
   var RADIUS = 0.6;
   var spheres = new Array(NUM_SPHERES);
 
@@ -47,11 +62,12 @@ function main() {
       translate: [x, y, z],
       modelMatrix: mat4.identity()
     };
-
+    const color = getColor(i)
     colorData.set([
-      Math.sqrt(Math.random()),
-      Math.sqrt(Math.random()),
-      Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      // Math.sqrt(Math.random()),
+      ...color,
       0.5]
     , i * 4);
   }
@@ -87,7 +103,6 @@ function main() {
   var accumBuffer = gl.createFramebuffer();
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, accumBuffer);
-  gl.activeTexture(gl.TEXTURE0);
 
   var accumTarget = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, accumTarget);
@@ -254,29 +269,17 @@ function main() {
     // texture 1 accumTarget
     gl.activeTexture(gl.TEXTURE1);  // 开启 作为 下一阶段的 texture 输入
     gl.bindTexture(gl.TEXTURE_2D, accumTarget); // frameBuffer COLOR_ATTACHMENT0
-    /*
-
-        shader  oitAccum.frag  片元对外输出
-        layout(location = 0) out vec4 accumColor;
-        layout(location = 1) out float accumAlpha;
-
-        ...
-        color.rgb *= color.a;
-        float w = weight(gl_FragCoord.z, color.a);
-        accumColor = vec4(color.rgb * w, color.a);
-        accumAlpha = color.a * w;
-    */
 
     // texture 2 accumAlphaTarget
     gl.activeTexture(gl.TEXTURE2);  // 开启 作为 下一阶段的 texture 输入
     gl.bindTexture(gl.TEXTURE_2D, accumAlphaTarget); // frameBuffer COLOR_ATTACHMENT1
 
     gl.useProgram(accumProgram);
-    gl.uniform1i(textureLocation, 0); // apply texture
+    gl.uniform1i(textureLocation, 0);
 
     gl.useProgram(drawProgram);
-    gl.uniform1i(accumLocation, 1); // apply texture
-    gl.uniform1i(accumAlphaLocation, 2); // apply texture
+    gl.uniform1i(accumLocation, 1);
+    gl.uniform1i(accumAlphaLocation, 2);
 
     var rotationMatrix = mat4.identity();
 
@@ -319,10 +322,11 @@ function main() {
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-      requestAnimationFrame(draw);
+      // requestAnimationFrame(draw);
     }
+    draw()
 
-    requestAnimationFrame(draw);
+    // requestAnimationFrame(draw);
 
   }
 

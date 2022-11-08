@@ -26,9 +26,9 @@ flat in vec4 vColor;
 // allFBO   COLOR_ATTACHMENT0 COLOR_ATTACHMENT1 COLOR_ATTACHMENT2
 // colorFBO                   COLOR_ATTACHMENT0 COLOR_ATTACHMENT1
 
-layout(location = 0) out vec4 depth;  //     allFBO.COLOR_ATTACHMENT0 RG32F, R - negative front depth, G - back depth
-layout(location = 1) out vec4 frontColor; // allFBO.COLOR_ATTACHMENT1 colorFBO.COLOR_ATTACHMENT0
-layout(location = 2) out vec4 backColor; //  allFBO.COLOR_ATTACHMENT2 colorFBO.COLOR_ATTACHMENT1
+layout(location = 0) out vec4 depth; // (-9999.0, -9999.0)   allFBO.COLOR_ATTACHMENT0 RG32F, R - negative front depth, G - back depth
+layout(location = 1) out vec4 frontColor; // (0,0,0,0)       allFBO.COLOR_ATTACHMENT1 colorFBO.COLOR_ATTACHMENT0
+layout(location = 2) out vec4 backColor; //   (0,0,0,0)      allFBO.COLOR_ATTACHMENT2 colorFBO.COLOR_ATTACHMENT1
 
 void main() {
 
@@ -67,10 +67,15 @@ void main() {
   if(fragDepth > nearestDepth && fragDepth < furthestDepth) {
                 // This needs to be peeled.
                 // the one remains after MAX blended for all need-to-peel will be peeled next pass
-    depth.rg = vec2(-fragDepth, fragDepth);
+                // 获取剥离的层信息 比如 4个重合的点  depth 分别是 0 0.2 0.4 0.9 根据 MAX blend 最后使用的是 -0.9~0.9
+    depth.rg = vec2(-fragDepth, fragDepth); // 实际上打印出来就是  (-0.1,0.1) 的效果 绿色 -0.1 = 0
     return;
   }
 
+// 进入这个里面 说明 当前的 fragDepth 符合要求
+// fragDepth == nearestDepth fragDepth == furthestDepth   最近的或者最远的
+// return;
+  // 相交
             // If it reaches here, it is the layer we need to render for this pass
 
             // -------------------------
@@ -89,6 +94,7 @@ void main() {
   float ambient = 0.2;
   float specular = pow(max(dot(reflectionDirection, eyeDirection), 0.0), 20.0);
 
+  // 球原本颜色 + 球纹理 + 旁氏光照
   vec4 color = vec4((ambient + diffuse + specular) * baseColor.rgb, vColor.a);
 
             // dual depth peeling
