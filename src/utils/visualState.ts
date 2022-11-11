@@ -27,6 +27,11 @@ export interface ITextureRecorderData {
   depth?: number;
   isCompressed: boolean;
 }
+interface ImgData{
+    src: string;
+    name: string; // like COLOR_ATTACHMENT0 gl inner name
+    uname: string // img custom name set by user
+}
 type Position =
   | "right-top"
   | "right-bottom"
@@ -39,6 +44,10 @@ export class VisualState {
 
   quickCapture: boolean;
   fullCapture: boolean;
+  NOTE: string;
+  idPrefix: string;
+  statusName: string;
+  programInfo: any;
   context: WebGLRenderingContext | WebGL2RenderingContext;
   contextVersion: number;
   extensions: ExtensionList;
@@ -49,18 +58,13 @@ export class VisualState {
   options: IContextInformation;
   img: HTMLImageElement;
   imgContainer: HTMLDivElement;
+  sourceContainer: HTMLDivElement;
   statusContainer: HTMLDivElement;
   position: Position;
-  imgSrcAry: {
-    src: string;
-    name: string;
-  }[];
+  imgSrcAry: ImgData[];
   curShowImg:
     | undefined
-    | {
-        src: string;
-        name: string;
-      };
+    | ImgData;
   private readonly captureFrameBuffer: WebGLFramebuffer;
   private readonly workingCanvas: HTMLCanvasElement;
   private readonly captureCanvas: HTMLCanvasElement;
@@ -72,67 +76,158 @@ export class VisualState {
     imgPosition: Position,
     max_capture_img_num = 30
   ) {
+    this.NOTE = "必须引入 Spector.js 基于其进行的修改"
     this.MAXCAPIMGNUM = max_capture_img_num;
     this.position = imgPosition;
-    this.img = document.createElement("img") as HTMLImageElement;
+    this.idPrefix = "pre_" + parseInt("" + Math.random() * 314);
+    this.img = document.createElement("img");
     this.quickCapture = false;
-    this.fullCapture = true; // true 图片使用原始尺寸
+    this.fullCapture = true;
     this.options = options;
     this.context = options.context;
+    this.contextVersion = options.contextVersion;
     this.currentState = {};
     this.extensions = {};
+    this.statusName = "";
+    this.programInfo = undefined;
     if (options.extensions !== undefined) {
       this.extensions = options.extensions;
     }
     this.contextVersion = options.contextVersion;
-    this.captureFrameBuffer =
-      options.context.createFramebuffer() as WebGLFramebuffer;
+    this.captureFrameBuffer = options.context.createFramebuffer() as WebGLFramebuffer;
     this.workingCanvas = document.createElement("canvas");
-    this.workingContext2D = this.workingCanvas.getContext(
-      "2d"
-    ) as CanvasRenderingContext2D;
+    this.workingContext2D = this.workingCanvas.getContext("2d") as CanvasRenderingContext2D;
     this.captureCanvas = document.createElement("canvas");
-    this.captureContext2D = this.captureCanvas.getContext(
-      "2d"
-    ) as CanvasRenderingContext2D;
+    this.captureContext2D = this.captureCanvas.getContext("2d") as CanvasRenderingContext2D;
     this.captureContext2D.imageSmoothingEnabled = true;
     (this.captureContext2D as any).mozImageSmoothingEnabled = true;
     (this.captureContext2D as any).oImageSmoothingEnabled = true;
     (this.captureContext2D as any).webkitImageSmoothingEnabled = true;
     (this.captureContext2D as any).msImageSmoothingEnabled = true;
     this.imgSrcAry = [];
-    this.imgContainer = document.createElement("div") as HTMLDivElement;
+    this.imgContainer = document.createElement("div");
     this.imgContainer.append(this.img);
-    this.statusContainer = document.createElement("div") as HTMLDivElement;
+    this.statusContainer = document.createElement("div");
     this.imgContainer.append(this.statusContainer);
     this.initImgContainer();
+    this.sourceContainer = document.createElement("div");
+    this.initSourceContainer();
     document.body.append(this.imgContainer);
+    document.body.append(this.sourceContainer);
+    this.initHTMLEvent();
   }
 
-  updateStatusContainer(name = "") {
-    console.log(name);
+  initSourceContainer() {
+    this.sourceContainer.style.display = "none";
+    this.sourceContainer.style.background = "white";
+    this.sourceContainer.style.width = "80%";
+    this.sourceContainer.style.height = "80%";
+    this.sourceContainer.style.overflow = "auto";
+    this.sourceContainer.style.top = "0px";
+    this.sourceContainer.style.left = "0px";
+    this.sourceContainer.style.position = "absolute";
+    this.sourceContainer.innerHTML = `
+            <span style="position: absolute; right: 40px; top: 10px;" id="${this.idPrefix}closeBtn">关闭</span>
+            <pre style="white-space: pre-wrap;word-wrap: break-word; overflow: auto; padding: 20px; height: calc(100% - 68px);" id="${this.idPrefix}source_container"></pre>
+        `;
+  }
+  initHTMLEvent() {
+    this.imgContainer.addEventListener("click", (e: MouseEvent) => {
+      // @ts-ignore
+      if (e && e.target && e.target.className === "fragBtn") {
+        this.showShaderSource("frag");
+      }
+      // @ts-ignore
+      if (e&& e.target && e.target.className === "vertBtn") {
+        this.showShaderSource("vert");
+      }
+    });
+    // document.addEventListener('keydown', e=>{
+    //     if(e.code === 'Escape' || e.key === 'Escape'){
+    //         this.closeShaderContainer()
+    //     }
+    // })
+    this.sourceContainer.addEventListener("click", (e: MouseEvent) => {
+      // @ts-ignore
+      if (e && e.target && e.target.id === `${this.idPrefix}closeBtn`) {
+        this.closeShaderContainer();
+      }
+    });
+  }
+  showShaderContainer() {
+    this.sourceContainer.style.display = "block";
+  }
+  closeShaderContainer() {
+    this.sourceContainer.style.display = "none";
+  }
+  showShaderSource(type = "frag") {
+    if (this.programInfo !== undefined) {
+      if (this.programInfo.__SPECTOR_Object_CustomData) {
+        const { shaders } = this.programInfo.__SPECTOR_Object_CustomData;
+        let source = "";
+        if (type === "frag") {
+          if (shaders[0].name === 'Fragment') {
+            source = shaders[0].source;
+          }
+          if (shaders[1].name === 'Fragment') {
+            source = shaders[1].source;
+          }
+        }
+        if (type === "vert") {
+          if (shaders[0].name === 'Vertex') {
+            source = shaders[0].source;
+          }
+          if (shaders[1].name === 'Vertex') {
+            source = shaders[1].source;
+          }
+        }
+        const container = document.getElementById(
+          `${this.idPrefix}source_container`
+        );
+        this.showShaderContainer();
+        if(container !== null){
+          container.innerHTML = source;
+        }
+      }
+    } else {
+      // eslint-disable-next-line no-alert
+      alert(" no source detect");
+    }
+  }
+  updateStatusContainer(name = "", uname="") {
     let curIndex = 0;
     if (this.curShowImg) {
       curIndex = this.imgSrcAry.indexOf(this.curShowImg);
     }
+    const customName = uname || this.statusName;
     const total = this.imgSrcAry.length;
-    this.statusContainer.innerHTML = `${curIndex + 1}/${total} ${name}`;
+    this.statusContainer.title = `${
+      curIndex + 1
+    }/${total} ${customName} ${name} `;
+    this.statusContainer.innerHTML = `
+            <span style="position:absolute; top:0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);">${customName}</span>
+            <span style="position:absolute; top:0px; right: 0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);cursor: pointer;" class="fragBtn">Frag</span>
+            <span style="position:absolute; top:0px; right: 30px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5); cursor: pointer;" class="vertBtn">Vert</span>
+            <span style="position:absolute; bottom:0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);">
+                ${curIndex + 1}/${total} ${name}
+            </span>
+        `;
   }
 
   initImgContainer() {
-    this.imgContainer.style.width = "200px";
-    this.imgContainer.style.height = "200px";
+    this.imgContainer.style.minWidth = "200px";
+    this.imgContainer.style.minHeight = "200px";
     this.imgContainer.style.position = "absolute";
+    this.imgContainer.style.boxSizing = "border-box";
+    this.imgContainer.style.border = "1px solid #666";
     this.statusContainer.style.position = "absolute";
     this.statusContainer.style.left = "0px";
     this.statusContainer.style.bottom = "0px";
-    this.statusContainer.style.height = "24px";
-    this.statusContainer.style.lineHeight = "24px";
+    this.statusContainer.style.height = "100%";
     this.statusContainer.style.fontSize = "12px";
-    this.statusContainer.style.maxWidth = "200px";
-    this.statusContainer.style.background = "rgba(0.5, 0.5, 0.5, 0.5)";
+    this.statusContainer.style.width = "100%";
+    // this.statusContainer.style.background = 'rgba(0.5, 0.5, 0.5, 0.5)';
     this.statusContainer.style.color = "white";
-
     const prevIcon = document.createElement("img");
     const nextIcon = document.createElement("img");
     prevIcon.style.position = "absolute";
@@ -144,7 +239,6 @@ export class VisualState {
     prevIcon.style.cursor = "pointer";
     prevIcon.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAMAAABmmnOVAAAAhFBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8qm6wAAAAK3RSTlMA+xLJXx7FBaGK7UUmDgra03w6zVZMpata9fHfurCWhVE1K+riv72Db2cY2Bh2eAAAA7NJREFUeNrUmNuyojAQRRuScI0ojHhXRrwdzf//38yDMTQqlQRIzaw3q86JC7K7OxH+Y/yCVotdMNsmnpdsZ8FuUdHCB2dMyphsxEc2JC4nMDZhGhNPdOKROA1hPIpDIrRIDgWMAr9thQHbG4ehOe6FMfsjDEl6FVZc0+EUSFcOk6QrqWQYDbb8XIyLfH7kjwz+kj34cZ5Hnwt3yfrXZL4Wbc4RZV+EaXQWbdZ52HMnpqLF5c6hE36/iBbTFOwJ4/ZqOQMNWN52j0PrNAQ4gssCtCmWOK6BZTLKBClEHIzgEdJISrAgRgoHBsawA9KIzeOwQC+zBitqtKELw2BkO6E4UbCGnoRil4EBPhGKyIce+JFQEIOlWKPC1hR6QteNGmfa8g2HWQ29qWcNC18zD6SxFRkMQNbYEqK1YtjIZAUDUTXSqVMjjdr8gcH4aVSqSY/yVjAgK0+/a5XKoYRBKZVFCZ0wNS9WMDArNUdYZygDkzzY5yIItQJRwQhUOrFIVX+AUVD9Iv26GdNXn8xgFLLZq3N+25D8NS9qMMbXOsHVrzmSw0fY6w+ohcNM7HUs6OtBGXxiqQJh4yCkhWYslp2pPPlWDpoW/qkrm0Rtho2DtNDfENLxIgJzh18Cv+Nugu+v4ipHRm3uYDZvak/e2aHFUTw59HH4DTocxJMjYPZyHTa6AzBPRggQXJXnuA64TDk0ucmFuAMH4PJV3KDJVqbbhYPqi1toUIgnhRMH/H3tvE7Hc8BM32sxTORoc+CABnYSvndLZukwB0MY6proVHcxcSDIwZTL2zlPrnd35gD39hSbyLLlzhyAy/+etC48Z9BlghysOKuLEIpE5MYBt+64FQnq0AFoKxQbWaDmDiuQ2Bbp5hky+dGVA350HzVy4tQBCBof1CSXk2AgB1igJFZycLhywOOjQkpzMwcK/ZijX4928tjpygEfrXfoHsCdOgBH9xx5fXo4dYCH/BkCnS8z6CQb1gEydM5Mnis7cEA8Z3eCPjh0QA//70j8aecOigCGgRgG8mdtFJ7Zh0qhbXKxpRCvg/gwiV+UWKyIZZvYwIitnBhqiPGOGHSJkd84/BDHQOJATEQDREhixEVEcEZEiESYasTKRMBuVA1E6ULUT0YRR1SSRjlL1NRGYU+gCwbEQeAsBthDIE4G7GVgbwQAaKCQBhRq4LEGKEwg0wY8bmD0hlBgqBWGZGLoNoh4ZChYhoxmaHmIoGiomoi0iui7iMiMKN2I3K5o/siFB8zVDz3HZ8W8SKUu1T3kAAAAAElFTkSuQmCC";
-
     nextIcon.style.background = "white";
     nextIcon.style.position = "absolute";
     nextIcon.style.right = "0px";
@@ -154,7 +248,6 @@ export class VisualState {
     nextIcon.style.cursor = "pointer";
     nextIcon.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAMAAABmmnOVAAAAhFBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8qm6wAAAAK3RSTlMA+xLJXx7FBaGK7UUmDgra03w6zVZMpata9fHfurCWhVE1K+riv72Db2cY2Bh2eAAAA7NJREFUeNrUmNmWojAURQ+EIJMotDgrLU6l+f//6xdJSErphCGrar+5llRtknPvTcQvxs29crn357vIcaLd3N8vSy93YY1pEZIte8uWhMUUYzOJQ+KwVhwSxhOMR36MmBbRMccoJPcdM2B3TzA0pwMz5nDCkMQ31olbPJwCacthFLUllQyjQVfvi3GZLU7JMwWA9JmcFlnwvnBXtH9NZhumcgk8+kHYCy5MZZP1rNh4xhSujwStJI8rU5jFfZYhVP9aRqEBzVT3sPNiUF+O4CqHNvlKjqtP0YkikhSCBEYkgaQRFehAKCkcKYyhR0kjNI/DUlrMCp2opA1dGgYj3TPB2UNnvDMT7FMY4BImCFz0wA2YgLjQhjYqbOOhJ96mUeNUW77hMK/Qm2resHA180AYJ0gxAGnAOCTVqotGJksMRNlIp06NNGrzC4Px1ahUkx7lrDEga0e/axXCocCgFMKiQCtUzIs1BmYt5ghtDaWvk4f+ufAnWoEoMQKlTixi0R8wCqJfxB83Y8b7ZIpRSOe8c37akIzPi0rr7OfCmIrPkQxvofwLno7Dgc07WHj8RSneseKB0HNg3KJTLFatqTy7eg7dLNxzWzYJ3ww9B27RdUNIy0L4+D/iZvjH3ML/vBS3emRUZnPA3KKqH75B4cReHKHD3z4WR/biBJl6kx2K0S1o/ewBEolUniNbiDJN0OReL0QCCxZJ/egdTXaig1iw4NW1Q4OcvchhwUL5f2peZ4Adi9n3WpxEfLRZsRADO5p875YUhiw6WlDRNdVT3RXoYUFMLK78nKfOrgesWTzUKTZ1eO+wZCG6ozNVLjwXoK/FFLpclItQyFu2RYtACQXhpxmLFp4Sii0v0K6sTS1EkW5fpz7x0Z6FeHVXauQEVi2IND48nsuBLHwti6WUxJIPDosWYnyUktIC/fDMLBbSr0d7fuy0aCGO1nvpHpDAqkUi3XPq6/oTVi2e9SVOOl+mGNYiRSupdM6MXvMMsGvx+mYkf7BqIV7+50j8a+cOigCGgRgG8mdtFJ7Zh0qhbXKxpRCvg/gwiV+UWKyIZZvYwIitnBhqiPGOGHSJkd84/BDHQOJATEQDREhixEVEcEZEiESYasTKRMBuVA1E6ULUT0YRR1SSRjlL1NRGYU+gCwbEQeAsBthDIE4G7GVgbwQAaKCQBhRq4LEGKEwg0wY8bmD0hlBgqBWGZGLoNoh4ZChYhoxmaHmIoGiomoi0iui7iMiMKN2I3K5o/siFB8zVDz3HZ3wCSKUyWTmTAAAAAElFTkSuQmCC";
-
     prevIcon.addEventListener("click", () => {
       this.showPrevImg();
     });
@@ -163,7 +256,6 @@ export class VisualState {
     });
     this.imgContainer.append(prevIcon);
     this.imgContainer.append(nextIcon);
-
     if (this.position === "left-bottom") {
       this.imgContainer.style.left = "0px";
       this.imgContainer.style.bottom = "0px";
@@ -185,18 +277,26 @@ export class VisualState {
     }
   }
 
-  readFromContext(): void {
+  getProgramInfo() {
+    if (this.programInfo === undefined) {
+      const curProgram = WebGlConstants.CURRENT_PROGRAM.value;
+      const pInfo = this.context.getParameter(curProgram);
+      this.programInfo = pInfo;
+    }
+  }
+
+  readFromContext(name = ''): void {
+    if (this.imgSrcAry.length >= this.MAXCAPIMGNUM) {
+      return;
+    }
+    this.statusName = name;
     const gl = this.context;
     this.currentState["Attachments"] = [];
-
-    // Check the framebuffer status.
     const frameBuffer = this.context.getParameter(
       WebGlConstants.FRAMEBUFFER_BINDING.value
     );
     if (!frameBuffer) {
       this.currentState["FrameBuffer"] = null;
-      // In case of the main canvas, we draw the entire screen instead of the viewport only.
-      // This will help for instance in VR use cases.
       this.getCapture(
         gl,
         "Canvas COLOR_ATTACHMENT",
@@ -210,14 +310,11 @@ export class VisualState {
       );
       return;
     }
-
-    // Get FrameBuffer Viewport size to adapt the created screenshot.
     const viewport = gl.getParameter(gl.VIEWPORT);
     const x = viewport[0];
     const y = viewport[1];
     const width = viewport[2];
     const height = viewport[3];
-
     this.currentState["FrameBuffer"] = this.getSpectorData(frameBuffer);
 
     // Check FBO status.
@@ -228,15 +325,12 @@ export class VisualState {
     if (status !== WebGlConstants.FRAMEBUFFER_COMPLETE.value) {
       return;
     }
-
-    // Capture all the attachments.
+    this.getProgramInfo();
     // @ts-ignore
-    const drawBuffersExtension =
-      this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
-    if (drawBuffersExtension) {
-      const maxDrawBuffers = this.context.getParameter(
-        WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.value
-      );
+    const drawBuffersExtension = this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
+    if (drawBuffersExtension || this.contextVersion === 1) {
+      // const maxDrawBuffers = this.context.getParameter(WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.value);
+      const maxDrawBuffers = 8;
       for (let i = 0; i < maxDrawBuffers; i++) {
         this.readFrameBufferAttachmentFromContext(
           this.context,
@@ -249,7 +343,7 @@ export class VisualState {
         );
       }
     } else if (this.contextVersion > 1) {
-      const context2 = this.context as WebGL2RenderingContext;
+      const context2 = this.context;
       const maxDrawBuffers = context2.getParameter(
         WebGlConstants.MAX_DRAW_BUFFERS.value
       );
@@ -295,7 +389,6 @@ export class VisualState {
     if (type === WebGlConstants.NONE.value) {
       return;
     }
-
     const storage = this.context.getFramebufferAttachmentParameter(
       target,
       webglConstant.value,
@@ -304,7 +397,6 @@ export class VisualState {
     if (!storage) {
       return;
     }
-
     const componentType =
       this.contextVersion > 1
         ? this.context.getFramebufferAttachmentParameter(
@@ -313,7 +405,6 @@ export class VisualState {
             WebGlConstants.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE.value
           )
         : WebGlConstants.UNSIGNED_BYTE.value;
-
     if (type === WebGlConstants.RENDERBUFFER.value) {
       this.readFrameBufferAttachmentFromRenderBuffer(
         gl,
@@ -523,6 +614,7 @@ export class VisualState {
       // @ts-ignore
       if (
         !ReadPixelsHelper.isSupportedCombination(
+          // @ts-ignore
           info.type,
           info.format,
           info.internalFormat
@@ -596,17 +688,16 @@ export class VisualState {
     }
     const attachmentVisualState = {
       attachmentName: name,
-      src: null as string,
+      src: "",
       textureCubeMapFace: textureCubeMapFace
         ? WebGlConstantsByValue[textureCubeMapFace].name
         : null,
       textureLayer,
     };
-
     if (!this.quickCapture) {
       try {
-        // Read the pixels from the context.
         const pixels = ReadPixelsHelper.readPixels(
+          // @ts-ignore
           gl,
           x,
           y,
@@ -615,7 +706,6 @@ export class VisualState {
           type
         );
         if (pixels) {
-          // Copy the pixels to a working 2D canvas same size.
           this.workingCanvas.width = width;
           this.workingCanvas.height = height;
           const imageData = this.workingContext2D.createImageData(
@@ -624,8 +714,6 @@ export class VisualState {
           );
           imageData.data.set(pixels);
           this.workingContext2D.putImageData(imageData, 0, 0);
-
-          // Copy the pixels to a resized capture 2D canvas.
           if (!this.fullCapture) {
             const imageAspectRatio = width / height;
             if (imageAspectRatio < 1) {
@@ -644,14 +732,11 @@ export class VisualState {
             this.captureCanvas.width = this.workingCanvas.width;
             this.captureCanvas.height = this.workingCanvas.height;
           }
-
           this.captureCanvas.width = Math.max(this.captureCanvas.width, 1);
           this.captureCanvas.height = Math.max(this.captureCanvas.height, 1);
-
-          // Scale and draw to flip Y to reorient readPixels.
           this.captureContext2D.globalCompositeOperation = "copy";
-          this.captureContext2D.scale(1, -1); // Y flip
-          this.captureContext2D.translate(0, -this.captureCanvas.height); // so we can draw at 0,0
+          this.captureContext2D.scale(1, -1);
+          this.captureContext2D.translate(0, -this.captureCanvas.height);
           this.captureContext2D.drawImage(
             this.workingCanvas,
             0,
@@ -665,59 +750,69 @@ export class VisualState {
           );
           this.captureContext2D.setTransform(1, 0, 0, 1, 0, 0);
           this.captureContext2D.globalCompositeOperation = "source-over";
-
-          // get the screen capture
           const src = this.captureCanvas.toDataURL();
           attachmentVisualState.src = src;
           this.imgSrcAry.push({
             src,
-            name,
+            name: name,
+            uname: this.statusName,
           });
           this.showFirstImg();
         }
       } catch (e) {
-        // Do nothing in case of error at this level.
         console.error("Spector can not capture the visual state: " + e);
       }
     }
-
     // this.currentState["Attachments"].push(attachmentVisualState);
   }
   showFirstImg() {
     const imgData = this.imgSrcAry[0];
     this.show(imgData);
   }
-  show(imgData: { src: string; name: string }) {
+  show(imgData: ImgData) {
     // should be a queue  按照顺序加载 加载完成 在加载下一个
     this.curShowImg = imgData;
-    const { src, name } = imgData;
-    this.updateStatusContainer(name);
+    const { src, name, uname } = imgData;
+    this.updateStatusContainer(name, uname);
     this.img.src = src;
     this.img.alt = name;
     this.img.title = name;
     this.img.style.width = "200px";
-    this.img.onload = () => {
-      //
-    };
   }
 
+  showImgByName(customName = "") {
+    const sameNameImgIdx: number[] = [];
+    this.imgSrcAry.map((imgData, index) => {
+      const { uname } = imgData;
+      if (uname === customName) {
+        sameNameImgIdx.push(index + 1);
+      }
+    });
+    console.log(" same name idx ", sameNameImgIdx);
+    console.log(" use showImgByIndex jump ");
+  }
+
+  showImgByIndex(idx: number) {
+    const idxNotBeyondLen = Math.min(this.imgSrcAry.length - 1, idx - 1);
+    const imgidx = Math.max(0, idxNotBeyondLen);
+    const img = this.imgSrcAry[imgidx];
+    this.show(img);
+  }
   showNextImg() {
-    console.log(" next img ");
-    if (this.curShowImg) {
-      const idx = this.imgSrcAry.indexOf(this.curShowImg);
-      const nextimgIdx = Math.min(this.imgSrcAry.length - 1, idx + 1);
-      const nextImg = this.imgSrcAry[nextimgIdx];
-      this.show(nextImg);
-    }
+    let idx = -1
+    // @ts-ignore
+    idx = this.imgSrcAry.indexOf(this.curShowImg);
+    const nextimgIdx = Math.min(this.imgSrcAry.length - 1, idx + 1);
+    const nextImg = this.imgSrcAry[nextimgIdx];
+    this.show(nextImg);
   }
   showPrevImg() {
-    console.log(" prev img ");
-    if (this.curShowImg) {
-      const idx = this.imgSrcAry.indexOf(this.curShowImg);
-      const previmgIdx = Math.max(0, idx - 1);
-      const nextImg = this.imgSrcAry[previmgIdx];
-      this.show(nextImg);
-    }
+    let idx = -1
+    // @ts-ignore
+    idx = this.imgSrcAry.indexOf(this.curShowImg);
+    const previmgIdx = Math.max(0, idx - 1);
+    const nextImg = this.imgSrcAry[previmgIdx];
+    this.show(nextImg);
   }
   getSpectorData(object: any): any {
     if (!object) {
@@ -731,5 +826,9 @@ export class VisualState {
       __SPECTOR_Object_CustomData: object.__SPECTOR_Object_CustomData,
       __SPECTOR_Metadata: object.__SPECTOR_Metadata,
     };
+  }
+  clear() {
+    this.imgSrcAry = [];
+    this.updateStatusContainer();
   }
 }
