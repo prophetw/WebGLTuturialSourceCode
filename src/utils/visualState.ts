@@ -27,10 +27,10 @@ export interface ITextureRecorderData {
   depth?: number;
   isCompressed: boolean;
 }
-interface ImgData{
-    src: string;
-    name: string; // like COLOR_ATTACHMENT0 gl inner name
-    uname: string // img custom name set by user
+interface ImgData {
+  src: string;
+  name: string; // like COLOR_ATTACHMENT0 gl inner name
+  uname: string; // img custom name set by user
 }
 type Position =
   | "right-top"
@@ -62,9 +62,8 @@ export class VisualState {
   statusContainer: HTMLDivElement;
   position: Position;
   imgSrcAry: ImgData[];
-  curShowImg:
-    | undefined
-    | ImgData;
+  imgFilterAry: ImgData[];
+  curShowImg: undefined | ImgData;
   private readonly captureFrameBuffer: WebGLFramebuffer;
   private readonly workingCanvas: HTMLCanvasElement;
   private readonly captureCanvas: HTMLCanvasElement;
@@ -76,7 +75,7 @@ export class VisualState {
     imgPosition: Position,
     max_capture_img_num = 30
   ) {
-    this.NOTE = "必须引入 Spector.js 基于其进行的修改"
+    this.NOTE = "必须引入 Spector.js 基于其进行的修改";
     this.MAXCAPIMGNUM = max_capture_img_num;
     this.position = imgPosition;
     this.idPrefix = "pre_" + parseInt("" + Math.random() * 314);
@@ -94,17 +93,23 @@ export class VisualState {
       this.extensions = options.extensions;
     }
     this.contextVersion = options.contextVersion;
-    this.captureFrameBuffer = options.context.createFramebuffer() as WebGLFramebuffer;
+    this.captureFrameBuffer =
+      options.context.createFramebuffer() as WebGLFramebuffer;
     this.workingCanvas = document.createElement("canvas");
-    this.workingContext2D = this.workingCanvas.getContext("2d") as CanvasRenderingContext2D;
+    this.workingContext2D = this.workingCanvas.getContext(
+      "2d"
+    ) as CanvasRenderingContext2D;
     this.captureCanvas = document.createElement("canvas");
-    this.captureContext2D = this.captureCanvas.getContext("2d") as CanvasRenderingContext2D;
+    this.captureContext2D = this.captureCanvas.getContext(
+      "2d"
+    ) as CanvasRenderingContext2D;
     this.captureContext2D.imageSmoothingEnabled = true;
     (this.captureContext2D as any).mozImageSmoothingEnabled = true;
     (this.captureContext2D as any).oImageSmoothingEnabled = true;
     (this.captureContext2D as any).webkitImageSmoothingEnabled = true;
     (this.captureContext2D as any).msImageSmoothingEnabled = true;
     this.imgSrcAry = [];
+    this.imgFilterAry = [];
     this.imgContainer = document.createElement("div");
     this.imgContainer.append(this.img);
     this.statusContainer = document.createElement("div");
@@ -138,7 +143,7 @@ export class VisualState {
         this.showShaderSource("frag");
       }
       // @ts-ignore
-      if (e&& e.target && e.target.className === "vertBtn") {
+      if (e && e.target && e.target.className === "vertBtn") {
         this.showShaderSource("vert");
       }
     });
@@ -166,18 +171,18 @@ export class VisualState {
         const { shaders } = this.programInfo.__SPECTOR_Object_CustomData;
         let source = "";
         if (type === "frag") {
-          if (shaders[0].name === 'Fragment') {
+          if (shaders[0].name === "Fragment") {
             source = shaders[0].source;
           }
-          if (shaders[1].name === 'Fragment') {
+          if (shaders[1].name === "Fragment") {
             source = shaders[1].source;
           }
         }
         if (type === "vert") {
-          if (shaders[0].name === 'Vertex') {
+          if (shaders[0].name === "Vertex") {
             source = shaders[0].source;
           }
-          if (shaders[1].name === 'Vertex') {
+          if (shaders[1].name === "Vertex") {
             source = shaders[1].source;
           }
         }
@@ -185,7 +190,7 @@ export class VisualState {
           `${this.idPrefix}source_container`
         );
         this.showShaderContainer();
-        if(container !== null){
+        if (container !== null) {
           container.innerHTML = source;
         }
       }
@@ -194,7 +199,7 @@ export class VisualState {
       alert(" no source detect");
     }
   }
-  updateStatusContainer(name = "", uname="") {
+  updateStatusContainer(name = "", uname = "") {
     let curIndex = 0;
     if (this.curShowImg) {
       curIndex = this.imgSrcAry.indexOf(this.curShowImg);
@@ -285,7 +290,7 @@ export class VisualState {
     }
   }
 
-  readFromContext(name = ''): void {
+  readFromContext(name = ""): void {
     if (this.imgSrcAry.length >= this.MAXCAPIMGNUM) {
       return;
     }
@@ -327,7 +332,8 @@ export class VisualState {
     }
     this.getProgramInfo();
     // @ts-ignore
-    const drawBuffersExtension = this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
+    const drawBuffersExtension =
+      this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
     if (drawBuffersExtension || this.contextVersion === 1) {
       // const maxDrawBuffers = this.context.getParameter(WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.value);
       const maxDrawBuffers = 8;
@@ -799,7 +805,17 @@ export class VisualState {
     this.show(img);
   }
   showNextImg() {
-    let idx = -1
+    if(this.imgFilterAry.length>0){
+        // show from imgFilterAry
+        // @ts-ignore
+        let curIdx = this.imgFilterAry.indexOf(this.curShowImg)
+        let nextImgIndex = -1
+        const nextShowImg = this.imgFilterAry[curIdx+1]
+        nextImgIndex = this.imgSrcAry.indexOf(nextShowImg)
+        this.showImgByIndex(nextImgIndex)
+        return
+    }
+    let idx = -1;
     // @ts-ignore
     idx = this.imgSrcAry.indexOf(this.curShowImg);
     const nextimgIdx = Math.min(this.imgSrcAry.length - 1, idx + 1);
@@ -807,7 +823,17 @@ export class VisualState {
     this.show(nextImg);
   }
   showPrevImg() {
-    let idx = -1
+    if(this.imgFilterAry.length>0){
+        // show from imgFilterAry
+        // @ts-ignore
+        const idx = this.imgFilterAry.indexOf(this.curShowImg) < 0 ? this.imgFilterAry.length : this.imgFilterAry.indexOf(this.curShowImg)
+        let nextImgIndex = -1
+        const nextShowImg = this.imgFilterAry[idx-1]
+        nextImgIndex = this.imgSrcAry.indexOf(nextShowImg)
+        this.showImgByIndex(nextImgIndex)
+        return
+    }
+    let idx = -1;
     // @ts-ignore
     idx = this.imgSrcAry.indexOf(this.curShowImg);
     const previmgIdx = Math.max(0, idx - 1);
@@ -830,5 +856,35 @@ export class VisualState {
   clear() {
     this.imgSrcAry = [];
     this.updateStatusContainer();
+  }
+  getThis() {
+      console.log("ThisObj 右键保存成全局变量 从命令行调用接口", this);
+      return this;
+  }
+  updateFilter(name = "") {
+    // 只关注 某些
+    this.imgFilterAry = this.imgSrcAry
+      .map((imgData) => {
+        let match = false;
+        const imgName = imgData.name.toLowerCase();
+        const uname = imgData.uname.toLowerCase();
+        if (imgName.indexOf(name.toLowerCase()) > -1) {
+          match = true;
+        }
+        if (uname.indexOf(name.toLowerCase()) > -1) {
+          match = true;
+        }
+        if (match) {
+          return imgData;
+        }
+        return undefined;
+      })
+      .filter((a): a is ImgData => a !== undefined);
+    console.log(
+      `只关注属性值包含" ${name} "的img  filter结果: ${this.imgFilterAry.length}`
+    );
+  }
+  resetFilter() {
+    this.imgFilterAry = [];
   }
 }
