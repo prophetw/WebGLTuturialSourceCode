@@ -42,6 +42,9 @@ type Position =
 export class VisualState {
   public static captureBaseSize = 256;
 
+  blendState?: {
+    [key: string]: any
+  }
   quickCapture: boolean;
   fullCapture: boolean;
   NOTE: string;
@@ -146,6 +149,10 @@ export class VisualState {
       if (e && e.target && e.target.className === "vertBtn") {
         this.showShaderSource("vert");
       }
+      // @ts-ignore
+      if (e.target.className === "blendBtn") {
+        this.showBlendState()
+      }
     });
     // document.addEventListener('keydown', e=>{
     //     if(e.code === 'Escape' || e.key === 'Escape'){
@@ -206,13 +213,13 @@ export class VisualState {
     }
     const customName = uname || this.statusName;
     const total = this.imgSrcAry.length;
-    this.statusContainer.title = `${
-      curIndex + 1
-    }/${total} ${customName} ${name} `;
+    this.statusContainer.title = `${curIndex + 1
+      }/${total} ${customName} ${name} `;
     this.statusContainer.innerHTML = `
             <span style="position:absolute; top:0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);">${customName}</span>
             <span style="position:absolute; top:0px; right: 0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);cursor: pointer;" class="fragBtn">Frag</span>
             <span style="position:absolute; top:0px; right: 30px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5); cursor: pointer;" class="vertBtn">Vert</span>
+            <span style="position:absolute; top:20px; right: 0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);cursor: pointer;" class="blendBtn">Blend</span>
             <span style="position:absolute; bottom:0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);">
                 ${curIndex + 1}/${total} ${name}
             </span>
@@ -291,6 +298,7 @@ export class VisualState {
   }
 
   readFromContext(name = ""): void {
+    this.getBlendState()
     if (this.imgSrcAry.length >= this.MAXCAPIMGNUM) {
       return;
     }
@@ -406,10 +414,10 @@ export class VisualState {
     const componentType =
       this.contextVersion > 1
         ? this.context.getFramebufferAttachmentParameter(
-            target,
-            webglConstant.value,
-            WebGlConstants.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE.value
-          )
+          target,
+          webglConstant.value,
+          WebGlConstants.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE.value
+        )
         : WebGlConstants.UNSIGNED_BYTE.value;
     if (type === WebGlConstants.RENDERBUFFER.value) {
       this.readFrameBufferAttachmentFromRenderBuffer(
@@ -805,15 +813,15 @@ export class VisualState {
     this.show(img);
   }
   showNextImg() {
-    if(this.imgFilterAry.length>0){
-        // show from imgFilterAry
-        // @ts-ignore
-        let curIdx = this.imgFilterAry.indexOf(this.curShowImg)
-        let nextImgIndex = -1
-        const nextShowImg = this.imgFilterAry[curIdx+1]
-        nextImgIndex = this.imgSrcAry.indexOf(nextShowImg)
-        this.showImgByIndex(nextImgIndex)
-        return
+    if (this.imgFilterAry.length > 0) {
+      // show from imgFilterAry
+      // @ts-ignore
+      let curIdx = this.imgFilterAry.indexOf(this.curShowImg)
+      let nextImgIndex = -1
+      const nextShowImg = this.imgFilterAry[curIdx + 1]
+      nextImgIndex = this.imgSrcAry.indexOf(nextShowImg)
+      this.showImgByIndex(nextImgIndex)
+      return
     }
     let idx = -1;
     // @ts-ignore
@@ -823,15 +831,15 @@ export class VisualState {
     this.show(nextImg);
   }
   showPrevImg() {
-    if(this.imgFilterAry.length>0){
-        // show from imgFilterAry
-        // @ts-ignore
-        const idx = this.imgFilterAry.indexOf(this.curShowImg) < 0 ? this.imgFilterAry.length : this.imgFilterAry.indexOf(this.curShowImg)
-        let nextImgIndex = -1
-        const nextShowImg = this.imgFilterAry[idx-1]
-        nextImgIndex = this.imgSrcAry.indexOf(nextShowImg)
-        this.showImgByIndex(nextImgIndex)
-        return
+    if (this.imgFilterAry.length > 0) {
+      // show from imgFilterAry
+      // @ts-ignore
+      const idx = this.imgFilterAry.indexOf(this.curShowImg) < 0 ? this.imgFilterAry.length : this.imgFilterAry.indexOf(this.curShowImg)
+      let nextImgIndex = -1
+      const nextShowImg = this.imgFilterAry[idx - 1]
+      nextImgIndex = this.imgSrcAry.indexOf(nextShowImg)
+      this.showImgByIndex(nextImgIndex)
+      return
     }
     let idx = -1;
     // @ts-ignore
@@ -858,8 +866,8 @@ export class VisualState {
     this.updateStatusContainer();
   }
   getThis() {
-      console.log("ThisObj 右键保存成全局变量 从命令行调用接口", this);
-      return this;
+    console.log("ThisObj 右键保存成全局变量 从命令行调用接口", this);
+    return this;
   }
   updateFilter(name = "") {
     // 只关注 某些
@@ -887,4 +895,68 @@ export class VisualState {
   resetFilter() {
     this.imgFilterAry = [];
   }
+  saveImg(imgIndex = 0) {
+    const imgData = this.imgSrcAry[imgIndex]
+    if (imgData) {
+      let a = document.createElement("a"); //Create <a>
+      a.href = imgData.src
+      a.download = `${imgIndex}.png`; //File name Here
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // @ts-ignore
+      a = undefined;
+    }
+  }
+  getBlendState() {
+    if (this.blendState !== undefined) return
+    const blendState: { [key: string]: any } = {
+      BLEND: WebGlConstants.BLEND,
+      BLEND_COLOR: WebGlConstants.BLEND_COLOR,
+      BLEND_DST_ALPHA: WebGlConstants.BLEND_DST_ALPHA,
+      BLEND_DST_RGB: WebGlConstants.BLEND_DST_RGB,
+      BLEND_EQUATION_ALPHA: WebGlConstants.BLEND_EQUATION_ALPHA,
+      BLEND_EQUATION_RGB: WebGlConstants.BLEND_EQUATION_RGB,
+      BLEND_SRC_ALPHA: WebGlConstants.BLEND_SRC_ALPHA,
+      BLEND_SRC_RGB: WebGlConstants.BLEND_SRC_RGB,
+    }
+    const result: { [key: string]: any } = {}
+    Object.keys(blendState).map((key) => {
+      const obj = blendState[key]
+      const value = this.context.getParameter(obj.value)
+      if (value === 1) {
+        result[obj.name] = "ONE"
+      } else if (value === 0) {
+        result[obj.name] = "ZERO"
+      } else {
+        const showValue = WebGlConstantsByValue[value] && WebGlConstantsByValue[value].name || value
+        if (showValue instanceof Float32Array) {
+          result[obj.name] = showValue.toString()
+        } else {
+          result[obj.name] = showValue
+        }
+      }
+    })
+    this.blendState = result;
+    // this.context.getParameter()
+  }
+  showBlendState() {
+    const state = this.blendState
+    if (state) {
+
+      let str = ''
+      Object.keys(state).map(key => {
+        str += `
+${key}: ${state[key]}`
+
+      })
+      const contariner = document.getElementById(
+        `${this.idPrefix}source_container`
+      ) as HTMLElement;
+      this.showShaderContainer();
+      contariner.innerHTML = str;
+    }
+
+  }
+
 }
