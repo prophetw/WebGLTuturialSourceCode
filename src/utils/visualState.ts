@@ -299,6 +299,7 @@ export class VisualState {
 
   readFromContext(name = ""): void {
     this.getBlendState()
+    this.getProgramInfo()
     if (this.imgSrcAry.length >= this.MAXCAPIMGNUM) {
       return;
     }
@@ -338,7 +339,6 @@ export class VisualState {
     if (status !== WebGlConstants.FRAMEBUFFER_COMPLETE.value) {
       return;
     }
-    this.getProgramInfo();
     // @ts-ignore
     const drawBuffersExtension =
       this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
