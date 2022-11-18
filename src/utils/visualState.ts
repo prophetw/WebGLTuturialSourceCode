@@ -45,6 +45,9 @@ export class VisualState {
   blendState?: {
     [key: string]: any
   }
+  depthState?: {
+    [key: string]: any
+  }
   quickCapture: boolean;
   fullCapture: boolean;
   NOTE: string;
@@ -154,11 +157,11 @@ export class VisualState {
         this.showBlendState()
       }
     });
-    // document.addEventListener('keydown', e=>{
-    //     if(e.code === 'Escape' || e.key === 'Escape'){
-    //         this.closeShaderContainer()
-    //     }
-    // })
+    document.addEventListener('keydown', e=>{
+        if(e.code === 'Escape' || e.key === 'Escape'){
+            this.closeShaderContainer()
+        }
+    })
     this.sourceContainer.addEventListener("click", (e: MouseEvent) => {
       // @ts-ignore
       if (e && e.target && e.target.id === `${this.idPrefix}closeBtn`) {
@@ -298,6 +301,7 @@ export class VisualState {
   }
 
   readFromContext(name = ""): void {
+    this.getDepthState()
     this.getBlendState()
     this.getProgramInfo()
     if (this.imgSrcAry.length >= this.MAXCAPIMGNUM) {
@@ -827,8 +831,8 @@ export class VisualState {
     // @ts-ignore
     idx = this.imgSrcAry.indexOf(this.curShowImg);
     let nextimgIdx = Math.min(this.imgSrcAry.length - 1, idx + 1);
-    if(idx === nextimgIdx){
-        nextimgIdx = 0
+    if (idx === nextimgIdx) {
+      nextimgIdx = 0
     }
     const nextImg = this.imgSrcAry[nextimgIdx];
     this.show(nextImg);
@@ -848,8 +852,8 @@ export class VisualState {
     // @ts-ignore
     idx = this.imgSrcAry.indexOf(this.curShowImg);
     let previmgIdx = Math.max(0, idx - 1);
-    if(idx === previmgIdx){
-        previmgIdx = this.imgSrcAry.length-1
+    if (idx === previmgIdx) {
+      previmgIdx = this.imgSrcAry.length - 1
     }
     const nextImg = this.imgSrcAry[previmgIdx];
     this.show(nextImg);
@@ -914,6 +918,34 @@ export class VisualState {
       a = undefined;
     }
   }
+  getDepthState() {
+    if (this.depthState !== undefined) return
+    const depthState: {[key: string]: any} = {
+      DEPTH_TEST: WebGlConstants.DEPTH_TEST,
+      DEPTH_WRITEMASK: WebGlConstants.DEPTH_WRITEMASK,
+      DEPTH_RANGE: WebGlConstants.DEPTH_RANGE,
+      DEPTH_FUNC: WebGlConstants.DEPTH_FUNC,
+    }
+    const result: {[key: string]: any} = {}
+    Object.keys(depthState).map((key) => {
+      const obj = depthState[key]
+      const value = this.context.getParameter(obj.value)
+      if (value === 1) {
+        result[obj.name] = "ONE"
+      } else if (value === 0) {
+        result[obj.name] = "ZERO"
+      } else {
+        const showValue = WebGlConstantsByValue[value] && WebGlConstantsByValue[value].name || value
+        if (showValue instanceof Float32Array) {
+          result[obj.name] = showValue.toString()
+        } else {
+          result[obj.name] = showValue
+        }
+      }
+    })
+    console.log(' depth result ', result);
+    this.depthState = result;
+  }
   getBlendState() {
     if (this.blendState !== undefined) return
     const blendState: { [key: string]: any } = {
@@ -950,7 +982,8 @@ export class VisualState {
     const state = this.blendState
     if (state) {
 
-      let str = ''
+      let str = `BlendState:
+            `
       Object.keys(state).map(key => {
         str += `
 ${key}: ${state[key]}`
@@ -958,7 +991,17 @@ ${key}: ${state[key]}`
       })
       const contariner = document.getElementById(
         `${this.idPrefix}source_container`
-      ) as HTMLElement;
+      ) as HTMLElement
+      if (this.depthState) {
+        str += `
+
+DepthState:
+                `
+        Object.keys(this.depthState).map(key => {
+          str += `
+${key}: ${this.depthState[key]}`
+        })
+      }
       this.showShaderContainer();
       contariner.innerHTML = str;
     }
