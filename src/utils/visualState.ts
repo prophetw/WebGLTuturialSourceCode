@@ -826,7 +826,10 @@ export class VisualState {
     let idx = -1;
     // @ts-ignore
     idx = this.imgSrcAry.indexOf(this.curShowImg);
-    const nextimgIdx = Math.min(this.imgSrcAry.length - 1, idx + 1);
+    let nextimgIdx = Math.min(this.imgSrcAry.length - 1, idx + 1);
+    if(idx === nextimgIdx){
+        nextimgIdx = 0
+    }
     const nextImg = this.imgSrcAry[nextimgIdx];
     this.show(nextImg);
   }
@@ -844,7 +847,10 @@ export class VisualState {
     let idx = -1;
     // @ts-ignore
     idx = this.imgSrcAry.indexOf(this.curShowImg);
-    const previmgIdx = Math.max(0, idx - 1);
+    let previmgIdx = Math.max(0, idx - 1);
+    if(idx === previmgIdx){
+        previmgIdx = this.imgSrcAry.length-1
+    }
     const nextImg = this.imgSrcAry[previmgIdx];
     this.show(nextImg);
   }
