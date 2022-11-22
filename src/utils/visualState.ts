@@ -699,7 +699,7 @@ export class VisualState {
     height: number,
     textureCubeMapFace: number,
     textureLayer: number,
-    type = WebGlConstants.UNSIGNED_BYTE.value // 如果tex使用的 float 这个地方需要传float
+    type: number // 如果tex使用的 float 这个地方需要传float
   ) {
     if (this.imgSrcAry.length >= this.MAXCAPIMGNUM) {
       return;
@@ -943,7 +943,6 @@ export class VisualState {
         }
       }
     })
-    console.log(' depth result ', result);
     this.depthState = result;
   }
   getBlendState() {

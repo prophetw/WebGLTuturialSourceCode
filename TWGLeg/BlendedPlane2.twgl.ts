@@ -7,7 +7,6 @@ const Vector3 = twgl.v3
 
 const dftPos = Vector3.normalize(Vector3.create(1, 1, 1))
 let cameraPos = Vector3.create(dftPos[0] * 5, dftPos[1] * 5, dftPos[2] * 5)
-console.log(cameraPos);
 
 function main() {
   const canvas = document.getElementById('webgl') as HTMLCanvasElement;

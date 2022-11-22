@@ -16,16 +16,16 @@ function main() {
   //   // powerPreference: "high-performance",
   //   // stencil: true
   // })
-  var gl2 = canvas.getContext('webgl', {
+  var gl = canvas.getContext('webgl2', {
     alpha: false,
     // powerPreference: "high-performance",
     // stencil: true
   })
 
-  gl = canvas.getContext('webgl', {
-    alpha: true
-  })
-  console.log("gl === gl2", gl === gl2);
+  // gl = canvas.getContext('webgl', {
+  //   alpha: true
+  // })
+  // console.log("gl === gl2", gl === gl2);
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -52,9 +52,11 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
   // // Enable alpha blending
   gl.enable(gl.BLEND);
+  gl.blendEquation(gl.MAX);
   // // Set blending function
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+  // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.blendFunc(gl.ZERO, gl.ONE);
+  // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 
   // Get the storage location of u_MvpMatrix
   var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');

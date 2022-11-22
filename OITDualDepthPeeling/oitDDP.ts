@@ -348,7 +348,7 @@ function main() {
     var MAX_DEPTH = 1.0;
     var MIN_DEPTH = 0.0;
 
-    var NUM_PASS = 4;   // maximum rendered layer number = NUM_PASS * 2
+    var NUM_PASS = 2;   // maximum rendered layer number = NUM_PASS * 2
     // window.spector.startCapture(canvas, 1000)
 
     let drawCount = 0
@@ -457,9 +457,8 @@ function main() {
         //                      偶数次  / 奇数次                  偶数次  / 奇数次
         // NOTE: 开启绘制 out => tex345 / tex012 通道  end   in => tex01 / tex34
 
-        debugRM.readFromContext()
+        debugRM.readFromContext('allBufferFbo_'+writeId)
         // read from fbo COLOR_ATTACHMENT0
-        debugRB.getCapture(gl, 'allbuffers-depth', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
 
         // blend back color separately
         offsetBack = writeId * 3;
@@ -474,8 +473,7 @@ function main() {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         console.log(' one time ');
-        debugRT.getCapture(gl, 'blendBackBuffer', 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, WebGlConstants.FLOAT.value)
-        // debugRT.readFromContext()
+        debugRT.readFromContext('blendBackFbo')
       }
       // return
 
@@ -492,6 +490,7 @@ function main() {
 
       gl.bindVertexArray(quadArray);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+      debugRB.readFromContext('finalFbo')
       // gl.useProgram(dualDepthPeelingProgram); // spector program 0
       // requestAnimationFrame(draw);
       // if(drawCount===2){

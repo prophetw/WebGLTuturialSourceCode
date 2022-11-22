@@ -4,7 +4,8 @@
   "description": "webgl 编程指南 源码",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel src/index.html --no-cache"
+    "start": "parcel src/index.html --no-cache",
+    "build": "parcel build src/index.html --public-url ./"
   },
   "staticFiles": {
     "staticPath": "resources",
@@ -23,7 +24,8 @@
   "dependencies": {
     "parcel": "^2.3.2",
     "spectorjs": "^0.9.27",
-    "twgl.js": "^4.23.2"
+    "twgl.js": "^4.23.2",
+    "typescript": "^4.8.4"
   },
   "devDependencies": {
     "@parcel/transformer-glsl": "2.3.2",

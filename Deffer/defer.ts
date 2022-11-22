@@ -4,6 +4,7 @@ import VS_TEX from './tex.vert'
 import FS_Draw from './draw.frag'
 import VS_Draw from './draw.vert'
 import { createBox, createSphere } from '../src/utils/utils'
+import { VisualState } from '../src/utils/visualState'
 
 const vec3 = twgl.v3
 const mat4 = twgl.m4
@@ -47,11 +48,22 @@ const utils = {
   }
 }
 
+
+
 function main() {
 
   var canvas = document.getElementById("webgl") as HTMLCanvasElement;
 
   var gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
+  const debugRT = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-top', 100)
+  const debugRM = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-mid', 100)
+  console.log(' debugRT ', debugRT);
   if (!gl) {
     console.error("WebGL 2 not available");
     document.body.innerHTML = "This example requires WebGL 2 which is unavailable on this system."
@@ -92,6 +104,10 @@ function main() {
   gl.activeTexture(gl.TEXTURE0);
 
   var positionTarget = gl.createTexture();
+  // @ts-ignore
+  positionTarget.__SPECTOR_Metadata = {
+    name: 'pos'
+  }
   gl.bindTexture(gl.TEXTURE_2D, positionTarget);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -118,8 +134,9 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RG16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, uvTarget, 0);
+  console.log(uvTarget);
 
   var depthTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, depthTexture);
@@ -174,26 +191,26 @@ function main() {
 
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, box.positions, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, box.position, gl.STATIC_DRAW);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
 
   var normalBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, box.normals, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, box.normal, gl.STATIC_DRAW);
   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(1);
 
   var uvBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, box.uvs, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, box.texcoord, gl.STATIC_DRAW);
   gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(2);
 
   var sphereVertexArray = gl.createVertexArray();
   gl.bindVertexArray(sphereVertexArray);
 
-  var numCubeVertices = box.positions.length / 3;
+  var numCubeVertices = box.position.length / 3;
 
   // var sphere = twgl.primitives.createSphereVertices(1, 100, 100)
   var sphere = createSphere()
@@ -201,7 +218,7 @@ function main() {
 
   positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, sphere.positions, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, sphere.position, gl.STATIC_DRAW);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
 
@@ -228,7 +245,7 @@ function main() {
 
   var boxes = [
     {
-      scale: [1, 1, 1],
+      scale: [0.8, 0.8, 0.8],
       rotate: [0, 0, 0],
       translate: [0, 0, 0],
       modelMatrix: mat4.identity(),
@@ -291,7 +308,7 @@ function main() {
 
   var image = new Image();
 
-  window.spector.startCapture(canvas, 1000)
+  // window.spector.startCapture(canvas, 1000)
   image.onload = function () {
     var colorTexture = gl.createTexture();
 
@@ -369,6 +386,7 @@ function main() {
 
         gl.drawArrays(gl.TRIANGLES, 0, numCubeVertices);
       }
+      debugRT.readFromContext('boxInfo_pos_norm_uv')
 
       /////////////////////////
       // MAIN DRAW PASS
@@ -387,11 +405,14 @@ function main() {
         gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, lights[i].uniformBuffer);
         gl.drawElements(gl.TRIANGLES, numSphereElements, gl.UNSIGNED_SHORT, 0);
       }
+      debugRM.readFromContext()
 
-      requestAnimationFrame(draw);
+
+      // requestAnimationFrame(draw);
     }
 
-    requestAnimationFrame(draw);
+    draw()
+    // requestAnimationFrame(draw);
 
   }
 

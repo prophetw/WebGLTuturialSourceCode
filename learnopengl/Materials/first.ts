@@ -19,7 +19,6 @@ type VertexOptions = [...TranslateXYZ, Angle, AngelType, ...ColorRGB]
 // const lightColor: ColorRGB = [Math.sin(Date.now()*2.0), Math.sin(Date.now()*0.7), Math.sin(Date.now()*1.3)]
 const lightColor: ColorRGB = [1.0, 1.0,1.0]
 
-console.log('lightColor', lightColor);
 const lightDiffuse: ColorRGB = [lightColor[0]*0.5,lightColor[1]*0.5,lightColor[2]*0.5]
 const lightAmbient: ColorRGB = [lightDiffuse[0]*0.2,lightDiffuse[1]*0.2,lightDiffuse[2]*0.2]
 const lightPosi: TranslateXYZ = [-1.2, -1.0, -20.0]

@@ -99,7 +99,7 @@ const initSpector = (callback = () => {
     if (window.SPECTOR !== undefined) {
       const spector = new SPECTOR.Spector();
       window.spector = spector
-      console.log(' spector ', spector);
+      console.log(' ---- spector ', spector);
       spector.spyCanvas();
       // document.getElementById('spector').addEventListener('click', () => {
       //   console.log(' display ui ');
@@ -137,10 +137,10 @@ let ExampleFn
 // ExampleFn = TWGLBlendedPlane
 // ExampleFn = FramebufferObject
 // ExampleFn = Primitives
-// ExampleFn = Defer
+ExampleFn = Defer
 // ExampleFn = MRT
 // ExampleFn = TWGLOIT
-ExampleFn = TWGLOITDDP
+// ExampleFn = TWGLOITDDP
 // ExampleFn = TWGLOITPlane
 // ExampleFn = TextureLab
 
