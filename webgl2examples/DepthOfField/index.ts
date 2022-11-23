@@ -182,7 +182,15 @@ function main() {
   ////////////////////////////////
 
   var boxBuffer = gl.createFramebuffer();
+  // @ts-ignore
+  boxBuffer.__SPECTOR_Metadata = {
+    name: 'boxFbo'
+  }
   var hblurBuffer = gl.createFramebuffer();
+  // @ts-ignore
+  hblurBuffer.__SPECTOR_Metadata = {
+    name: 'hblurFbo'
+  }
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, boxBuffer);
   gl.activeTexture(gl.TEXTURE0);
@@ -194,9 +202,43 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  // gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.HALF_FLOAT, null);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorTarget, 0);
+
+  var normalTarget = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, normalTarget);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, normalTarget, 0);
+
+
+  var uvTarget = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, uvTarget);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, uvTarget, 0);
+
+  var posTarget = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, posTarget);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT3, gl.TEXTURE_2D, posTarget, 0);
 
   var depthTarget = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, depthTarget);
@@ -206,7 +248,7 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, gl.drawingBufferWidth, gl.drawingBufferHeight);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH24_STENCIL8, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTarget, 0);
 
   // gl.drawBuffers([
@@ -225,6 +267,17 @@ function main() {
   // gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.HALF_FLOAT, null);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, hblurTarget, 0);
+
+  var depthTarget1 = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, depthTarget1);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, depthTarget1, 0);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -393,7 +446,14 @@ function main() {
 
       gl.bindBuffer(gl.ARRAY_BUFFER, matrixBuffer);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, modelMatrixData);
+
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.drawBuffers([
+        gl.COLOR_ATTACHMENT0,
+        gl.COLOR_ATTACHMENT1,
+        gl.COLOR_ATTACHMENT2,
+      ])
+
       gl.drawArraysInstanced(gl.TRIANGLES, 0, numVertices, boxes.length);
       debugRT.readFromContext('box')
 
@@ -406,8 +466,12 @@ function main() {
       gl.useProgram(blurProgram);
       gl.bindVertexArray(quadArray);
       gl.bindBufferBase(gl.UNIFORM_BUFFER, 1, dofUniformBuffer);
+      gl.drawBuffers([
+        gl.COLOR_ATTACHMENT0, //  tex3 hBlurTex
+        gl.COLOR_ATTACHMENT1, //  depthTex
+      ])
 
-      gl.uniform1i(textureLocation, 1);
+      gl.uniform1i(textureLocation, 1); // in tex1 colorTex
       gl.uniform2fv(texelOffsetLocation, hTexelOffset);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       debugRB.readFromContext('h_blur')
@@ -418,7 +482,7 @@ function main() {
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.bindVertexArray(quadArray);
-      gl.uniform1i(textureLocation, 3);
+      gl.uniform1i(textureLocation, 3); // in tex3 hBlurTex
       gl.uniform2fv(texelOffsetLocation, vTexelOffset);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       debugRM.readFromContext('v_blur')

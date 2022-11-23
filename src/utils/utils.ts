@@ -675,7 +675,15 @@ void main() {
     console.log(pixels);
   }
 }
-
+class CustomBtn{
+    constructor(btnName: string, btnOnClick: (e: MouseEvent)=>void){
+        const button = document.createElement('button');
+        button.addEventListener('click', btnOnClick);
+        button.innerHTML = btnName;
+        const container = document.getElementById('btn_container') as HTMLTableRowElement
+        container.append(button);
+    }
+}
 
 export {
   GraphicEngine,
@@ -684,5 +692,6 @@ export {
   xformMatrix,
   createBox,
   createSphere,
-  DebugFrameBuffer
+  DebugFrameBuffer,
+  CustomBtn,
 }

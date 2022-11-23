@@ -86,7 +86,7 @@ import {TextureLab} from '../TextureLab'
 import {TWGLOIT} from '../webgl2examples/OIT'
 import {TWGLOITDDP, TWGLOITPlane} from '../webgl2examples/OITDualDepthPeeling'
 import {Defer} from '../webgl2examples/Deffer'
-import {DepthOfField} from '../webgl2examples'
+import {DepthOfField, SSAO} from '../webgl2examples'
 
 // import * as SPECTOR from "spectorjs"
 // window.SPECTOR = SPECTOR
@@ -141,6 +141,7 @@ let ExampleFn
 // ExampleFn = Primitives
 ExampleFn = Defer
 ExampleFn = DepthOfField
+ExampleFn = SSAO
 // ExampleFn = MRT
 // ExampleFn = TWGLOIT
 // ExampleFn = TWGLOITDDP
