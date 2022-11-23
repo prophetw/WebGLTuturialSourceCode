@@ -16,7 +16,17 @@ uniform sampler2D uPositionBuffer;
 uniform sampler2D uNormalBuffer;
 uniform sampler2D uNoiseBuffer;
 
-out float occlusion;
+out vec4 vec4Occlusion;
+
+vec4 encodeFloatRGBA(float floatNum)
+{
+    // See Aras Pranckevičius' post Encoding Floats to RGBA
+    // http://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
+    vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * floatNum;
+    enc = fract(enc);
+    enc -= enc.yzww * vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);
+    return enc;
+}
 
 float getOcclusion(vec3 position, vec3 normal, ivec2 fragCoord) {
   vec3 occluderPosition = texelFetch(uPositionBuffer, fragCoord, 0).xyz;
@@ -29,6 +39,7 @@ float getOcclusion(vec3 position, vec3 normal, ivec2 fragCoord) {
 }
 
 void main() {
+  float occlusion;
   ivec2 fragCoord = ivec2(gl_FragCoord.xy);
   vec3 position = texelFetch(uPositionBuffer, fragCoord, 0).xyz;
   vec3 normal = texelFetch(uNormalBuffer, fragCoord, 0).xyz;
@@ -58,4 +69,7 @@ void main() {
   }
 
   occlusion = clamp(occlusion / 16.0, 0.0, 1.0);
+
+  // vec4Occlusion = vec4(occlusion, 0.0, 0.0, 1.0);
+  vec4Occlusion = encodeFloatRGBA(occlusion);
 }

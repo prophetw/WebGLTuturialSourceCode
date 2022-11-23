@@ -22,11 +22,8 @@ const vec2 = {
 
 
 function main() {
-  var ssaoEnabled = false;
+  var ssaoEnabled = true;
 
-  new utils.CustomBtn('ssaoToggle', ()=>{
-    ssaoEnabled = !ssaoEnabled
-  })
   // document.getElementById("ssao-toggle").addEventListener("change", function () {
   //   ssaoEnabled = this.checked;
   // });
@@ -36,6 +33,24 @@ function main() {
   // canvas.height = window.innerHeight;
 
   var gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
+
+  const debugRT = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-top', 100)
+  const debugRM = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-mid', 100)
+  const debugRB = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-bottom', 100)
+  const debugLB = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'left-bottom', 100)
+
 
   if (!gl) {
     console.error("WebGL 2 not available");
@@ -238,7 +253,7 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorTarget, 0);
 
   var positionTarget = gl.createTexture();
@@ -287,7 +302,7 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, occlusionTarget, 0);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -486,6 +501,7 @@ function main() {
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, modelMatrixData);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.drawElementsInstanced(gl.TRIANGLES, sphere.indices.length, gl.UNSIGNED_SHORT, 0, spheres.length);
+      debugRT.readFromContext('box')
 
       gl.bindVertexArray(quadArray);
 
@@ -497,6 +513,7 @@ function main() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, occlusionBuffer);
         gl.useProgram(ssaoProgram);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+        debugRM.readFromContext('occlusion')
 
         //////////////////
         // BLEND PASS
@@ -505,6 +522,7 @@ function main() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.useProgram(aoBlendProgram);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+        debugRB.readFromContext('blendOccusion')
       } else {
         ///////////////////////
         // DRAW W/O OCCLUSION
@@ -513,12 +531,18 @@ function main() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.useProgram(noSSAOProgram);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+        debugLB.readFromContext('nossao')
       }
 
-      requestAnimationFrame(draw);
+      // requestAnimationFrame(draw);
     }
+    draw()
 
-    requestAnimationFrame(draw);
+    new utils.CustomBtn('ssaoToggle', ()=>{
+      ssaoEnabled = !ssaoEnabled
+      draw()
+    })
+    // requestAnimationFrame(draw);
 
   }
 
