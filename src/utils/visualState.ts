@@ -344,8 +344,7 @@ export class VisualState {
       return;
     }
     // @ts-ignore
-    const drawBuffersExtension =
-      this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
+    const drawBuffersExtension = this.extensions[WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.extensionName];
     if (drawBuffersExtension || this.contextVersion === 1) {
       // const maxDrawBuffers = this.context.getParameter(WebGlConstants.MAX_DRAW_BUFFERS_WEBGL.value);
       const maxDrawBuffers = 8;
@@ -423,6 +422,11 @@ export class VisualState {
           WebGlConstants.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE.value
         )
         : WebGlConstants.UNSIGNED_BYTE.value;
+
+    const componentTypeName = WebGlConstantsByValue[componentType] && WebGlConstantsByValue[componentType].name
+    const typeName = WebGlConstantsByValue[type] && WebGlConstantsByValue[type].name
+    console.log(`componentTypeName: ${componentTypeName} ${componentType}`);
+    console.log(`typeName: ${typeName}  ${type}`);
     if (type === WebGlConstants.RENDERBUFFER.value) {
       this.readFrameBufferAttachmentFromRenderBuffer(
         gl,
@@ -625,8 +629,9 @@ export class VisualState {
       const info = storage.__SPECTOR_Object_CustomData as ITextureRecorderData;
       width = info.width;
       height = info.height;
-      // @ts-ignore
-      textureType = info.type;
+      if(info.type){
+        textureType = info.type;
+      }
       knownAsTextureArray =
         info.target === WebGlConstants.TEXTURE_2D_ARRAY.name;
       // @ts-ignore

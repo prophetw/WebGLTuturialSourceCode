@@ -3,8 +3,8 @@ import FS_TEX from './tex.frag'
 import VS_TEX from './tex.vert'
 import FS_Draw from './draw.frag'
 import VS_Draw from './draw.vert'
-import { createBox, createSphere } from '../src/utils/utils'
-import { VisualState } from '../src/utils/visualState'
+import { createBox, createSphere } from '../../src/utils/utils'
+import { VisualState } from '../../src/utils/visualState'
 
 const vec3 = twgl.v3
 const mat4 = twgl.m4

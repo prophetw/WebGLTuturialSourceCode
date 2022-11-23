@@ -4,7 +4,7 @@ import FS_Accum from './oitAccum.frag'
 import VS_Accum from './oitAccum.vert'
 import FS_Draw from './oitDraw.frag'
 import VS_Quad from './oitQuad.vert'
-import * as utils from '../src/utils/utils'
+import * as utils from '../../src/utils/utils'
 
 const mat4 = twgl.m4
 const vec3 = twgl.v3

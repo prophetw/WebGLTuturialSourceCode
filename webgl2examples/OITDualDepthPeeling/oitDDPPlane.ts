@@ -5,7 +5,7 @@ import VSPeeling from './peeling.vert'
 import FSFinal from './final.frag'
 import FSBLENDBACK from './blendBack.frag'
 import VSDRAW from './draw.vert'
-import * as utils from '../src/utils/utils'
+import * as utils from '../../src/utils/utils'
 
 const mat4 = twgl.m4
 const vec3 = twgl.v3

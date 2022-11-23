@@ -81,13 +81,15 @@ import { LOGLTexLetter, LOGLTexLetter2, LOGLTexRingWithLetter } from '../learnop
 import { LOGLCircle, LOGLPick, LOGLPickComplete, LOGLPickCube, LOGLPickCubeRing, LOGLPickCubeRingTex, LOGLPickV2 } from "../learnopengl/Pick"
 import { TWGLPrimitive, TWGLTexRing } from "../learnopengl/TWGLAPI"
 import { TWGLBlendedPlane, TWGLBlendedPlane2, Primitives, MRT } from "../TWGLeg"
-import {TWGLOIT} from '../OIT'
-import {TWGLOITDDP, TWGLOITPlane} from '../OITDualDepthPeeling'
-import {Defer} from '../Deffer'
 import {TextureLab} from '../TextureLab'
 
-import * as SPECTOR from "spectorjs"
-window.SPECTOR = SPECTOR
+import {TWGLOIT} from '../webgl2examples/OIT'
+import {TWGLOITDDP, TWGLOITPlane} from '../webgl2examples/OITDualDepthPeeling'
+import {Defer} from '../webgl2examples/Deffer'
+import {DepthOfField} from '../webgl2examples'
+
+// import * as SPECTOR from "spectorjs"
+// window.SPECTOR = SPECTOR
 
 
 const initSpector = (callback = () => {
@@ -138,6 +140,7 @@ let ExampleFn
 // ExampleFn = FramebufferObject
 // ExampleFn = Primitives
 ExampleFn = Defer
+ExampleFn = DepthOfField
 // ExampleFn = MRT
 // ExampleFn = TWGLOIT
 // ExampleFn = TWGLOITDDP
