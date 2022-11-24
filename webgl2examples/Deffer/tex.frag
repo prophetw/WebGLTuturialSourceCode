@@ -1,5 +1,5 @@
 
-        #version 300 es
+#version 300 es
 precision highp float;
 
 in vec4 vPosition;

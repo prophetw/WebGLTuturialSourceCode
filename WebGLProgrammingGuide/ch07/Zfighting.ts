@@ -40,8 +40,8 @@ function main() {
 
   var viewProjMatrix = new Matrix4()
   // Set the eye point, look-at point, and up vector.
-  viewProjMatrix.setPerspective(30, canvas.width / canvas.height, 1, 100)
-  viewProjMatrix.lookAt(3.06, 2.5, 10.0, 0, 0, -2, 0, 1, 0)
+  viewProjMatrix.setPerspective(45, canvas.width / canvas.height, 1, 100)
+  viewProjMatrix.lookAt(0, 0, 0, 1, 1, 1, 0, 1, 0)
 
   // Pass the view projection matrix to u_ViewProjMatrix
   gl.uniformMatrix4fv(u_ViewProjMatrix, false, viewProjMatrix.elements)

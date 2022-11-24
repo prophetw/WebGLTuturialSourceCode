@@ -675,14 +675,18 @@ void main() {
     console.log(pixels);
   }
 }
-class CustomBtn{
-    constructor(btnName: string, btnOnClick: (e: MouseEvent)=>void){
-        const button = document.createElement('button');
-        button.addEventListener('click', btnOnClick);
-        button.innerHTML = btnName;
-        const container = document.getElementById('btn_container') as HTMLTableRowElement
-        container.append(button);
-    }
+class CustomBtn {
+  button: HTMLButtonElement
+  constructor(btnName: string, btnOnClick: (e: MouseEvent) => void) {
+    const button = this.button = document.createElement('button');
+    button.addEventListener('click', btnOnClick);
+    button.innerHTML = btnName;
+    const container = document.getElementById('btn_container') as HTMLTableRowElement
+    container.append(button);
+  }
+  updateTex(btnTxt: string) {
+    this.button.innerHTML = btnTxt
+  }
 }
 
 export {

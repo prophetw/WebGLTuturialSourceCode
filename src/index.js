@@ -88,6 +88,7 @@ import {TWGLOITDDP, TWGLOITPlane} from '../webgl2examples/OITDualDepthPeeling'
 import {Defer} from '../webgl2examples/Deffer'
 import {DepthOfField, SSAO} from '../webgl2examples'
 
+import Space from '../Space/Space'
 // import * as SPECTOR from "spectorjs"
 // window.SPECTOR = SPECTOR
 
@@ -142,6 +143,8 @@ let ExampleFn
 ExampleFn = Defer
 ExampleFn = DepthOfField
 ExampleFn = SSAO
+ExampleFn = Zfighting
+ExampleFn = Space
 // ExampleFn = MRT
 // ExampleFn = TWGLOIT
 // ExampleFn = TWGLOITDDP

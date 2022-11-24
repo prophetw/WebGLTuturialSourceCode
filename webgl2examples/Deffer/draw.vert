@@ -1,5 +1,5 @@
 
-        #version 300 es
+#version 300 es
 
 layout(std140, column_major) uniform;
 
