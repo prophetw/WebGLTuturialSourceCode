@@ -6,7 +6,7 @@ import {
   HelloTriangle_LINE_STRIP, MultiPoint, RotatedTriangle,
   RotatedTriangle_Matrix, ScaledTriangle_Matrix, TranslatedTriangle
 
-} from '../ch03'
+} from '../WebGLProgrammingGuide/ch03'
 import {
   RotatedTranslatedTriangle, RotatedTriangle_Matrix4, RotatingTranslatedTriangle,
   RotatingTriangle, RotatingTriangle_withButtons, TranslatedRotatedTriangle
@@ -16,7 +16,7 @@ import {
   MultiAttributeColor, MultiAttributeSize,
   MultiAttributeSize_Interleaved, MultiTexture,
   TexturedQuad, TexturedQuad_Clamp_Mirror, TexturedQuad_Repeat
-} from '../ch05'
+} from '../WebGLProgrammingGuide/ch05'
 import {
   ColoredCube, ColoredCube_singleColor,
   DepthBuffer, HelloCube, HelloCube_singleColor,
@@ -24,23 +24,23 @@ import {
   LookAtTrianglesWithKeys, LookAtTrianglesWithKeys_ViewVolume, OrthoView,
   OrthoView_halfSize, OrthoView_halfWidth, PerspectiveView, PerspectiveView_mvp,
   PerspectiveView_mvpMatrix, Zfighting
-} from '../ch07'
+} from '../WebGLProgrammingGuide/ch07'
 import {
   LightedCube, LightedCube_ambient,
   LightedCube_animation, LightedCube_perFragment, LightedTranslatedRotatedCube,
   LightSource,
   PointLightedCube, PointLightedCube_animation, PointLightedCube_perFragment,
   PointLightedSphere, PointLightedSphere_perFragment
-} from '../ch08'
-import { JointModel, MultiJointModel, MultiJointModel_segment } from '../ch09'
+} from '../WebGLProgrammingGuide/ch08'
+import { JointModel, MultiJointModel, MultiJointModel_segment } from '../WebGLProgrammingGuide/ch09'
 import {
   ThreeDoverWeb, BlendedCube, Fog,
   Fog_w, FramebufferObject, HUD, LookAtBlendedTriangles,
   OBJViewer, PickFace, PickObject, Picking,
   ProgramObject, RotateObject, RotatingTriangle_contextLost,
   RoundedPoints, Shadow, Shadow_highp, Shadow_highp_sphere, BlendedCubeTwgl, BlendedRectTwgl
-} from '../ch10'
-import { CoordinateSystem } from '../Appendix'
+} from '../WebGLProgrammingGuide/ch10'
+import { CoordinateSystem } from '../WebGLProgrammingGuide/Appendix'
 
 import {
   LOGLHelloTriangle,
