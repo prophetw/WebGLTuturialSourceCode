@@ -1,5 +1,5 @@
 // import SPECTOR from './spector'
-import { ClickedPoints, ColoredPoint, DrawRectangle, HelloCanvas, HelloPoint1, HelloPoint2 } from "../ch02"
+import { ClickedPoints, ColoredPoint, DrawRectangle, HelloCanvas, HelloPoint1, HelloPoint2 } from "../WebGLProgrammingGuide/ch02"
 import {
   HelloQuad, HelloQuad_FAN, HelloTriangle,
   HelloTriangle_LINES, HelloTriangle_LINE_LOOP,
@@ -10,7 +10,7 @@ import {
 import {
   RotatedTranslatedTriangle, RotatedTriangle_Matrix4, RotatingTranslatedTriangle,
   RotatingTriangle, RotatingTriangle_withButtons, TranslatedRotatedTriangle
-} from '../ch04'
+} from '../WebGLProgrammingGuide/ch04'
 import {
   ColoredTriangle, HelloTriangle_FragCoord,
   MultiAttributeColor, MultiAttributeSize,
@@ -145,6 +145,7 @@ ExampleFn = DepthOfField
 ExampleFn = SSAO
 ExampleFn = Zfighting
 ExampleFn = Space
+ExampleFn = LightedCube_perFragment
 // ExampleFn = MRT
 // ExampleFn = TWGLOIT
 // ExampleFn = TWGLOITDDP

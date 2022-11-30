@@ -1,10 +1,14 @@
-import FSHADER_SOURCE from './LightedCube_perFragment.frag.glsl'
-import VSHADER_SOURCE from './LightedCube_perFragment.vert.glsl'
+import FSHADER_SOURCE from './LightedCube_perFragment.frag'
+import VSHADER_SOURCE from './LightedCube_perFragment.vert'
 
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl') as HTMLCanvasElement;
 
+  document.title = 'lightedcube_perfragment'
+
+  canvas.width = 400
+  canvas.height = 400
   // Get the rendering context for WebGL
   var gl = window.getWebGLContext(canvas);
   if (!gl) {
@@ -19,7 +23,7 @@ function main() {
   }
 
   //
-  window.spector.startCapture(canvas, 150)
+  // window.spector.startCapture(canvas, 150)
   var n = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to initialize buffers');

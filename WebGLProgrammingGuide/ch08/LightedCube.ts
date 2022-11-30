@@ -1,5 +1,5 @@
-import FSHADER_SOURCE from './LightedCube.frag.glsl'
-import VSHADER_SOURCE from './LightedCube.vert.glsl'
+import FSHADER_SOURCE from './LightedCube.frag'
+import VSHADER_SOURCE from './LightedCube.vert'
 import initLightSource from './LightSource'
 
 function main() {
