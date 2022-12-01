@@ -404,8 +404,8 @@ function main() {
       for (var i = 0, len = lights.length; i < len; ++i) {
         gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, lights[i].uniformBuffer);
         gl.drawElements(gl.TRIANGLES, numSphereElements, gl.UNSIGNED_SHORT, 0);
+        debugRM.readFromContext()
       }
-      debugRM.readFromContext()
 
 
       // requestAnimationFrame(draw);

@@ -1,5 +1,8 @@
 import FSHADER_SOURCE from './LightedCube_perFragment.frag'
 import VSHADER_SOURCE from './LightedCube_perFragment.vert'
+import * as twgl from 'twgl.js'
+const Matrix4 = twgl.m4;
+const Vector3 = twgl.v3;
 
 function main() {
   // Retrieve <canvas> element
@@ -7,8 +10,8 @@ function main() {
 
   document.title = 'lightedcube_perfragment'
 
-  canvas.width = 400
-  canvas.height = 400
+  // canvas.width = 400
+  // canvas.height = 400
   // Get the rendering context for WebGL
   var gl = window.getWebGLContext(canvas);
   if (!gl) {
@@ -35,42 +38,48 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   // Get the storage locations of uniform variables and so on
+  var u_mMatrix = gl.getUniformLocation(gl.program, 'u_mMatrix');
+  var u_vMatrix = gl.getUniformLocation(gl.program, 'u_vMatrix');
+  // var u_normalMatrix = gl.getUniformLocation(gl.program, 'u_normalMatrix');
   var u_mvpMatrix = gl.getUniformLocation(gl.program, 'u_mvpMatrix');
-  var u_normalMatrix = gl.getUniformLocation(gl.program, 'u_normalMatrix');
   var u_LightDir = gl.getUniformLocation(gl.program, 'u_LightDir');
-  if (!u_mvpMatrix || !u_normalMatrix || !u_LightDir) {
+  if (!u_mvpMatrix || !u_LightDir) {
     console.log('Failed to get the storage location');
     return;
   }
 
   // Set the viewing volume
-  var viewMatrix = new window.Matrix4();   // View matrix
-  var mvpMatrix = new window.Matrix4();    // Model view projection matrix
-  var mvMatrix = new window.Matrix4();     // Model matrix
-  var normalMatrix = new window.Matrix4(); // Transformation matrix for normals
+  var viewMatrix = Matrix4.identity();   // View matrix
+  var mvpMatrix = Matrix4.identity();    // Model view projection matrix
+  var mvMatrix = Matrix4.identity();     // Model matrix
+  var normalMatrix = Matrix4.identity(); // Transformation matrix for normals
+  let modelMat4 = Matrix4.identity()
 
   // Calculate the view matrix
-  viewMatrix.setLookAt(0, 3, 3, 0, 0, 0, 0, 1, 0);
-  mvMatrix.set(viewMatrix).rotate(60, 0, 1, 0); // Rotate 60 degree around the y-axis
+  viewMatrix = Matrix4.lookAt(Vector3.create(2, 2, 2), Vector3.create(0, 0, 0), Vector3.create(0, 1, 0));
+  viewMatrix = Matrix4.inverse(viewMatrix);
+  // modelMat4 = Matrix4.rotateY(modelMat4, Math.PI/3)
+  // mvMatrix.set(viewMatrix).rotate(60, 0, 1, 0); // Rotate 60 degree around the y-axis
   // Calculate the model view projection matrix
-  mvpMatrix.setPerspective(30, 1, 1, 100);
-  mvpMatrix.multiply(mvMatrix);
+  const projMat = Matrix4.perspective(Math.PI/2, 1, 1, 100);
+  mvMatrix = Matrix4.multiply(projMat, viewMatrix);
+  mvpMatrix = Matrix4.multiply(mvMatrix, modelMat4);
+
+  normalMatrix = viewMatrix
   // Calculate the matrix to transform the normal based on the model matrix
-  normalMatrix.setInverseOf(mvMatrix);
-  normalMatrix.transpose();
+
+  gl.uniformMatrix4fv(u_mMatrix, false, modelMat4);
+  gl.uniformMatrix4fv(u_vMatrix, false, viewMatrix);
 
   // Pass the model view matrix to u_mvpMatrix
-  gl.uniformMatrix4fv(u_mvpMatrix, false, mvpMatrix.elements);
+  gl.uniformMatrix4fv(u_mvpMatrix, false, mvpMatrix);
 
   // Pass the normal matrixu_normalMatrix
-  gl.uniformMatrix4fv(u_normalMatrix, false, normalMatrix.elements);
+  // gl.uniformMatrix4fv(u_normalMatrix, false, normalMatrix);
 
   // Pass the direction of the diffuse light(world coordinate, normalized)
-  var lightDir = new Vector3([1.0, 1.0, 1.0]);
-  lightDir.normalize();     // Normalize
-  var lightDir_eye = viewMatrix.multiplyVector3(lightDir); // Transform to view coordinate
-  lightDir_eye.normalize(); // Normalize
-  gl.uniform3fv(u_LightDir, lightDir_eye.elements);
+  var lightDir = Vector3.create(4.0, 4.0, 3.0);
+  gl.uniform3fv(u_LightDir, lightDir);
 
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

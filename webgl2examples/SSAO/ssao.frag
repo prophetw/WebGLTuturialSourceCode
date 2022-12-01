@@ -16,7 +16,8 @@ uniform sampler2D uPositionBuffer;
 uniform sampler2D uNormalBuffer;
 uniform sampler2D uNoiseBuffer;
 
-out vec4 vec4Occlusion;
+layout(location=0) out float occlusion;
+layout(location=1) out vec4 vec4Occlusion;
 
 vec4 encodeFloatRGBA(float floatNum)
 {
@@ -69,7 +70,6 @@ void main() {
   }
 
   occlusion = clamp(occlusion / 16.0, 0.0, 1.0);
-
-  // vec4Occlusion = vec4(occlusion, 0.0, 0.0, 1.0);
-  vec4Occlusion = encodeFloatRGBA(occlusion);
+  vec4Occlusion = vec4(occlusion, 0.0, 0.0, 1.0);
+  // vec4Occlusion = encodeFloatRGBA(occlusion);
 }

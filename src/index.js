@@ -92,6 +92,8 @@ import Space from '../Space/Space'
 // import * as SPECTOR from "spectorjs"
 // window.SPECTOR = SPECTOR
 
+import {TextureDemo} from '../WebglFundemental/index'
+
 
 const initSpector = (callback = () => {
   //
@@ -140,17 +142,20 @@ let ExampleFn
 // ExampleFn = TWGLBlendedPlane
 // ExampleFn = FramebufferObject
 // ExampleFn = Primitives
-ExampleFn = Defer
 ExampleFn = DepthOfField
-ExampleFn = SSAO
 ExampleFn = Zfighting
 ExampleFn = Space
+ExampleFn = MRT
+ExampleFn = TWGLOIT
+ExampleFn = TWGLOITDDP
+ExampleFn = TWGLOITPlane
+ExampleFn = TextureLab
+ExampleFn = Defer
 ExampleFn = LightedCube_perFragment
-// ExampleFn = MRT
-// ExampleFn = TWGLOIT
-// ExampleFn = TWGLOITDDP
-// ExampleFn = TWGLOITPlane
-// ExampleFn = TextureLab
+ExampleFn = SSAO
+ExampleFn = LOGLCubuInSkyBox
+ExampleFn = LOGLSkyBox
+ExampleFn = TextureDemo
 
 
 // const ExampleFn = LOGLTexturesTriangle

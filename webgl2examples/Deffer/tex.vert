@@ -17,8 +17,8 @@ out vec4 vNormal;
 out vec4 vUV;
 
 void main() {
-  vPosition = uModelMatrix * aPosition;
-  vNormal = uModelMatrix * vec4(aNormal, 0.0);
+  vPosition = uModelMatrix * aPosition; // world position
+  vNormal = uModelMatrix * vec4(aNormal, 0.0); // world position
   vUV = aUV;
   gl_Position = uMVP * aPosition;
 }

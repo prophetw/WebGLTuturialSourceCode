@@ -18,18 +18,21 @@ function Space() {
   const pInfo = twgl.createProgramInfo(gl, [VS, FS])
   const worldpInfo = twgl.createProgramInfo(gl, [WorldSpaceVS, FS])
   const viewpInfo = twgl.createProgramInfo(gl, [ViewSpaceVS, FS])
-  const bufferInfo = twgl.primitives.createPlaneBufferInfo(gl)
-  const vertics = twgl.primitives.createPlaneVertices()
+  // const bufferInfo = twgl.primitives.createPlaneBufferInfo(gl)
+  // const vertics = twgl.primitives.createPlaneVertices()
+  const bufferInfo = twgl.primitives.createCubeBufferInfo(gl)
+  const vertics = twgl.primitives.createCubeVertices()
   console.log(vertics);
   console.log(pInfo, bufferInfo);
   console.log('w', worldpInfo);
   console.log('view', viewpInfo);
   const modelMat4 = twgl.m4.identity()
   console.log(modelMat4);
-  const viewMat4 = twgl.m4.lookAt(twgl.v3.create(0, 0, 0), twgl.v3.create(1, 1, 1), twgl.v3.create(0, 1, 0))
+  twgl.m4.translate(modelMat4, twgl.v3.create(-0.4, -0.4, -0.4), modelMat4)
+  const viewMat4 = twgl.m4.lookAt(twgl.v3.create(0, 0, 0), twgl.v3.create(0, 0, 10), twgl.v3.create(0, 1, 0))
   console.log(viewMat4);
   twgl.m4.inverse(viewMat4, viewMat4)
-  const projMat4 = twgl.m4.perspective(60, 1, 0.1, 1000)
+  const projMat4 = twgl.m4.perspective(45, 1, 0.01, 10000)
   let mvpMat4 = twgl.m4.multiply(viewMat4, modelMat4);
   mvpMat4 = twgl.m4.multiply(projMat4, mvpMat4);
   console.log(' mvp ', mvpMat4);

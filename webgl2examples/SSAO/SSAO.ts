@@ -21,7 +21,9 @@ const vec2 = {
 }
 
 
+
 function main() {
+
   var ssaoEnabled = true;
 
   // document.getElementById("ssao-toggle").addEventListener("change", function () {
@@ -37,19 +39,19 @@ function main() {
   const debugRT = new VisualState({
     context: gl,
     contextVersion: 2
-  }, 'right-top', 100)
+  }, 'right-top', 3)
   const debugRM = new VisualState({
     context: gl,
     contextVersion: 2
-  }, 'right-mid', 100)
+  }, 'right-mid', 3)
   const debugRB = new VisualState({
     context: gl,
     contextVersion: 2
-  }, 'right-bottom', 100)
-  const debugLB = new VisualState({
-    context: gl,
-    contextVersion: 2
-  }, 'left-bottom', 100)
+  }, 'right-bottom', 3)
+  // const debugLB = new VisualState({
+  //   context: gl,
+  //   contextVersion: 2
+  // }, 'left-bottom', 100)
 
 
   if (!gl) {
@@ -234,7 +236,7 @@ function main() {
   var noiseBufferLocation = gl.getUniformLocation(ssaoProgram, "uNoiseBuffer");
 
   var colorBufferLocation = gl.getUniformLocation(aoBlendProgram, "uColorBuffer");
-  var occlustionBufferLocation = gl.getUniformLocation(aoBlendProgram, "uOcclusionBuffer");
+  var occlustionBufferLocation = gl.getUniformLocation(aoBlendProgram, "uocclusionFBO");
 
   var noSSAOColorBufferLocation = gl.getUniformLocation(noSSAOProgram, "uColorBuffer");
 
@@ -242,8 +244,8 @@ function main() {
   //  SET UP FRAMEBUFFERS
   ////////////////////////////////
 
-  var colorGeoBuffer = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, colorGeoBuffer);
+  var colorGeoFBO = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, colorGeoFBO);
   gl.activeTexture(gl.TEXTURE0);
 
   var colorTarget = gl.createTexture();
@@ -253,7 +255,7 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorTarget, 0);
 
   var positionTarget = gl.createTexture();
@@ -292,8 +294,8 @@ function main() {
     gl.COLOR_ATTACHMENT2
   ]);
 
-  var occlusionBuffer = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, occlusionBuffer);
+  var occlusionFBO = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, occlusionFBO);
 
   var occlusionTarget = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, occlusionTarget);
@@ -302,7 +304,7 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, occlusionTarget, 0);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -476,13 +478,14 @@ function main() {
 
     var rotationMatrix = mat4.identity();
 
+    // window.spector.startCapture(canvas, 500)
     function draw() {
 
       ////////////////////
       // DRAW BOXES
       ////////////////////
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, colorGeoBuffer);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, colorGeoFBO);
       gl.useProgram(colorGeoProgram);
       gl.bindVertexArray(sphereArray);
 
@@ -510,7 +513,7 @@ function main() {
         // OCCLUSION PASS
         //////////////////
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, occlusionBuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, occlusionFBO);
         gl.useProgram(ssaoProgram);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         debugRM.readFromContext('occlusion')
@@ -531,20 +534,20 @@ function main() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.useProgram(noSSAOProgram);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-        debugLB.readFromContext('nossao')
+        // debugLB.readFromContext('nossao')
       }
 
-      // requestAnimationFrame(draw);
+      requestAnimationFrame(draw);
     }
     draw()
 
-    new utils.CustomBtn('ssaoToggle', ()=>{
-      ssaoEnabled = !ssaoEnabled
-      draw()
-    })
-    // requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
 
   }
+    new utils.CustomBtn('ssaoToggle', ()=>{
+      ssaoEnabled = !ssaoEnabled
+      // draw()
+    })
 
   image.src = "resources/khronos_webgl.png";
 
