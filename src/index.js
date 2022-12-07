@@ -92,7 +92,7 @@ import Space from '../Space/Space'
 // import * as SPECTOR from "spectorjs"
 // window.SPECTOR = SPECTOR
 
-import {TextureDemo} from '../WebglFundemental/index'
+import {EnvironmentMap, SkyboxWFM, TextureDemo} from '../WebglFundemental/index'
 
 
 const initSpector = (callback = () => {
@@ -156,6 +156,8 @@ ExampleFn = SSAO
 ExampleFn = LOGLCubuInSkyBox
 ExampleFn = LOGLSkyBox
 ExampleFn = TextureDemo
+ExampleFn = EnvironmentMap
+ExampleFn = SkyboxWFM
 
 
 // const ExampleFn = LOGLTexturesTriangle

@@ -36,7 +36,6 @@ export class ReadPixelsHelper {
         // prepare destination storage.
         const size = width * height * 4;
         let pixels: ArrayBufferView;
-        console.log(' type is : ', type);
         if (type === WebGlConstants.UNSIGNED_BYTE.value || type === WebGlConstants.UNSIGNED_NORMALIZED_EXT.value) {
             pixels = new Uint8Array(size);
         }
