@@ -28,6 +28,10 @@ import LOGLMaterial from './Materials/first'
 import LOGLLightingMapping from './LightMapping/TexturesWoodBox3D'
 import LOGLDiffuseMapping from './LightMapping/DiffuseMapping'
 
+import PBR from './PBR/simp/pbr'
+import PBRWithTex from './PBR/pbr'
+import PBRIBL from './PBR/PBR_IBL/pbr'
+
 
 export {
   LOGLHelloTriangle,
@@ -60,4 +64,7 @@ export {
   LOGLMaterial,
   LOGLLightingMapping,
   LOGLDiffuseMapping,
+  PBR,
+  PBRWithTex,
+  PBRIBL,
 }

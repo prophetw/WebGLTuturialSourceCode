@@ -6,6 +6,7 @@ interface Window {
   initShaders: (gl: WebGLRenderingContext, VSHADER_SOURCE: string, FSHADER_SOURCE: string)=>boolean
   createProgram: (gl: WebGLRenderingContext, VSHADER_SOURCE: string, FSHADER_SOURCE: string)=>WebGLProgram
   Matrix4: new (value?: any) => Matrix4
+  HDRImage: new () => any
 }
 interface WebGLRenderingContext{
   program: WebGLProgram
