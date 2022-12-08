@@ -10,8 +10,32 @@ import { angleToRads } from '../../../lib/utils'
 import { Camera } from '../../../src/utils/utils'
 import { clamp } from '../simp/pbr'
 
+async function loadHDR (hdrSrc: string){
+  return new Promise((resolve, reject) => {
+    // https://enkimute.github.io/hdrpng.js/
+    const hdrloader = new window.HDRImage()
+    hdrloader.src = hdrSrc;
+    hdrloader.onload = ()=>{
+      // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB9_E5, w, h, 0, gl.RGB, gl.FLOAT, new Float32Array(myHDR.dataRAW.buffer));
+      resolve(hdrloader)
+    }
+  })
+}
 
-function main() {
+async function createTextures(gl: WebGLRenderingContext, texinfo: {
+  [key: string]: twgl.TextureOptions
+}){
+  return new Promise((resolve, reject)=>{
+    twgl.createTextures(gl, texinfo, (err, textures)=>{
+      if(err){
+        reject(err)
+      }
+      resolve(textures)
+    })
+  })
+}
+
+async function main() {
   const canvas = document.getElementById('webgl') as HTMLCanvasElement;
 
   const gl = canvas.getContext('webgl2');
@@ -54,6 +78,8 @@ function main() {
 
   // pbr: load HDR environment map
   // -----------------------------
+
+
 
 
   const perspectiveOptions = {
@@ -222,14 +248,6 @@ function main() {
   // const cube = twgl.primitives.createCubeBufferInfo(gl)
   // console.log(cube);
 
-  // https://enkimute.github.io/hdrpng.js/
-  // const hdrloader = new window.HDRImage()
-  // console.log(' hdrloader here ', hdrloader);
-  // hdrloader.src = './resources/pbr/footprint_court.hdr'
-  // hdrloader.onload = ()=>{
-  //   // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB9_E5, w, h, 0, gl.RGB, gl.FLOAT, new Float32Array(myHDR.dataRAW.buffer));
-  //   console.log(hdrloader);
-  // }
   let draw = () => {
     //
   }

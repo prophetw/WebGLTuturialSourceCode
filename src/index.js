@@ -163,7 +163,7 @@ ExampleFn = EnvironmentMap
 ExampleFn = SkyboxWFM
 ExampleFn = PBR
 ExampleFn = PBRWithTex
-// ExampleFn = PBRIBL
+ExampleFn = PBRIBL
 
 
 // const ExampleFn = LOGLTexturesTriangle
