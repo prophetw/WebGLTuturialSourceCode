@@ -1,13 +1,14 @@
 #version 300 es
 precision highp float;
 
+out vec4 FragColor;
 in vec3 WorldPos;
 
 uniform samplerCube environmentMap;
 
 const float PI = 3.14159265359;
 
-out vec4 FragColor;
+
 void main()
 {
 	// The world vector acts as the normal of a tangent surface

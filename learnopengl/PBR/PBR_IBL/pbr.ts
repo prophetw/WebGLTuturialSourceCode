@@ -2,7 +2,7 @@ import BackgroundVS from './background.vert'
 import BackgroundFS from './background.frag'
 import PBRFS from './pbr.frag'
 import PBRVS from './pbr.vert'
-import CubeVS from './cube.vert'
+import CubeVS from './cubemap.vert'
 import ECubeFS from './equirectangular_to_cubemap.frag'
 import IrradConvolutionFS from './irradiance_convolution.frag'
 import * as twgl from 'twgl.js'
@@ -21,6 +21,7 @@ function main() {
   }
 
   gl.enable(gl.DEPTH_TEST)
+  gl.depthFunc(gl.LEQUAL); // set depth function to less than AND equal for skybox depth trick.
   gl.clearColor(0, 0, 0, 1.0)
 
   // init program
@@ -38,6 +39,22 @@ function main() {
     pbrProgramInfo,
     // eqToCubeProgramInfo, irradianceProgramInfo, bgProgramInfo
   );
+
+
+  // pbr: setup framebuffer
+  // ----------------------
+  const RBO = gl.createRenderbuffer()
+  gl.bindRenderbuffer(gl.RENDERBUFFER, RBO)
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, 512, 512)
+  const pbrFbo = twgl.createFramebufferInfo(gl, [
+    { attachment: RBO, attachmentPoint: gl.DEPTH_ATTACHMENT},
+  ])
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  console.log(' pbr fbo ', pbrFbo);
+
+  // pbr: load HDR environment map
+  // -----------------------------
+
 
   const perspectiveOptions = {
     fov: Math.PI / 3
@@ -186,16 +203,16 @@ function main() {
 
   // light info
   const lightPositions = [
-    0, 0, 10,
-    // 10, 10, 10,
-    // -10, -10, 10,
-    // 10, -10, 10,
+    -10, 10, 10,
+    10, 10, 10,
+    -10, -10, 10,
+    10, -10, 10,
   ]
   const lightColors = [
-    // 150, 150, 150,
-    // 300, 300, 300,
-    // 300, 300, 300,
-    500, 500, 500,
+    300, 300, 300,
+    300, 300, 300,
+    300, 300, 300,
+    300, 300, 300,
   ]
 
   // init
@@ -231,11 +248,9 @@ function main() {
       camPos,
       lightPositions,
       lightColors,
-      albedoMap: texObj.albedoMap,
-      normalMap: texObj.normalMap,
-      metallicMap: texObj.metallicMap,
-      roughnessMap: texObj.roughnessMap,
-      aoMap: texObj.aoMap
+      albedo: twgl.v3.create(0.5, 0.0, 0.0),
+      irradianceMap: 0,
+      ao: 1.0
     })
 
     // draw para
@@ -249,6 +264,11 @@ function main() {
 
     // render sphere
     for (let row = 0; row < nrRows; ++row) {
+      const metallic = row / nrRows;
+      // console.log(' --- 金属度 ', metallic);
+      twgl.setUniforms(pbrProgramInfo, {
+        metallic
+      })
       for (let col = 0; col < nrColumns; ++col) {
         const model = twgl.m4.identity()
         twgl.m4.translate(model, twgl.v3.create(
@@ -256,9 +276,11 @@ function main() {
           (row - (nrRows / 2)) * spacing,
           0
         ), model);
-        // console.log('  modeMat',model);
+        const roughness = clamp(col/nrColumns, 0.05, 1)
+        // console.log( ' 粗糙度', roughness );
         twgl.setUniforms(pbrProgramInfo, {
-          model
+          model,
+          roughness,
         })
         twgl.drawBufferInfo(gl, sphereBufferInfo)
       }

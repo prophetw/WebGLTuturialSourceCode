@@ -1,5 +1,5 @@
 #version 300 es
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec3 position;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -8,7 +8,7 @@ out vec3 WorldPos;
 
 void main()
 {
-    WorldPos = aPos;
+    WorldPos = position;
 
 	mat4 rotView = mat4(mat3(view));
 	vec4 clipPos = projection * rotView * vec4(WorldPos, 1.0);

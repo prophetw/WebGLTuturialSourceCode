@@ -186,16 +186,16 @@ function main() {
 
   // light info
   const lightPositions = [
-    0, 0, 10,
-    // 10, 10, 10,
+    // 0, 0, 10,
+    10, 10, 10,
     // -10, -10, 10,
     // 10, -10, 10,
   ]
   const lightColors = [
-    // 150, 150, 150,
+    150, 150, 150,
     // 300, 300, 300,
     // 300, 300, 300,
-    500, 500, 500,
+    // 500, 500, 500,
   ]
 
   // init
@@ -218,11 +218,14 @@ function main() {
   }
 
   // console.log(hdrloader.dataRAW);
+  const materialAry = ['gold', 'grass', 'plastic', 'rusted_iron', 'wall']
+  const materialName = materialAry[3]
+
   twgl.createTextures(gl, {
     albedoMap: {
       // level: 0,
       auto: true,
-      src: './resources/pbr/rusted_iron/albedo.png',
+      src: `./resources/pbr/${materialName}/albedo.png`,
       // format: gl.RED,
       // internalFormat: gl.R8,
       type: gl.UNSIGNED_BYTE,
@@ -234,7 +237,7 @@ function main() {
     normalMap: {
       // level: 0,
       auto: true,
-      src: './resources/pbr/rusted_iron/normal.png',
+      src: `./resources/pbr/${materialName}/normal.png`,
       // format: gl.RED,
       // internalFormat: gl.R8,
       type: gl.UNSIGNED_BYTE,
@@ -246,7 +249,7 @@ function main() {
     metallicMap: {
       // level: 0,
       auto: true,
-      src: './resources/pbr/rusted_iron/metallic.png',
+      src: `./resources/pbr/${materialName}/metallic.png`,
       // format: gl.FLOAT,
       // internalFormat: gl.RGBA16F,
       wrapS: gl.REPEAT,
@@ -257,7 +260,7 @@ function main() {
     roughnessMap: {
       auto: true,
       // level: 0,
-      src: './resources/pbr/rusted_iron/roughness.png',
+      src: `./resources/pbr/${materialName}/roughness.png`,
       // format: gl.RGB,
       // internalFormat: gl.RGB8,
       type: gl.UNSIGNED_BYTE,
@@ -270,7 +273,7 @@ function main() {
       // level: 0,
       auto: true,
       target: gl.TEXTURE_2D,
-      src: './resources/pbr/rusted_iron/ao.png',
+      src: `./resources/pbr/${materialName}/ao.png`,
       // format: gl.RGBA,
       // internalFormat: gl.RGBA8,
       type: gl.UNSIGNED_BYTE,
