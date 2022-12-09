@@ -74,7 +74,7 @@ import {
   LOGLCameraMovingTwgl,
   PBR,
   PBRWithTex,
-  PBRIBL,
+  PBRSKYBOX,
 } from '../learnopengl'
 import { LOGLAmbient, LOGLDiffuse, LOGLSpecular } from '../learnopengl/BasicLighting'
 import { LOGLSpecularMaps } from '../learnopengl/LightMapping'
@@ -163,7 +163,7 @@ ExampleFn = EnvironmentMap
 ExampleFn = SkyboxWFM
 ExampleFn = PBR
 ExampleFn = PBRWithTex
-ExampleFn = PBRIBL
+ExampleFn = PBRSKYBOX
 
 
 // const ExampleFn = LOGLTexturesTriangle

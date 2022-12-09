@@ -30,7 +30,7 @@ import LOGLDiffuseMapping from './LightMapping/DiffuseMapping'
 
 import PBR from './PBR/simp/pbr'
 import PBRWithTex from './PBR/pbr'
-import PBRIBL from './PBR/PBR_IBL/pbr'
+import PBRSKYBOX from './PBR/PBR_SKYBOX/pbr'
 
 
 export {
@@ -66,5 +66,5 @@ export {
   LOGLDiffuseMapping,
   PBR,
   PBRWithTex,
-  PBRIBL,
+  PBRSKYBOX,
 }

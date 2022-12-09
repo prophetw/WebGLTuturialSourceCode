@@ -112,8 +112,8 @@ async function main() {
   gl.clearColor(0.7, 0.7, 0.7, 1.0)
 
 
-  // let camPos = twgl.v3.create(0, 0, 20);
-  let camPos = twgl.v3.create(1, 1, 5);
+  let camPos = twgl.v3.create(0, 0, 20);
+  // let camPos = twgl.v3.create(1, 1, 5);
   let camFront = twgl.v3.create(0, 0, -1)
   let camUp = twgl.v3.create(0, 1, 0)
   const perspectiveOptions = {
