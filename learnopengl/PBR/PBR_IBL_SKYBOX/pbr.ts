@@ -270,14 +270,16 @@ async function main() {
 
 
   // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
-  // --------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------------\
+  const irradWidth = 512
+  const irradHeight = 512
   const texObj = await createTextures(gl, {
     irradianceTexMap: {
       auto: true,
       src: undefined,
       target: gl.TEXTURE_CUBE_MAP,
-      width: 32,
-      height: 32,
+      width: irradWidth,
+      height: irradHeight,
       // internalFormat: gl.RGB16F,
       // format: gl.RGB,
       type: gl.UNSIGNED_BYTE,
@@ -288,8 +290,8 @@ async function main() {
       max: gl.LINEAR,
     }
   })
-  twgl.resizeFramebufferInfo(gl, captureFbo, attachments, 32, 32)
-  gl.viewport(0, 0, 32, 32)
+  twgl.resizeFramebufferInfo(gl, captureFbo, attachments, irradWidth, irradHeight)
+  gl.viewport(0, 0, irradWidth, irradHeight)
 
 
   // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
@@ -334,14 +336,17 @@ async function main() {
   // pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
   // --------------------------------------------------------------------------------
 
+  window.spector.startCapture(canvas, 1000)
+  const preWidth = 512
+  const preHeight = 512
   const texs = await createTextures(gl, {
     prefilterMap: {
       auto: true,
       src: undefined,
       type: gl.UNSIGNED_BYTE,
       target: gl.TEXTURE_CUBE_MAP,
-      width: 128,
-      height: 128,
+      width: preWidth,
+      height: preHeight,
       wrapR: gl.CLAMP_TO_EDGE,
       wrapS: gl.CLAMP_TO_EDGE,
       wrapT: gl.CLAMP_TO_EDGE,
@@ -357,13 +362,18 @@ async function main() {
     environmentMap: textures.envCubeMapTex,
     projection: captureProjection
   })
-  twgl.bindFramebufferInfo(gl, captureFbo, gl.FRAMEBUFFER)
+  const attachments1: twgl.AttachmentOptions[] = [
+    { attachment: texs.prefilterMap, attachmentPoint: gl.COLOR_ATTACHMENT0},
+    { attachment: RBO, attachmentPoint: gl.DEPTH_ATTACHMENT },
+  ]
+  const fbo = twgl.createFramebufferInfo(gl, attachments1, preWidth, preHeight)
+  twgl.bindFramebufferInfo(gl, fbo, gl.FRAMEBUFFER)
   const maxMipLeverls = 5
   twgl.setBuffersAndAttributes(gl, prefilterProgramInfo, cubeBufferInfo)
   for(let mip=0; mip<maxMipLeverls;mip++){
-    const mipWidth = 128 * Math.pow(0.5, mip)
-    const mipHeight = 128 * Math.pow(0.5, mip)
-    twgl.resizeFramebufferInfo(gl, captureFbo, attachments, mipWidth, mipHeight)
+    const mipWidth = preWidth * Math.pow(0.5, mip)
+    const mipHeight = preHeight * Math.pow(0.5, mip)
+    twgl.resizeFramebufferInfo(gl, fbo, attachments1, mipWidth, mipHeight)
     gl.viewport(0, 0, mipWidth, mipHeight)
     const roughness = mip / (maxMipLeverls - 1)
     console.log('roughness', roughness);
@@ -575,7 +585,6 @@ async function main() {
     //
   }
 
-  window.spector.startCapture(canvas, 1000, false, true)
   const drawFn = () => {
 
     const target = twgl.v3.add(camPos, camFront);

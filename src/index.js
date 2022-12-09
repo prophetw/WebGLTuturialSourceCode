@@ -165,7 +165,7 @@ ExampleFn = SkyboxWFM
 ExampleFn = PBRWithTex
 ExampleFn = PBR
 ExampleFn = PBRSKYBOX
-// ExampleFn = PBRSKYBOXIBL
+ExampleFn = PBRSKYBOXIBL
 
 
 // const ExampleFn = LOGLTexturesTriangle
