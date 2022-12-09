@@ -237,6 +237,8 @@ async function main() {
     twgl.m4.inverse(twgl.m4.lookAt(Vector3.create(0, 0, 0), Vector3.create(0, 0, -1), Vector3.create(0, -1, 0))),
   ]
 
+
+  // window.spector.startCapture(canvas, 1000, false, true)
   // pbr: convert HDR equirectangular environment map to cubemap equivalent
   // ----------------------------------------------------------------------
   gl.useProgram(eqToCubeProgram)
@@ -271,13 +273,14 @@ async function main() {
   // --------------------------------------------------------------------------------
   const texObj = await createTextures(gl, {
     irradianceTexMap: {
+      auto: true,
       src: undefined,
       target: gl.TEXTURE_CUBE_MAP,
       width: 32,
       height: 32,
       // internalFormat: gl.RGB16F,
       // format: gl.RGB,
-      // type: gl.FLOAT,
+      type: gl.UNSIGNED_BYTE,
       wrapR: gl.CLAMP_TO_EDGE,
       wrapS: gl.CLAMP_TO_EDGE,
       wrapT: gl.CLAMP_TO_EDGE,
@@ -286,6 +289,7 @@ async function main() {
     }
   })
   twgl.resizeFramebufferInfo(gl, captureFbo, attachments, 32, 32)
+  gl.viewport(0, 0, 32, 32)
 
 
   // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
@@ -295,7 +299,6 @@ async function main() {
     projection: captureProjection,
     environmentMap: textures.envCubeMapTex
   })
-  gl.viewport(0, 0, 32, 32)
   twgl.bindFramebufferInfo(gl, captureFbo)
   twgl.setBuffersAndAttributes(gl, irradianceProgramInfo, cubeBufferInfo)
   for (let i = 0; i < 6; i++) {
@@ -307,17 +310,35 @@ async function main() {
     twgl.drawBufferInfo(gl, cubeBufferInfo)
   }
 
-  // gl.viewport(0, 0, 512, 512)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  // debug cube start
+  // gl.viewport(0, 0, 512, 512)
+  // const target = twgl.v3.add(camPos, camFront);
+  // const cameraMat = twgl.m4.lookAt(camPos, target, camUp)
+  // const view = twgl.m4.inverse(cameraMat)
+  // const projection = twgl.m4.perspective(perspectiveOptions.fov, 1, 0.1, 100)
+  // gl.useProgram(bgProgram)
+  // twgl.setBuffersAndAttributes(gl, bgProgramInfo, cubeBufferInfo)
+  // twgl.setUniforms(bgProgramInfo, {
+  //   view,
+  //   projection,
+  //   // environmentMap: texObj.irradianceTexMap
+  //   environmentMap: textures.envCubeMapTex
+  //   // environmentMap: texs.prefilterMap
+  // })
+  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+  // twgl.drawBufferInfo(gl, cubeBufferInfo)
+  // return
+  // debug cube end
 
   // pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
   // --------------------------------------------------------------------------------
 
-  // window.spector.startCapture(canvas, 1000, false, true)
   const texs = await createTextures(gl, {
     prefilterMap: {
       auto: true,
       src: undefined,
+      type: gl.UNSIGNED_BYTE,
       target: gl.TEXTURE_CUBE_MAP,
       width: 128,
       height: 128,
@@ -330,6 +351,7 @@ async function main() {
   })
   // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
   // ----------------------------------------------------------------------------------------------------
+  // window.spector.startCapture(canvas, 100, false, true)
   gl.useProgram(prefilterProgram)
   twgl.setUniforms(prefilterProgramInfo, {
     environmentMap: textures.envCubeMapTex,
@@ -344,6 +366,7 @@ async function main() {
     twgl.resizeFramebufferInfo(gl, captureFbo, attachments, mipWidth, mipHeight)
     gl.viewport(0, 0, mipWidth, mipHeight)
     const roughness = mip / (maxMipLeverls - 1)
+    console.log('roughness', roughness);
     twgl.setUniforms(prefilterProgramInfo, {
       roughness
     })
@@ -361,24 +384,6 @@ async function main() {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
   gl.viewport(0,0,512,512);
 
-  // debug cube start
-  // const target = twgl.v3.add(camPos, camFront);
-  // const cameraMat = twgl.m4.lookAt(camPos, target, camUp)
-  // const view = twgl.m4.inverse(cameraMat)
-  // const projection = twgl.m4.perspective(perspectiveOptions.fov, 1, 0.1, 100)
-  // gl.useProgram(bgProgram)
-  // twgl.setBuffersAndAttributes(gl, bgProgramInfo, cubeBufferInfo)
-  // twgl.setUniforms(bgProgramInfo, {
-  //   view,
-  //   projection,
-  //   // environmentMap: texObj.irradianceTexMap
-  //   // environmentMap: textures.envCubeMapTex
-  //   environmentMap: texs.prefilterMap
-  // })
-  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-  // twgl.drawBufferInfo(gl, cubeBufferInfo)
-  // return
-  // debug cube end
 
   // pbr: generate a 2D LUT from the BRDF equations used.
   // ----------------------------------------------------
@@ -388,9 +393,9 @@ async function main() {
       src: undefined,
       width: 512,
       height: 512,
-      internalFormat: gl.RG16F,
-      format: gl.RG,
-      type: gl.FLOAT,
+      // internalFormat: gl.RG16F,
+      // format: gl.RG,
+      // type: gl.UNSIGNED_BYTE,
       wrapS: gl.CLAMP_TO_EDGE,
       wrapT: gl.CLAMP_TO_EDGE,
       min: gl.LINEAR,
@@ -408,7 +413,7 @@ async function main() {
   twgl.setBuffersAndAttributes(gl, brdfProgramInfo, quadBufferInfo)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
   twgl.drawBufferInfo(gl, quadBufferInfo)
-  // debugRm.readFromContext('2d_lut')
+  // debugRb.readFromContext('2d_lut')
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
   console.log(' here ___ ');
@@ -451,7 +456,6 @@ async function main() {
     // wheel 拉近 拉远
     // change fov angle
     canvas.addEventListener('wheel', (e) => {
-      console.log('wheel');
       const { deltaY } = e
       const step = 0.05
       let newFov = 0;
@@ -530,7 +534,6 @@ async function main() {
       canvas.removeEventListener('mouseup', onMouseUp)
     }
     const onMousedown = (e: MouseEvent) => {
-      console.log(e);
       const { offsetX, offsetY, which } = e
       const isLeftClick = which === 1
       const isMiddleClick = which === 2
@@ -572,6 +575,7 @@ async function main() {
     //
   }
 
+  window.spector.startCapture(canvas, 1000, false, true)
   const drawFn = () => {
 
     const target = twgl.v3.add(camPos, camFront);
@@ -579,10 +583,6 @@ async function main() {
     const view = twgl.m4.inverse(cameraMat)
     const projection = twgl.m4.perspective(perspectiveOptions.fov, 1, 0.1, 100)
 
-    gl.useProgram(bgProgram)
-    twgl.setUniforms(bgProgramInfo, {
-      projection
-    })
 
     gl.useProgram(pbrProgram)
     twgl.setUniforms(pbrProgramInfo, {
@@ -653,6 +653,7 @@ async function main() {
     twgl.setBuffersAndAttributes(gl, bgProgramInfo, cubeBufferInfo)
     twgl.setUniforms(bgProgramInfo, {
       view,
+      projection,
       // environmentMap: texObj.irradianceTexMap
       // environmentMap: texs.prefilterMap,
       environmentMap: textures.envCubeMapTex

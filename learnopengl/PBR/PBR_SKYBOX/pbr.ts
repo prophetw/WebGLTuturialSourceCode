@@ -218,6 +218,7 @@ async function main() {
     twgl.m4.inverse(twgl.m4.lookAt(Vector3.create(0, 0, 0), Vector3.create(0, 0, -1), Vector3.create(0, -1, 0))),
   ]
 
+  // window.spector.startCapture(canvas, 1000)
   // pbr: convert HDR equirectangular environment map to cubemap equivalent
   // ----------------------------------------------------------------------
   gl.useProgram(eqToCubeProgram)
@@ -267,15 +268,18 @@ async function main() {
 
   // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
   // --------------------------------------------------------------------------------
+  const irradianceWidth = 512
+  const irradianceHeight = 512
+
   const texObj = await createTextures(gl, {
     irradianceTexMap: {
       src: undefined,
       target: gl.TEXTURE_CUBE_MAP,
-      width: 32,
-      height: 32,
+      width: irradianceWidth,
+      height: irradianceHeight,
       // internalFormat: gl.RGB16F,
       // format: gl.RGB,
-      // type: gl.FLOAT,
+      type: gl.UNSIGNED_BYTE,
       wrapR: gl.CLAMP_TO_EDGE,
       wrapS: gl.CLAMP_TO_EDGE,
       wrapT: gl.CLAMP_TO_EDGE,
@@ -283,14 +287,17 @@ async function main() {
       max: gl.LINEAR,
     }
   })
-  twgl.resizeFramebufferInfo(gl, captureFbo, attachments, 32, 32)
+  twgl.bindFramebufferInfo(gl, captureFbo)
+  twgl.resizeFramebufferInfo(gl, captureFbo, attachments, irradianceWidth, irradianceHeight)
+
+  // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+  // -----------------------------------------------------------------------------
   gl.useProgram(irradianceProgram)
   twgl.setUniforms(irradianceProgramInfo, {
     projection: captureProjection,
     environmentMap: textures.envCubeMapTex
   })
-  gl.viewport(0, 0, 32, 32)
-  twgl.bindFramebufferInfo(gl, captureFbo)
+  gl.viewport(0, 0, irradianceWidth, irradianceHeight)
   twgl.setBuffersAndAttributes(gl, irradianceProgramInfo, cubeBufferInfo)
   for (let i = 0; i < 6; i++) {
     twgl.setUniforms(irradianceProgramInfo, {
@@ -301,8 +308,8 @@ async function main() {
     twgl.drawBufferInfo(gl, cubeBufferInfo)
   }
 
-  gl.viewport(0, 0, 512, 512)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  gl.viewport(0, 0, 512,512)
 
 
 

@@ -8,7 +8,6 @@ uniform samplerCube environmentMap;
 
 const float PI = 3.14159265359;
 
-
 void main()
 {
 	// The world vector acts as the normal of a tangent surface
@@ -43,4 +42,5 @@ void main()
     irradiance = PI * irradiance * (1.0 / float(nrSamples));
 
     FragColor = vec4(irradiance, 1.0);
+    // FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
