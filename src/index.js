@@ -75,6 +75,7 @@ import {
   PBR,
   PBRWithTex,
   PBRSKYBOX,
+  PBRSKYBOXIBL,
 } from '../learnopengl'
 import { LOGLAmbient, LOGLDiffuse, LOGLSpecular } from '../learnopengl/BasicLighting'
 import { LOGLSpecularMaps } from '../learnopengl/LightMapping'
@@ -164,6 +165,7 @@ ExampleFn = SkyboxWFM
 ExampleFn = PBR
 ExampleFn = PBRWithTex
 ExampleFn = PBRSKYBOX
+ExampleFn = PBRSKYBOXIBL
 
 
 // const ExampleFn = LOGLTexturesTriangle
