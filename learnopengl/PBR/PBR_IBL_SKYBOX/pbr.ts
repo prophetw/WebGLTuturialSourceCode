@@ -170,7 +170,7 @@ async function main() {
   gl.bindRenderbuffer(gl.RENDERBUFFER, RBO)
   gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, 512, 512)
   const attachments: twgl.AttachmentOptions[] = [
-    // { attachmentPoint: gl.COLOR_ATTACHMENT0 },
+    { attachmentPoint: gl.COLOR_ATTACHMENT0 },
     { attachment: RBO, attachmentPoint: gl.DEPTH_ATTACHMENT },
   ]
   const captureFbo = twgl.createFramebufferInfo(gl, attachments, 512, 512)
@@ -216,7 +216,7 @@ async function main() {
         wrapR: gl.CLAMP_TO_EDGE,
         wrapS: gl.CLAMP_TO_EDGE,
         wrapT: gl.CLAMP_TO_EDGE,
-        min: gl.LINEAR,
+        min: gl.LINEAR_MIPMAP_LINEAR,
         max: gl.LINEAR,
       }
     }
@@ -261,6 +261,9 @@ async function main() {
     twgl.drawBufferInfo(gl, cubeBufferInfo)
     // debugRt.readFromContext('cubemap' + i)
   }
+
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, textures.envCubeMapTex)
+  gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
 
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -336,12 +339,12 @@ async function main() {
   // pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
   // --------------------------------------------------------------------------------
 
-  window.spector.startCapture(canvas, 1000)
+  // window.spector.startCapture(canvas, 1000)
   const preWidth = 512
   const preHeight = 512
   const texs = await createTextures(gl, {
     prefilterMap: {
-      auto: true,
+      // auto: true,
       src: undefined,
       type: gl.UNSIGNED_BYTE,
       target: gl.TEXTURE_CUBE_MAP,
@@ -354,6 +357,8 @@ async function main() {
       max: gl.LINEAR,
     }
   })
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, texs.prefilterMap)
+  gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
   // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
   // ----------------------------------------------------------------------------------------------------
   // window.spector.startCapture(canvas, 100, false, true)
@@ -384,7 +389,7 @@ async function main() {
       twgl.setUniforms(prefilterProgramInfo, {
         view: captureViews[i]
       })
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, texs.prefilterMap, 0)
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, texs.prefilterMap, mip)
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
       twgl.drawBufferInfo(gl, cubeBufferInfo)
       // debugRm.readFromContext('prefilter_' + i)
