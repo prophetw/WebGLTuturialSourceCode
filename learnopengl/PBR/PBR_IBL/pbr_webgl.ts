@@ -13,17 +13,6 @@ import { VisualState } from '../../../src/utils/visualState'
 
 const Vector3 = twgl.v3
 
-async function loadImg(src: string): Promise<HTMLImageElement>{
-  return new Promise((resolve, reject)=>{
-    const img = document.createElement('img')
-    img.crossOrigin = ''
-    img.src = src
-    img.onload = ()=>{
-      resolve(img)
-    }
-  })
-}
-
 async function loadHDR(hdrSrc: string): Promise<{
   dataFloat: Float32Array,
   dataRGBE: Uint8Array
@@ -109,17 +98,7 @@ async function main() {
 
   gl.enable(gl.DEPTH_TEST)
   gl.depthFunc(gl.LEQUAL); // set depth function to less than AND equal for skybox depth trick.
-  gl.clearColor(0.7, 0.7, 0.7, 1.0)
-
-
-  // let camPos = twgl.v3.create(0, 0, 20);
-  let camPos = twgl.v3.create(1, 1, 5);
-  let camFront = twgl.v3.create(0, 0, -1)
-  let camUp = twgl.v3.create(0, 1, 0)
-  const perspectiveOptions = {
-    fov: Math.PI / 3
-  }
-  // mvp
+  gl.clearColor(0.5, 0.5, 0.5, 1.0)
 
   // init program
   const pbrProgramInfo = twgl.createProgramInfo(gl, [PBRVS, PBRFS])
@@ -160,22 +139,19 @@ async function main() {
   // pbr: load the HDR environment map
   // -----------------------------
   const hdrImageData = await loadHDR('./resources/hdr/newport_loft.hdr')
-  // const hdrImageData = await loadHDR('./resources/pbr/clarens_midday_4k.hdr')
-  // console.log(' ______ hdr ImageData _____ ', hdrImageData);
-  // const imageData = await loadImg('./resources/pbr/footprint_court.jpg');
+  console.log(' ______ hdr ImageData _____ ', hdrImageData);
 
   const textures = await createTextures(gl,
     {
       hdr: {
-        // src: imageData,
         src: hdrImageData.canvas,
         // src: hdrImageData.dataFloat,
-        // width: 1600,
-        // height: 800,
         // internalFormat: gl.RGB16F,
         // format: gl.RGB,
-        // type: gl.FLOAT,
+        // type: gl.HALF_FLOAT,
         // type: gl.UNSIGNED_BYTE,
+        width: 1600,
+        height: 800,
         flipY: true,
         wrapS: gl.CLAMP_TO_EDGE,
         wrapT: gl.CLAMP_TO_EDGE,
@@ -191,7 +167,7 @@ async function main() {
         height: 512,
         // internalFormat: gl.RGB16F,
         // format: gl.RGB,
-        // type: gl.FLOAT,
+        // type: gl.HALF_FLOAT,
         // type: gl.UNSIGNED_BYTE,
         target: gl.TEXTURE_CUBE_MAP,
         wrapR: gl.CLAMP_TO_EDGE,
@@ -229,44 +205,24 @@ async function main() {
   twgl.bindFramebufferInfo(gl, captureFbo, gl.FRAMEBUFFER)
   // gl.activeTexture(gl.TEXTURE0)
   // gl.bindTexture(gl.TEXTURE_2D, textures.hdr)
-  twgl.setBuffersAndAttributes(gl, eqToCubeProgramInfo, cubeBufferInfo)
   for (let i = 0; i < 6; i++) {
     twgl.setUniforms(eqToCubeProgramInfo, {
       view: captureViews[i]
     })
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, textures.envCubeMapTex, 0)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    console.log(' --- hahaha ');
     twgl.drawBufferInfo(gl, cubeBufferInfo)
+    console.log(' --- hahaha ');
     debugRt.readFromContext('cubemap' + i)
   }
 
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-
-
-  // debug cube start
-  // const target = twgl.v3.add(camPos, camFront);
-  // const cameraMat = twgl.m4.lookAt(camPos, target, camUp)
-  // const view = twgl.m4.inverse(cameraMat)
-  // const projection = twgl.m4.perspective(perspectiveOptions.fov, 1, 0.1, 100)
-  // gl.useProgram(bgProgram)
-  // twgl.setBuffersAndAttributes(gl, bgProgramInfo, cubeBufferInfo)
-  // twgl.setUniforms(bgProgramInfo, {
-  //   view,
-  //   projection,
-  //   // environmentMap: texObj.irradianceTexMap
-  //   environmentMap: textures.envCubeMapTex
-  // })
-  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-  // twgl.drawBufferInfo(gl, cubeBufferInfo)
-  // return
-  // debug cube end
-
-
+  return
 
   // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
   // --------------------------------------------------------------------------------
+
   const texObj = await createTextures(gl, {
     irradianceTexMap: {
       src: undefined,
@@ -275,7 +231,7 @@ async function main() {
       height: 32,
       // internalFormat: gl.RGB16F,
       // format: gl.RGB,
-      // type: gl.FLOAT,
+      // type: gl.HALF_FLOAT,
       wrapR: gl.CLAMP_TO_EDGE,
       wrapS: gl.CLAMP_TO_EDGE,
       wrapT: gl.CLAMP_TO_EDGE,
@@ -291,7 +247,6 @@ async function main() {
   })
   gl.viewport(0, 0, 32, 32)
   twgl.bindFramebufferInfo(gl, captureFbo)
-  twgl.setBuffersAndAttributes(gl, irradianceProgramInfo, cubeBufferInfo)
   for (let i = 0; i < 6; i++) {
     twgl.setUniforms(irradianceProgramInfo, {
       view: captureViews[i]
@@ -304,9 +259,15 @@ async function main() {
   gl.viewport(0, 0, 512, 512)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
+  const perspectiveOptions = {
+    fov: Math.PI / 3
+  }
+  // mvp
 
 
-
+  let camPos = twgl.v3.create(0, 0, 20);
+  let camFront = twgl.v3.create(0, 0, -1)
+  let camUp = twgl.v3.create(0, 1, 0)
 
   const cameraChange = (canvas: HTMLCanvasElement, callback = () => {
     //
@@ -539,7 +500,6 @@ async function main() {
 
     // render skybox (render as last to prevent overdraw)
     gl.useProgram(bgProgram)
-    twgl.setBuffersAndAttributes(gl, bgProgramInfo, cubeBufferInfo)
     twgl.setUniforms(bgProgramInfo, {
       view,
       // environmentMap: texObj.irradianceTexMap
@@ -550,11 +510,11 @@ async function main() {
 
   }
   draw = drawFn
-  draw()
+  // draw()
 
-  cameraChange(canvas, () => {
-    draw()
-  })
+  // cameraChange(canvas, () => {
+  //   draw()
+  // })
 
 }
 export default main;
