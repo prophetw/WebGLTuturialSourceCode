@@ -124,8 +124,8 @@ async function main() {
   gl.clearColor(0.7, 0.7, 0.7, 1.0)
 
 
-  let camPos = twgl.v3.create(0, 0, 20);
-  // let camPos = twgl.v3.create(1, 1, 5);
+  // let camPos = twgl.v3.create(0, 0, 20);
+  let camPos = twgl.v3.create(-8, 5, 8);
   let camFront = twgl.v3.create(0, 0, -1)
   let camUp = twgl.v3.create(0, 1, 0)
   const perspectiveOptions = {
@@ -187,14 +187,17 @@ async function main() {
     {
       hdr: {
         // src: imageData,
-        src: hdrImageData.canvas,
-        // src: hdrImageData.dataFloat,
-        // width: 1600,
-        // height: 800,
-        // internalFormat: gl.RGB16F,
-        // format: gl.RGB,
-        // type: gl.FLOAT,
-        // type: gl.UNSIGNED_BYTE,
+
+        // src: hdrImageData.canvas,
+
+        width: hdrImageData.canvas.width,
+        height: hdrImageData.canvas.height,
+
+        src: hdrImageData.dataFloat,
+        internalFormat: gl.RGB16F,
+        format: gl.RGB,
+        type: gl.FLOAT,
+
         flipY: true,
         wrapS: gl.CLAMP_TO_EDGE,
         wrapT: gl.CLAMP_TO_EDGE,
@@ -274,8 +277,8 @@ async function main() {
 
   // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
   // --------------------------------------------------------------------------------\
-  const irradWidth = 512
-  const irradHeight = 512
+  const irradWidth = 32
+  const irradHeight = 32
   const texObj = await createTextures(gl, {
     irradianceTexMap: {
       auto: true,
@@ -673,6 +676,7 @@ async function main() {
       environmentMap: textures.envCubeMapTex
     })
     twgl.drawBufferInfo(gl, cubeBufferInfo)
+    debugRt.readFromContext('render')
 
 
   }

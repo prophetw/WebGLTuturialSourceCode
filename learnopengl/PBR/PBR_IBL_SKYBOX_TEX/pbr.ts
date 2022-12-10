@@ -17,12 +17,12 @@ import { EnvironmentMap } from '../../../WebglFundemental'
 
 const Vector3 = twgl.v3
 
-async function loadImg(src: string): Promise<HTMLImageElement>{
-  return new Promise((resolve, reject)=>{
+async function loadImg(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
     const img = document.createElement('img')
     img.crossOrigin = ''
     img.src = src
-    img.onload = ()=>{
+    img.onload = () => {
       resolve(img)
     }
   })
@@ -180,20 +180,35 @@ async function main() {
   // -----------------------------
   const hdrImageData = await loadHDR('./resources/hdr/newport_loft.hdr')
   // const hdrImageData = await loadHDR('./resources/pbr/clarens_midday_4k.hdr')
+  // const hdrImageData = await loadHDR('./resources/pbr/fireplace_4k.hdr')
+
   // console.log(' ______ hdr ImageData _____ ', hdrImageData);
   // const imageData = await loadImg('./resources/pbr/footprint_court.jpg');
+  // uniform sampler2D albedoMap;
+  // uniform sampler2D normalMap;
+  // uniform sampler2D metallicMap;
+  // uniform sampler2D roughnessMap;
+  // uniform sampler2D aoMap;
+
+  const materialAry = ['gold', 'grass', 'plastic', 'rusted_iron', 'wall', 'space_cruiser', 'grey_granite_flecks_bl', 'paint_metal', 'silver']
+  const materialName = materialAry[0]
+
+
 
   const textures = await createTextures(gl,
     {
       hdr: {
         // src: imageData,
-        src: hdrImageData.canvas,
-        // src: hdrImageData.dataFloat,
-        // width: 1600,
-        // height: 800,
-        // internalFormat: gl.RGB16F,
-        // format: gl.RGB,
-        // type: gl.FLOAT,
+
+        // src: hdrImageData.canvas,
+
+        src: hdrImageData.dataFloat,
+        internalFormat: gl.RGB32F,
+        format: gl.RGB,
+        type: gl.FLOAT,
+
+        width: hdrImageData.canvas.width,
+        height: hdrImageData.canvas.height,
         // type: gl.UNSIGNED_BYTE,
         flipY: true,
         wrapS: gl.CLAMP_TO_EDGE,
@@ -218,7 +233,69 @@ async function main() {
         wrapT: gl.CLAMP_TO_EDGE,
         min: gl.LINEAR_MIPMAP_LINEAR,
         max: gl.LINEAR,
-      }
+      },
+
+      albedoMap: {
+        // level: 0,
+        auto: true,
+        src: `./resources/pbr/${materialName}/albedo.png`,
+        // format: gl.RED,
+        // internalFormat: gl.R8,
+        type: gl.UNSIGNED_BYTE,
+        wrapS: gl.REPEAT,
+        wrapT: gl.REPEAT,
+        min: gl.LINEAR_MIPMAP_LINEAR,
+        max: gl.LINEAR,
+      },
+      normalMap: {
+        // level: 0,
+        auto: true,
+        src: `./resources/pbr/${materialName}/normal.png`,
+        // format: gl.RED,
+        // internalFormat: gl.R8,
+        type: gl.UNSIGNED_BYTE,
+        wrapS: gl.REPEAT,
+        wrapT: gl.REPEAT,
+        min: gl.LINEAR_MIPMAP_LINEAR,
+        max: gl.LINEAR,
+      },
+      metallicMap: {
+        // level: 0,
+        auto: true,
+        src: `./resources/pbr/${materialName}/metallic.png`,
+        // format: gl.FLOAT,
+        // internalFormat: gl.RGBA16F,
+        wrapS: gl.REPEAT,
+        wrapT: gl.REPEAT,
+        min: gl.LINEAR_MIPMAP_LINEAR,
+        max: gl.LINEAR,
+      },
+      roughnessMap: {
+        auto: true,
+        // level: 0,
+        src: `./resources/pbr/${materialName}/roughness.png`,
+        // format: gl.RGB,
+        // internalFormat: gl.RGB8,
+        type: gl.UNSIGNED_BYTE,
+        wrapS: gl.REPEAT,
+        wrapT: gl.REPEAT,
+        min: gl.LINEAR_MIPMAP_LINEAR,
+        max: gl.LINEAR,
+      },
+      aoMap: {
+        // level: 0,
+        auto: true,
+        target: gl.TEXTURE_2D,
+        src: `./resources/pbr/${materialName}/ao.png`,
+        // format: gl.RGBA,
+        // internalFormat: gl.RGBA8,
+        type: gl.UNSIGNED_BYTE,
+        wrapS: gl.REPEAT,
+        wrapT: gl.REPEAT,
+        min: gl.LINEAR_MIPMAP_LINEAR,
+        max: gl.LINEAR,
+      },
+
     }
   )
   console.log(' ___ textues ___ ', textures);
@@ -274,8 +351,8 @@ async function main() {
 
   // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
   // --------------------------------------------------------------------------------\
-  const irradWidth = 512
-  const irradHeight = 512
+  const irradWidth = 32
+  const irradHeight = 32
   const texObj = await createTextures(gl, {
     irradianceTexMap: {
       auto: true,
@@ -368,14 +445,14 @@ async function main() {
     projection: captureProjection
   })
   const attachments1: twgl.AttachmentOptions[] = [
-    { attachment: texs.prefilterMap, attachmentPoint: gl.COLOR_ATTACHMENT0},
+    { attachment: texs.prefilterMap, attachmentPoint: gl.COLOR_ATTACHMENT0 },
     { attachment: RBO, attachmentPoint: gl.DEPTH_ATTACHMENT },
   ]
   const fbo = twgl.createFramebufferInfo(gl, attachments1, preWidth, preHeight)
   twgl.bindFramebufferInfo(gl, fbo, gl.FRAMEBUFFER)
   const maxMipLeverls = 5
   twgl.setBuffersAndAttributes(gl, prefilterProgramInfo, cubeBufferInfo)
-  for(let mip=0; mip<maxMipLeverls;mip++){
+  for (let mip = 0; mip < maxMipLeverls; mip++) {
     const mipWidth = preWidth * Math.pow(0.5, mip)
     const mipHeight = preHeight * Math.pow(0.5, mip)
     twgl.resizeFramebufferInfo(gl, fbo, attachments1, mipWidth, mipHeight)
@@ -385,7 +462,7 @@ async function main() {
     twgl.setUniforms(prefilterProgramInfo, {
       roughness
     })
-    for(let i=0; i<6; i++){
+    for (let i = 0; i < 6; i++) {
       twgl.setUniforms(prefilterProgramInfo, {
         view: captureViews[i]
       })
@@ -397,7 +474,7 @@ async function main() {
   }
   console.log(' goes here ');
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-  gl.viewport(0,0,512,512);
+  gl.viewport(0, 0, 512, 512);
 
 
   // pbr: generate a 2D LUT from the BRDF equations used.
@@ -422,7 +499,7 @@ async function main() {
   twgl.resizeFramebufferInfo(gl, captureFbo, attachments, 512, 512)
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texs2.brdfLUTTexture, 0)
 
-  gl.viewport(0,0,512,512);
+  gl.viewport(0, 0, 512, 512);
 
   gl.useProgram(brdfProgram)
   twgl.setBuffersAndAttributes(gl, brdfProgramInfo, quadBufferInfo)
@@ -606,8 +683,11 @@ async function main() {
       lightPositions,
       lightColors,
 
-      albedo: twgl.v3.create(0.5, 0.0, 0.0),
-      ao: 1.0,
+      albedoMap: textures.albedoMap,
+      normalMap: textures.normalMap,
+      metallicMap: textures.metallicMap,
+      roughnessMap: textures.roughnessMap,
+      aoMap: textures.aoMap,
 
       irradianceMap: texObj.irradianceTexMap,
       brdfLUT: texs2.brdfLUTTexture,
