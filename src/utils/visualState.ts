@@ -982,6 +982,11 @@ export class VisualState {
     this.blendState = result;
     // this.context.getParameter()
   }
+  getWebglShowName(value: number){
+        const showValue = WebGlConstantsByValue[value] && WebGlConstantsByValue[value].name || value
+        console.log(showValue);
+        return showValue
+  }
   showBlendState() {
     const state = this.blendState
     if (state) {

@@ -118,6 +118,7 @@ async function main() {
     context: gl,
     contextVersion: 2
   }, 'right-bottom', 100)
+  console.log(' _____ debugRb ', debugRb);
 
   gl.enable(gl.DEPTH_TEST)
   gl.depthFunc(gl.LEQUAL); // set depth function to less than AND equal for skybox depth trick.
@@ -178,9 +179,9 @@ async function main() {
 
   // pbr: load the HDR environment map
   // -----------------------------
-  const hdrImageData = await loadHDR('./resources/hdr/newport_loft.hdr')
+  // const hdrImageData = await loadHDR('./resources/hdr/newport_loft.hdr')
   // const hdrImageData = await loadHDR('./resources/pbr/clarens_midday_4k.hdr')
-  // const hdrImageData = await loadHDR('./resources/pbr/fireplace_4k.hdr')
+  const hdrImageData = await loadHDR('./resources/pbr/fireplace_4k.hdr')
 
   // console.log(' ______ hdr ImageData _____ ', hdrImageData);
   // const imageData = await loadImg('./resources/pbr/footprint_court.jpg');
@@ -194,6 +195,7 @@ async function main() {
   const materialName = materialAry[0]
 
 
+  // window.spector.startCapture(canvas, 1000)
 
   const textures = await createTextures(gl,
     {
@@ -203,7 +205,7 @@ async function main() {
         // src: hdrImageData.canvas,
 
         src: hdrImageData.dataFloat,
-        internalFormat: gl.RGB32F,
+        internalFormat: gl.RGB16F,
         format: gl.RGB,
         type: gl.FLOAT,
 
@@ -339,8 +341,8 @@ async function main() {
     // debugRt.readFromContext('cubemap' + i)
   }
 
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, textures.envCubeMapTex)
-  gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
+  // gl.bindTexture(gl.TEXTURE_CUBE_MAP, textures.envCubeMapTex)
+  // gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
 
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -421,7 +423,7 @@ async function main() {
   const preHeight = 512
   const texs = await createTextures(gl, {
     prefilterMap: {
-      // auto: true,
+      auto: true,
       src: undefined,
       type: gl.UNSIGNED_BYTE,
       target: gl.TEXTURE_CUBE_MAP,
@@ -434,8 +436,6 @@ async function main() {
       max: gl.LINEAR,
     }
   })
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, texs.prefilterMap)
-  gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
   // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
   // ----------------------------------------------------------------------------------------------------
   // window.spector.startCapture(canvas, 100, false, true)
