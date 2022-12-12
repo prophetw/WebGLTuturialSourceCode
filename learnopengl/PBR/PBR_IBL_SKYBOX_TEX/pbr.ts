@@ -14,9 +14,34 @@ import { Camera } from '../../../src/utils/utils'
 import { clamp } from '../simp/pbr'
 import { VisualState } from '../../../src/utils/visualState'
 import { EnvironmentMap } from '../../../WebglFundemental'
+import * as png from 'fast-png'
+import axios from 'axios'
 
 const Vector3 = twgl.v3
 
+async function loadImgBlob(src: string): Promise<ArrayBuffer> {
+  return axios.get(src, {
+    responseType: 'arraybuffer'
+  }).then(res=>{
+    console.log(res);
+    return res.data
+  })
+}
+
+async function init(){
+  const png1 = await loadImgBlob('http://localhost:5000/TextureEncodingTest/glTF/0_136_0.png')
+  console.log(png1);
+  const pngicc = await loadImgBlob('http://localhost:5000/TextureEncodingTest/glTF/0_136_0_icc.png')
+  console.log(pngicc);
+  const decode1 = png.decode(png1)
+  const decode2 = png.decode(pngicc)
+  console.log(' _______ result ');
+  console.log(decode1);
+  console.log(decode2);
+
+
+}
+// init()
 async function loadImg(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = document.createElement('img')
@@ -27,6 +52,8 @@ async function loadImg(src: string): Promise<HTMLImageElement> {
     }
   })
 }
+
+
 
 async function loadHDR(hdrSrc: string): Promise<{
   dataFloat: Float32Array,
