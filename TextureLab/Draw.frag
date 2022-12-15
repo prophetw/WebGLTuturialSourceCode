@@ -1,14 +1,13 @@
-#extension GL_EXT_draw_buffers : enable
+#version 300 es
 precision highp float;
 
-uniform sampler2D texture0; // read tex
-varying vec2 v_Texcoord;
+in vec2 v_TexCoord;
 
-// out gl_FragData []  0, 1, 2 ,3
+uniform sampler2D texture0; // read tex
+
+out vec4 fragColor;
+
 void main() {
-  vec4 color = texture2D(texture0, v_Texcoord);
-  gl_FragData[0] = color; 
-  gl_FragData[1] = vec4(color.x, 0.0, 0.0, color.a);
-  gl_FragData[2] = vec4(0.0, color.y, 0.0, color.a);
-  gl_FragData[3] = vec4(0.0, 0.0, color.z, color.a);
+  vec4 color = texture(texture0, v_TexCoord);
+  fragColor = color;
 }

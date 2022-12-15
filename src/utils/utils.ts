@@ -4,6 +4,8 @@ import { angleToRads } from '../../lib/utils'
 import { IContextInformation } from './contextInformation'
 import { ReadPixelsHelper } from './readPixelsHelper'
 import { WebGlConstant, WebGlConstants, WebGlConstantsByValue } from './webglConstants'
+import axios from 'axios'
+import * as png from 'fast-png'
 const Vector3 = twgl.v3
 const Matrix4 = twgl.m4
 
@@ -689,6 +691,115 @@ class CustomBtn {
   }
 }
 
+async function loadImgArrayBuffer(src: string): Promise<ArrayBuffer> {
+  return axios.get(src, {
+    responseType: 'arraybuffer'
+  }).then(res=>{
+    return res.data
+  })
+}
+async function loadImgBlob(src: string): Promise<Blob> {
+  return axios.get(src, {
+    responseType: 'arraybuffer'
+  }).then(res=>{
+    const result = res.data as ArrayBuffer
+    const blob = new Blob([result])
+    return blob
+  })
+}
+
+// async function testPng(){
+//   const png1 = await loadImgBlob('http://localhost:5000/TextureEncodingTest/glTF/0_136_0.png')
+//   console.log(png1);
+//   const pngicc = await loadImgBlob('http://localhost:5000/TextureEncodingTest/glTF/0_136_0_icc.png')
+//   console.log(pngicc);
+//   const decode1 = png.decode(png1)
+//   const decode2 = png.decode(pngicc)
+//   console.log(' _______ result ');
+//   console.log(decode1);
+//   console.log(decode2);
+
+
+// }
+
+async function loadImg(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img')
+    img.crossOrigin = ''
+    img.src = src
+    img.onload = () => {
+      resolve(img)
+    }
+  })
+}
+
+async function loadHDR(hdrSrc: string): Promise<{
+  dataFloat: Float32Array,
+  dataRGBE: Uint8Array
+  imageData: ImageData,
+  canvas: HTMLCanvasElement
+}> {
+  return new Promise((resolve, reject) => {
+    // https://enkimute.github.io/hdrpng.js/
+    const hdrloader = new window.HDRImage()
+    hdrloader.src = hdrSrc;
+    hdrloader.onload = () => {
+      // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB9_E5, w, h, 0, gl.RGB, gl.FLOAT, new Float32Array(myHDR.dataRAW.buffer));
+      const width = hdrloader.width
+      const height = hdrloader.height
+      const ctx = (hdrloader as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D
+      const imageData = ctx.createImageData(width, height)
+      console.log(' dataFloat ', hdrloader.dataFloat);
+      console.log(' dataRGBE ', hdrloader.dataRGBE);
+      const dataFloat = hdrloader.dataFloat
+      const dataRGBE = hdrloader.dataRGBE
+      resolve({
+        dataFloat,
+        dataRGBE,
+        imageData,
+        canvas: hdrloader
+      })
+      // hdrloader.toHDRBlob(function (blob: Blob) {
+      //   var a = document.createElement('a');
+      //   a.href = URL.createObjectURL(blob);
+      //   a.download = 'memorial.RGBE.PNG';
+      //   a.innerHTML = 'click to save';
+      //   document.body.appendChild(a); // or a.click()
+      //   a.click()
+      //   // resolve(blob)
+      // })
+    }
+  })
+}
+
+async function createTextures(gl: WebGLRenderingContext, texinfo: {
+  [key: string]: twgl.TextureOptions
+}): Promise<{
+  [key: string]: WebGLTexture;
+}> {
+  return new Promise((resolve, reject) => {
+    twgl.createTextures(gl, texinfo, (err, textures: {
+      [key: string]: WebGLTexture;
+    }) => {
+      if (err) {
+        reject(err)
+      }
+      resolve(textures)
+    })
+  })
+}
+async function createTexture(gl: WebGLRenderingContext, texinfo: twgl.TextureOptions
+): Promise<WebGLTexture> {
+  return new Promise((resolve, reject) => {
+    twgl.createTexture(gl, texinfo, (err: any, tex: WebGLTexture) => {
+      console.log(' qqq here ~~~ ');
+      if (err) {
+        reject(err)
+      }
+      resolve(tex)
+    })
+  })
+}
 export {
   GraphicEngine,
   Camera,
@@ -698,4 +809,10 @@ export {
   createSphere,
   DebugFrameBuffer,
   CustomBtn,
+  loadHDR,
+  loadImgArrayBuffer,
+  loadImgBlob,
+  loadImg,
+  createTexture,
+  createTextures,
 }

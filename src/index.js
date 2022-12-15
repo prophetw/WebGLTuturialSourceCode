@@ -154,7 +154,6 @@ ExampleFn = MRT
 ExampleFn = TWGLOIT
 ExampleFn = TWGLOITDDP
 ExampleFn = TWGLOITPlane
-ExampleFn = TextureLab
 ExampleFn = Defer
 ExampleFn = LightedCube_perFragment
 ExampleFn = SSAO
@@ -168,6 +167,7 @@ ExampleFn = PBR
 ExampleFn = PBRSKYBOX
 ExampleFn = PBRSKYBOXIBL
 ExampleFn = PBRSKYBOXIBLTEX
+ExampleFn = TextureLab
 
 
 // const ExampleFn = LOGLTexturesTriangle
