@@ -207,8 +207,8 @@ async function main() {
   // pbr: load the HDR environment map
   // -----------------------------
   // const hdrImageData = await loadHDR('./resources/hdr/newport_loft.hdr')
-  // const hdrImageData = await loadHDR('./resources/pbr/clarens_midday_4k.hdr')
-  const hdrImageData = await loadHDR('./resources/pbr/fireplace_4k.hdr')
+  const hdrImageData = await loadHDR('./resources/pbr/clarens_midday_4k.hdr')
+  // const hdrImageData = await loadHDR('./resources/pbr/fireplace_4k.hdr')
 
   // console.log(' ______ hdr ImageData _____ ', hdrImageData);
   // const imageData = await loadImg('./resources/pbr/footprint_court.jpg');
@@ -445,7 +445,7 @@ async function main() {
   // pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
   // --------------------------------------------------------------------------------
 
-  // window.spector.startCapture(canvas, 1000)
+  window.spector.startCapture(canvas, 1000)
   const preWidth = 512
   const preHeight = 512
   const texs = await createTextures(gl, {

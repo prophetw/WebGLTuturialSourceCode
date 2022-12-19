@@ -10,6 +10,7 @@ async function main() {
   // Get the rendering context for WebGL
   const gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
   gl.clearColor(0.1, 0.1, 0.1, 1)
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
   const debugFBO = new DebugFrameBuffer(canvas, gl)
   console.log('  --- debgFBO ', debugFBO);
 
