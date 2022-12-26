@@ -26,6 +26,8 @@
     "fast-png": "^6.1.0",
     "parcel": "^2.3.2",
     "spectorjs": "^0.9.27",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.1",
     "twgl.js": "^4.23.2",
     "typescript": "^4.8.4"
   },
