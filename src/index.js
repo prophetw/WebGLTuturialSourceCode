@@ -91,7 +91,7 @@ import {TextureLab} from '../TextureLab'
 import {TWGLOIT} from '../webgl2examples/OIT'
 import {TWGLOITDDP, TWGLOITPlane} from '../webgl2examples/OITDualDepthPeeling'
 import {Defer} from '../webgl2examples/Deffer'
-import {DepthOfField, SSAO} from '../webgl2examples'
+import {ComputeShader, DepthOfField, SSAO} from '../webgl2examples'
 
 import Space from '../Space/Space'
 // import * as SPECTOR from "spectorjs"
@@ -171,6 +171,7 @@ ExampleFn = PBRSKYBOXIBLTEX
 ExampleFn = TextureLab
 ExampleFn = SimpleDemoMain
 ExampleFn = MRTDemo
+ExampleFn = ComputeShader
 ExampleFn = MultiCamera
 ExampleFn = ShadowMap
 ExampleFn = VirtualCamera
