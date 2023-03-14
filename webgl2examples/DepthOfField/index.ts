@@ -6,7 +6,6 @@ import QuadVS from './quad.vert'
 import * as utils from '../../src/utils/utils'
 import { VisualState } from '../../src/utils/visualState'
 import * as twgl from 'twgl.js'
-console.log(twgl);
 const mat4 = twgl.m4
 const vec3 = twgl.v3
 // @ts-ignore
