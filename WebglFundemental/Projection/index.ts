@@ -3,7 +3,6 @@ import ColorFS from './color.frag'
 import Shader3DVS from './shader3d.vert'
 import Shader3DFS from './shader3d.frag'
 import * as twgl from 'twgl.js'
-import { CustomBtn } from '../../src/utils/utils';
 
 const m4 = twgl.m4
 const primitives = twgl.primitives
@@ -17,34 +16,40 @@ async function main() {
   document.title = 'Projection'
   canvas.width = 800
   canvas.height = 800
-  var gl = canvas.getContext("webgl2", {antialias: false});
+  var gl = canvas.getContext("webgl", {antialias: false});
   if (!gl) {
     return;
   }
 
-  // Use our boilerplate utils to compile the shaders and link into a program
-  var colorInfo = twgl.createProgramInfo(gl, [ColorVS, ColorFS])
-  var shader3DInfo = twgl.createProgramInfo(gl, [Shader3DVS, Shader3DFS])
-  console.log(colorInfo);
-  console.log(shader3DInfo);
-
   twgl.setAttributePrefix('a_')
 
-  const sphereBufInfo = primitives.createSphereBufferInfo(gl, 1, 12, 6)
-  const planeBufInfo = primitives.createPlaneBufferInfo(gl, 20, 20, 1, 1)
 
-  console.log(sphereBufInfo);
-  console.log(planeBufInfo);
+  // setup GLSL programs
+  const textureProgramInfo = twgl.createProgramInfo(gl, [Shader3DVS, Shader3DFS]);
+  const colorProgramInfo = twgl.createProgramInfo(gl, [ColorVS, ColorFS]);
 
-  const cubeLinesBufInfo = twgl.createBufferInfoFromArrays(gl, {
-     position: [
-       0,  0, -1,
-       1,  0, -1,
-       0,  1, -1,
+  const sphereBufferInfo = primitives.createSphereBufferInfo(
+      gl,
+      1,  // radius
+      12, // subdivisions around
+      6,  // subdivisions down
+  );
+  const planeBufferInfo = primitives.createPlaneBufferInfo(
+      gl,
+      20,  // width
+      20,  // height
+      1,   // subdivisions across
+      1,   // subdivisions down
+  );
+  const cubeLinesBufferInfo = twgl.createBufferInfoFromArrays(gl, {
+    position: [
+      -1, -1, -1,
+       1, -1, -1,
+      -1,  1, -1,
        1,  1, -1,
-       0,  0,  1,
-       1,  0,  1,
-       0,  1,  1,
+      -1, -1,  1,
+       1, -1,  1,
+      -1,  1,  1,
        1,  1,  1,
     ],
     indices: [
@@ -63,12 +68,9 @@ async function main() {
       3, 7,
       2, 6,
     ],
-  })
+  });
 
-  function degToRad(d: number) {
-    return d * Math.PI / 180;
-  }
- // make a 8x8 checkerboard texture
+  // make a 8x8 checkerboard texture
   const checkerboardTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, checkerboardTexture);
   gl.texImage2D(
@@ -94,14 +96,8 @@ async function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
   function loadImageTexture(url: string) {
+    if(!gl) return
     // Create a texture.
-    let res: (val: any)=>void, rej;
-    const promise = new Promise((resolve, reject)=>{
-      res = resolve;
-      rej = reject;
-
-    })
-    if(gl === null) return;
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     // Fill the texture with a 1x1 blue pixel.
@@ -109,23 +105,25 @@ async function main() {
                   new Uint8Array([0, 0, 255, 255]));
     // Asynchronously load an image
     const image = new Image();
-    image.crossOrigin = '';
     image.src = url;
+    image.crossOrigin = '';
     image.addEventListener('load', function() {
+      if(!gl) return
       // Now that the image has loaded make copy it to the texture.
-      if(gl === null) return;
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
       // assumes this texture is a power of 2
       gl.generateMipmap(gl.TEXTURE_2D);
-      // render();
-      res(texture)
+      render();
     });
-    return promise;
+    return texture;
   }
 
-  const imageTexture = await loadImageTexture('https://webglfundamentals.org/webgl/resources/f-texture.png');
+  const imageTexture = loadImageTexture('https://webglfundamentals.org/webgl/resources/f-texture.png');
 
+  function degToRad(d: number) {
+    return d * Math.PI / 180;
+  }
 
   const settings = {
     cameraX: 2.75,
@@ -141,10 +139,7 @@ async function main() {
     perspective: true,
     fieldOfView: 45,
   };
-
-
-  console.log(' setupUI ', webglLessonsUI.setupUI);
-   webglLessonsUI.setupUI(document.querySelector('#ui'), settings, [
+  window.webglLessonsUI.setupUI(document.querySelector('#ui'), settings, [
     { type: 'slider',   key: 'cameraX',    min: -10, max: 10, change: render, precision: 2, step: 0.001, },
     { type: 'slider',   key: 'cameraY',    min:   1, max: 20, change: render, precision: 2, step: 0.001, },
     { type: 'slider',   key: 'posX',       min: -10, max: 10, change: render, precision: 2, step: 0.001, },
@@ -153,9 +148,9 @@ async function main() {
     { type: 'slider',   key: 'targetX',    min: -10, max: 10, change: render, precision: 2, step: 0.001, },
     { type: 'slider',   key: 'targetY',    min:   0, max: 20, change: render, precision: 2, step: 0.001, },
     { type: 'slider',   key: 'targetZ',    min: -10, max: 20, change: render, precision: 2, step: 0.001, },
-    { type: 'slider',   key: 'projWidth',  min:   0, max: 10, change: render, precision: 2, step: 0.001, },
-    { type: 'slider',   key: 'projHeight', min:   0, max: 10, change: render, precision: 2, step: 0.001, },
-    { type: 'checkbox', key: 'perspective', },
+    { type: 'slider',   key: 'projWidth',  min:   0, max:  2, change: render, precision: 2, step: 0.001, },
+    { type: 'slider',   key: 'projHeight', min:   0, max:  2, change: render, precision: 2, step: 0.001, },
+    { type: 'checkbox', key: 'perspective', change: render, },
     { type: 'slider',   key: 'fieldOfView', min:  1, max: 179, change: render, },
   ]);
 
@@ -172,21 +167,18 @@ async function main() {
     u_texture: checkerboardTexture,
     u_world: m4.translation([2, 3, 4]),
   };
- function drawScene(projectionMatrix: twgl.m4, cameraMatrix: m4) {
-  // window.spector.startCapture(canvas, 2000);
+
+  function drawScene(projectionMatrix: twgl.m4.Mat4, cameraMatrix: twgl.m4.Mat4) {
+
+      if(!gl) return
     // Make a view matrix from the camera matrix.
-    console.log(' drawScene ');
     const viewMatrix = m4.inverse(cameraMatrix);
 
-
-    // 待投影的 img 所在的 view 以及 projection
-    // camera
     const textureWorldMatrix = m4.lookAt(
         [settings.posX, settings.posY, settings.posZ],          // position
         [settings.targetX, settings.targetY, settings.targetZ], // target
         [0, 1, 0],                                              // up
     );
-    // projection
     const textureProjectionMatrix = settings.perspective
         ? m4.perspective(
             degToRad(settings.fieldOfView),
@@ -201,18 +193,21 @@ async function main() {
              0.1,                      // near
              200);                     // far
 
+    let textureMatrix = m4.identity();
+    textureMatrix = m4.translate(textureMatrix, [0.5, 0.5, 0.5]);
+    textureMatrix = m4.scale(textureMatrix, [0.5, 0.5, 0.5]);
+    textureMatrix = m4.multiply(textureMatrix, textureProjectionMatrix);
     // use the inverse of this world matrix to make
     // a matrix that will transform other positions
     // to be relative this world space.
-    // mvp  texture matrix
-    const textureMatrix = m4.multiply(
-        textureProjectionMatrix,
+    textureMatrix = m4.multiply(
+        textureMatrix,
         m4.inverse(textureWorldMatrix));
 
-    gl.useProgram(shader3DInfo.program);
+    gl.useProgram(textureProgramInfo.program);
 
     // set uniforms that are the same for both the sphere and plane
-    twgl.setUniforms(shader3DInfo, {
+    twgl.setUniforms(textureProgramInfo, {
       u_view: viewMatrix,
       u_projection: projectionMatrix,
       u_textureMatrix: textureMatrix,
@@ -222,38 +217,40 @@ async function main() {
     // ------ Draw the sphere --------
 
     // Setup all the needed attributes.
-    twgl.setBuffersAndAttributes(gl, shader3DInfo, sphereBufInfo);
+    twgl.setBuffersAndAttributes(gl, textureProgramInfo, sphereBufferInfo);
 
     // Set the uniforms unique to the sphere
-    twgl.setUniforms(shader3DInfo, sphereUniforms);
+    twgl.setUniforms(textureProgramInfo, sphereUniforms);
 
     // calls gl.drawArrays or gl.drawElements
-    twgl.drawBufferInfo(gl, sphereBufInfo);
+    twgl.drawBufferInfo(gl, sphereBufferInfo);
 
     // ------ Draw the plane --------
 
     // Setup all the needed attributes.
-    twgl.setBuffersAndAttributes(gl, shader3DInfo, planeBufInfo);
+    twgl.setBuffersAndAttributes(gl, textureProgramInfo, planeBufferInfo);
 
     // Set the uniforms we just computed
-    twgl.setUniforms(shader3DInfo, planeUniforms);
+    twgl.setUniforms(textureProgramInfo, planeUniforms);
 
     // calls gl.drawArrays or gl.drawElements
-    twgl.drawBufferInfo(gl, planeBufInfo);
+    twgl.drawBufferInfo(gl, planeBufferInfo);
 
     // ------ Draw the cube ------
 
-    gl.useProgram(colorInfo.program);
+    gl.useProgram(colorProgramInfo.program);
 
     // Setup all the needed attributes.
-    twgl.setBuffersAndAttributes(gl, colorInfo, cubeLinesBufInfo);
+    twgl.setBuffersAndAttributes(gl, colorProgramInfo, cubeLinesBufferInfo);
 
-    // orient the cube to match the projection.
+    // scale the cube in Z so it's really long
+    // to represent the texture is being projected to
+    // infinity
     const mat = m4.multiply(
         textureWorldMatrix, m4.inverse(textureProjectionMatrix));
 
     // Set the uniforms we just computed
-    twgl.setUniforms(colorInfo, {
+    twgl.setUniforms(colorProgramInfo, {
       u_color: [0, 0, 0, 1],
       u_view: viewMatrix,
       u_projection: projectionMatrix,
@@ -261,28 +258,26 @@ async function main() {
     });
 
     // calls gl.drawArrays or gl.drawElements
-    twgl.drawBufferInfo(gl, cubeLinesBufInfo, gl.LINES);
-    console.log(' drawScene end ');
+    twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
   }
 
   // Draw the scene.
   function render() {
-    if(gl === null) return
+    if(!gl) return
+    const canvas = gl.canvas as HTMLCanvasElement
     twgl.resizeCanvasToDisplaySize(canvas);
 
-
     // Tell WebGL how to convert from clip space to pixels
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
 
-    gl.clearColor(0.5, 0.5, 0.5, 1.0);
     // Clear the canvas AND the depth buffer.
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Compute the projection matrix
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const aspect = canvas.clientWidth / canvas.clientHeight;
     const projectionMatrix =
         m4.perspective(fieldOfViewRadians, aspect, 1, 2000);
 
@@ -295,8 +290,7 @@ async function main() {
     drawScene(projectionMatrix, cameraMatrix);
   }
   render();
+
 }
-
-
 
 export default main;

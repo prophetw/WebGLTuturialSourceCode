@@ -171,10 +171,10 @@ ExampleFn = PBRSKYBOXIBLTEX
 ExampleFn = TextureLab
 ExampleFn = SimpleDemoMain
 ExampleFn = MRTDemo
-ExampleFn = Projection
 ExampleFn = MultiCamera
 ExampleFn = ShadowMap
 ExampleFn = VirtualCamera
+ExampleFn = Projection
 
 
 // const ExampleFn = LOGLTexturesTriangle
