@@ -177,11 +177,15 @@ async function main() {
     console.log(' drawScene ');
     const viewMatrix = m4.inverse(cameraMatrix);
 
+
+    // 待投影的 img 所在的 view 以及 projection
+    // camera
     const textureWorldMatrix = m4.lookAt(
         [settings.posX, settings.posY, settings.posZ],          // position
         [settings.targetX, settings.targetY, settings.targetZ], // target
         [0, 1, 0],                                              // up
     );
+    // projection
     const textureProjectionMatrix = settings.perspective
         ? m4.perspective(
             degToRad(settings.fieldOfView),
@@ -199,6 +203,7 @@ async function main() {
     // use the inverse of this world matrix to make
     // a matrix that will transform other positions
     // to be relative this world space.
+    // mvp  texture matrix
     const textureMatrix = m4.multiply(
         textureProjectionMatrix,
         m4.inverse(textureWorldMatrix));

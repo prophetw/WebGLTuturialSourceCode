@@ -5,8 +5,8 @@ varying vec2 v_texcoord;
 varying vec4 v_projectedTexcoord;
 
 uniform vec4 u_colorMult;
-uniform sampler2D u_texture;
-uniform sampler2D u_projectedTexture;
+uniform sampler2D u_texture; // 棋盘纹理
+uniform sampler2D u_projectedTexture; // 待投影的texture
 
 void main() {
   vec3 projectedTexcoord = v_projectedTexcoord.xyz / v_projectedTexcoord.w;
