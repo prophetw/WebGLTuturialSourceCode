@@ -14,6 +14,7 @@ var zDepth = 50;
 async function main() {
   var canvas = document.getElementById("webgl") as HTMLCanvasElement;
 
+  document.title = 'Projection'
   canvas.width = 800
   canvas.height = 800
   var gl = canvas.getContext("webgl2", {antialias: false});

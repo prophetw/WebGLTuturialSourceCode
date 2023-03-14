@@ -10,10 +10,11 @@ const primitives = twgl.primitives
 
 function main() {
 
+  document.title = 'Shadow map'
   var canvas = document.getElementById("webgl") as HTMLCanvasElement;
 
-  canvas.width = 800
-  canvas.height = 800
+  canvas.width = 512
+  canvas.height = 512
   var gl = canvas.getContext("webgl", {antialias: false});
   if (!gl) {
     return;

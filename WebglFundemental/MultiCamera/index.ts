@@ -9,6 +9,7 @@ function main() {
 
   var canvas = document.getElementById("webgl") as HTMLCanvasElement;
 
+  document.title = 'Multi view'
   canvas.width = 800
   canvas.height = 800
   var gl = canvas.getContext("webgl", {antialias: false});
