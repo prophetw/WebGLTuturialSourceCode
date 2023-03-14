@@ -9,6 +9,10 @@ interface Window {
   createProgram: (gl: WebGLRenderingContext, VSHADER_SOURCE: string, FSHADER_SOURCE: string)=>WebGLProgram
   Matrix4: new (value?: any) => Matrix4
   HDRImage: new () => any
+  webglLessonsUI: WebglLessonsUI
+}
+interface WebglLessonsUI{
+  setupUI: (ele: HTMLElement|null, settings: any, changes: any)=>void
 }
 interface WebGLRenderingContext{
   program: WebGLProgram
@@ -21,6 +25,8 @@ interface WebGLProgram{
   a_TexCoord?: number
   u_Sampler?: WebGLUniformLocation
 }
+
+
 interface WebGLBuffer{
   num: number
   type: number
