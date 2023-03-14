@@ -4,6 +4,7 @@ import SkyboxWFM from './SkyboxWFM'
 import Projection from './Projection'
 import MultiCamera from './MultiCamera'
 import Shadow from './Shadow'
+import VirtualCamera from './VirtualCamera'
 
 export {
   TextureDemo,
@@ -11,5 +12,6 @@ export {
   SkyboxWFM,
   Projection,
   MultiCamera,
-Shadow,
+  Shadow,
+  VirtualCamera,
 }

@@ -97,7 +97,7 @@ import Space from '../Space/Space'
 // import * as SPECTOR from "spectorjs"
 // window.SPECTOR = SPECTOR
 
-import {EnvironmentMap, MultiCamera, Shadow as ShadowMap, Projection, SkyboxWFM, TextureDemo} from '../WebglFundemental/index'
+import {EnvironmentMap, MultiCamera, Shadow as ShadowMap, Projection, SkyboxWFM, TextureDemo, VirtualCamera} from '../WebglFundemental/index'
 import { MRTDemo, SimpleDemoMain } from '../simpleDemo'
 
 
@@ -174,6 +174,7 @@ ExampleFn = MRTDemo
 ExampleFn = Projection
 ExampleFn = MultiCamera
 ExampleFn = ShadowMap
+ExampleFn = VirtualCamera
 
 
 // const ExampleFn = LOGLTexturesTriangle
