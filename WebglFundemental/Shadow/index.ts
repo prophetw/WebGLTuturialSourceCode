@@ -4,11 +4,13 @@ import ColorVS from './color.vert'
 import ColorFS from './color.frag'
 import Shader3DVS from './shader3d.vert'
 import Shader3DFS from './shader3d.frag'
+import {VisualState} from '../../src/utils/visualState'
 import * as twgl from 'twgl.js'
 const m4 = twgl.m4
 const primitives = twgl.primitives
 
 function main() {
+
 
   document.title = 'Shadow map'
   var canvas = document.getElementById("webgl") as HTMLCanvasElement;
@@ -20,6 +22,11 @@ function main() {
     return;
   }
 
+
+  const debugRt = new VisualState({
+    context: gl,
+    contextVersion: 2
+  }, 'right-bottom', 10)
 
   const ext = gl.getExtension('WEBGL_depth_texture');
   if (!ext) {
@@ -317,6 +324,7 @@ function main() {
         m4.identity(),
         lightWorldMatrix,
         colorProgramInfo);
+    debugRt.readFromContext('depthTexture')
 
     // now draw scene to the canvas projecting the depth texture into the scene
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -325,8 +333,11 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     let textureMatrix = m4.identity();
+
+    // Converts from NDC space to texture space  -1~1 => 0~1
     textureMatrix = m4.translate(textureMatrix, [0.5, 0.5, 0.5]);
     textureMatrix = m4.scale(textureMatrix, [0.5, 0.5, 0.5]);
+
     textureMatrix = m4.multiply(textureMatrix, lightProjectionMatrix);
     // use the inverse of this world matrix to make
     // a matrix that will transform other positions

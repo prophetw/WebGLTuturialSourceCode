@@ -27,6 +27,7 @@ void main() {
       projectedTexcoord.x <= 1.0 &&
       projectedTexcoord.y >= 0.0 &&
       projectedTexcoord.y <= 1.0;
+  // bool inRange = 1.0;
 
   // the 'r' channel has the depth values
   float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;

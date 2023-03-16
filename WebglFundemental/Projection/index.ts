@@ -174,6 +174,7 @@ async function main() {
     // Make a view matrix from the camera matrix.
     const viewMatrix = m4.inverse(cameraMatrix);
 
+    // camera matrix
     const textureWorldMatrix = m4.lookAt(
         [settings.posX, settings.posY, settings.posZ],          // position
         [settings.targetX, settings.targetY, settings.targetZ], // target
@@ -194,8 +195,11 @@ async function main() {
              200);                     // far
 
     let textureMatrix = m4.identity();
+
+    // Converts from NDC space to texture space
     textureMatrix = m4.translate(textureMatrix, [0.5, 0.5, 0.5]);
     textureMatrix = m4.scale(textureMatrix, [0.5, 0.5, 0.5]);
+
     textureMatrix = m4.multiply(textureMatrix, textureProjectionMatrix);
     // use the inverse of this world matrix to make
     // a matrix that will transform other positions
