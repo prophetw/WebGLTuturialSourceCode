@@ -2,6 +2,8 @@ import ColorVS from './color.vert'
 import ColorFS from './color.frag'
 import Shader3DVS from './shader3d.vert'
 import Shader3DFS from './shader3d.frag'
+import QuadVS from './quad.vert'
+import QuadFS from './quad.frag'
 import * as twgl from 'twgl.js'
 
 const m4 = twgl.m4
@@ -27,6 +29,7 @@ async function main() {
   // setup GLSL programs
   const textureProgramInfo = twgl.createProgramInfo(gl, [Shader3DVS, Shader3DFS]);
   const colorProgramInfo = twgl.createProgramInfo(gl, [ColorVS, ColorFS]);
+  const quadProgramInfo = twgl.createProgramInfo(gl, [QuadVS, QuadFS]);
 
   const sphereBufferInfo = primitives.createSphereBufferInfo(
       gl,
@@ -41,6 +44,37 @@ async function main() {
       1,   // subdivisions across
       1,   // subdivisions down
   );
+
+  const planeBufferInfo3 = primitives.createPlaneBufferInfo(
+      gl,
+      2,  // width
+      2,  // height
+      1,   // subdivisions across
+      1,   // subdivisions down
+  );
+  // twgl.createVertexArrayInfo
+  const farPlaneBufInfo = twgl.createBufferInfoFromArrays(gl, {
+    position: [
+      -1, -1, 1,
+       1, -1, 1,
+      -1,  1, 1,
+       1,  1, 1,
+    ],
+    indices: [
+      0, 1, 2,
+      2, 1, 3
+    ],
+  })
+  console.log(' farPlane', farPlaneBufInfo);
+
+
+  const plane2BufferInfo = primitives.createXYQuadBufferInfo(
+      gl
+  );
+  console.log(' plane ', primitives.createPlaneVertices());
+  console.log(' XYQuad ', primitives.createXYQuadVertices());
+
+  // 线框 立方体 绘制12条边 每条边两个顶点
   const cubeLinesBufferInfo = twgl.createBufferInfoFromArrays(gl, {
     position: [
       -1, -1, -1,
@@ -134,8 +168,8 @@ async function main() {
     targetX: 2.5,
     targetY: 0,
     targetZ: 3.5,
-    projWidth: 1,
-    projHeight: 1,
+    projWidth: 4,
+    projHeight: 10,
     perspective: true,
     fieldOfView: 45,
   };
@@ -167,6 +201,9 @@ async function main() {
     u_texture: checkerboardTexture,
     u_world: m4.translation([2, 3, 4]),
   };
+  const quadUniforms = {
+    u_texture: checkerboardTexture,
+  }
 
   function drawScene(projectionMatrix: twgl.m4.Mat4, cameraMatrix: twgl.m4.Mat4) {
 
@@ -185,14 +222,14 @@ async function main() {
             degToRad(settings.fieldOfView),
             settings.projWidth / settings.projHeight,
             0.1,  // near
-            200)  // far
+            10)  // far
         : m4.ortho(
             -settings.projWidth / 2,   // left
              settings.projWidth / 2,   // right
             -settings.projHeight / 2,  // bottom
              settings.projHeight / 2,  // top
              0.1,                      // near
-             200);                     // far
+             10);                     // far
 
     let textureMatrix = m4.identity();
 
@@ -250,19 +287,49 @@ async function main() {
     // scale the cube in Z so it's really long
     // to represent the texture is being projected to
     // infinity
+    // transform to world matrix
+    // projectPosition = p * v * m * pos
+    // v^-1 * p^-1 * p * v * m * pos = worldPos
+    // textureWorldMatrix = cameraMatrix
     const mat = m4.multiply(
         textureWorldMatrix, m4.inverse(textureProjectionMatrix));
+    // const mat = m4.identity();
 
     // Set the uniforms we just computed
     twgl.setUniforms(colorProgramInfo, {
       u_color: [0, 0, 0, 1],
       u_view: viewMatrix,
       u_projection: projectionMatrix,
-      u_world: mat,
+      u_world: mat,  // projection space to world space
     });
 
     // calls gl.drawArrays or gl.drawElements
+    // twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
     twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
+
+
+    // ------- Draw the frustum far plane ------
+
+    gl.useProgram(quadProgramInfo.program);
+
+    // twgl.setBuffersAndAttributes(gl, quadProgramInfo, plane2BufferInfo);
+    twgl.setBuffersAndAttributes(gl, quadProgramInfo, farPlaneBufInfo);
+
+    // const mat2 = m4.multiply(
+    //     textureWorldMatrix, m4.inverse(textureProjectionMatrix));
+
+    twgl.setUniforms(quadProgramInfo, {
+      // u_color: [0, 0, 0, 1],
+      u_view: viewMatrix,
+      u_projection: projectionMatrix,
+      u_world: mat,  // projection space to world space
+      u_texture: imageTexture,
+    });
+
+    // twgl.drawBufferInfo(gl, plane2BufferInfo, gl.TRIANGLES);
+    twgl.drawBufferInfo(gl, farPlaneBufInfo, gl.TRIANGLES);
+
+
   }
 
   // Draw the scene.

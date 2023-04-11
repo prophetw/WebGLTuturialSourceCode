@@ -173,8 +173,8 @@ ExampleFn = SimpleDemoMain
 ExampleFn = MRTDemo
 ExampleFn = ComputeShader
 ExampleFn = MultiCamera
-ExampleFn = ShadowMap
 ExampleFn = VirtualCamera
+ExampleFn = ShadowMap
 ExampleFn = Projection
 
 
