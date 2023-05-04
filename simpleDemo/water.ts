@@ -26,14 +26,14 @@ function WaterDemo() {
   // twgl.setAttributePrefix('a_')
   const pInfo = twgl.createProgramInfo(gl, [cubeVS, cubeFS])
   console.log(' program info ', pInfo);
-  const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl)
+  const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl, 10)
   console.log(' triBufInfo  ', quadBufInfo);
 
 
-  const camera = twgl.m4.lookAt([0, 0, -3], [0, 0, 0], [0, 1, 0])
+  const camera = twgl.m4.lookAt([0, 0, -10], [0, 0, 0], [0, 1, 0])
   const view = twgl.m4.inverse(camera)
   const model = twgl.m4.identity()
-  const projection = twgl.m4.perspective(toRadias(60), 1, 0.1, 10)
+  const projection = twgl.m4.perspective(toRadias(60), 1, 0.1, 100)
 
   const waterSrc = './resources/water/Foam.png'
   const waterNormal = './resources/water/water.jpg'

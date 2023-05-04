@@ -52,17 +52,20 @@ void main() {
   vec4 waterColor = mix(shalowColor, deepColor , depth);
   // vec3 tangentNormal = texture2D(waterNormal, v_texCoord).rgb; // normal in tangent space
 
-  float time = time * 0.05;
+  float time = time * 0.1;
   // vec2 texCoord1 = v_texCoord + vec2(time * 0.00, time * 0.03); // offset 1
   // vec2 texCoord2 = v_texCoord + vec2(time * 0.01, time * 0.02); // offset 2
 
-  vec2 panner1 = (time * vec2(0.03, 0.05) + v_texCoord);
-  vec2 panner2 = (time * vec2(0.25, 0.5) + v_texCoord);
+  vec2 panner1 = (time * vec2(0.2, 0.1) + v_texCoord);
+  vec2 panner2 = (time * vec2(0.1, 0.3) + v_texCoord);
 
-  vec3 normal1 = unpackNormal(texture2D(waterNormal, panner1));
-  vec3 normal2 = unpackNormal(texture2D(waterNormal, panner2));
+  vec4 samp1 = texture2D(waterNormal, panner1);
+  vec4 samp2 = texture2D(waterNormal, panner2);
 
-  vec3 normal = blendNormals(normal1, normal2, 0.5);
+  vec3 normal1 = unpackNormal(samp1);
+  vec3 normal2 = unpackNormal(samp2);
+
+  vec3 normal = blendNormals(normal1, normal2, samp2.a);
   normal = mix(normal, vec3(0.0, 0.0, 1.0), 0.5);
 
   vec3 worldNormal = getNormalFromMap(normal);
@@ -78,16 +81,18 @@ void main() {
 
 
   // Blinn-Phong
-  vec3 lightPos = vec3(0.0, 0.0, 3.0);
+  vec3 lightPos = vec3(10.0, 0.0, 1.0);
   vec3 lightVec = normalize(lightPos - worldPos);
   vec3 halfVec = normalize(lightVec + eyeVec);
 
   float NdotL = saturate(dot(worldNormal, lightVec));
   float NdotH = saturate(dot(worldNormal, halfVec));
 
-  float specularFactor = pow(NdotH, 10.0);
+  float specularFactor = pow(NdotH, 32.0);
   specularFactor = NdotL > 0.0 ? specularFactor : 0.0;
   specularFactor = NdotV > 0.0 ? specularFactor : 0.0;
+
+
 
   // calculate fresnel
   float fresnel = pow(1.0 - NdotV, 3.0);
@@ -98,9 +103,10 @@ void main() {
   // diffuse += vec4(1.0, 1.0, 1.0, 1.0) * NdotL;
   diffuse += waterColor * NdotL;
 
-  // calculate specular
-  vec4 specularColor = vec4(1.0, 1.0, 1.0, 1.0);
-  vec4 specular = specularColor * specularFactor;
+  // Blinn-Phong specular
+  vec4 specular = specularFactor * vec4(1.0, 1.0, 1.0, 1.0);
+
+
 
 
   vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
@@ -125,7 +131,7 @@ void main() {
   vec4 reflectionColor = texture2D(texture, reflectionTexCoords.xy);
 
   // mix reflection color with water color
-  waterColor = mix(waterColor, reflectionColor, 0.5);
+  // waterColor = mix(waterColor, reflectionColor, 0.5);
   // add foam
   float foam = texture2D(texture, v_texCoord).g;
   // waterColor = mix(waterColor, vec4(1.0, 1.0, 1.0, 1.0), foam);
