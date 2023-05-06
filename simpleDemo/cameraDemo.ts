@@ -1,15 +1,15 @@
 
 
 import * as twgl from 'twgl.js'
-import { Camera } from '../src/Core/Camera'
+import { BoundingBox, Camera } from '../src/Core/Camera'
 
 const cubeFS = `
   precision mediump float;
   varying vec4 v_Color;
 	uniform vec3 u_color;
   void main() {
-    // gl_FragColor = vec4(u_color.xyz, 1.0);
-    gl_FragColor = vec4(1.0);
+    gl_FragColor = vec4(u_color.xyz, 1.0);
+    // gl_FragColor = vec4(1.0);
   }
 `
 const cubeVS = `
@@ -52,7 +52,27 @@ function CameraDemo() {
   const pInfo = twgl.createProgramInfo(gl, [cubeVS, cubeFS])
   console.log(' program info ', pInfo);
   const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
+
+  const vertices = [
+    -5, -5, 0, // 左下角
+    5, -5, 0, // 右下角
+    5, 5, 0, // 右上角
+    -5, 5, 0  // 左上角
+  ];
+
+  const indices = [
+    0, 1, 2, // 第一个三角形
+    0, 2, 3  // 第二个三角形
+  ];
+
+  const quadBufInfo3 = twgl.createBufferInfoFromArrays(gl, {
+    position: { numComponents: 3, data: vertices },
+    indices: { numComponents: 3, data: indices }
+  });
+
   const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl)
+
+
   console.log(' quadBufInfo2 ', quadBufInfo2);
   console.log(' triBufInfo  ', quadBufInfo);
 
@@ -62,9 +82,15 @@ function CameraDemo() {
 
   const camera = new Camera(canvas);
   camera.position = [10, 10, 10];
-  camera.direction = [0,0,-1];
+  camera.direction = [0, 0, -1];
   camera.up = [0, 1, 0];
-  camera.initEvent();
+
+  const boundingBox = new BoundingBox([-1, -1, 0], [1,1,0]);
+  camera.setViewToBoundingBox(boundingBox);
+
+  // const cc = twgl.m4.perspective(toRadias(60), 1, 0.1, 100)
+  const cam = twgl.m4.lookAt([0, 0, 10], [0, 0, 0], [0, 1, 0])
+  console.log(cam);
 
   const render = (time: number) => {
     // console.log(' r ');
@@ -105,6 +131,7 @@ function CameraDemo() {
     })
     twgl.setBuffersAndAttributes(gl, pInfo, quadBufInfo2);
     twgl.drawBufferInfo(gl, quadBufInfo2)
+
     requestAnimationFrame(render)
 
   }
