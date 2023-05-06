@@ -149,6 +149,10 @@ export class VisualState {
         this.showShaderSource("frag");
       }
       // @ts-ignore
+      if (e && e.target && e.target.className === "clear") {
+          this.clear();
+      }
+      // @ts-ignore
       if (e && e.target && e.target.className === "vertBtn") {
         this.showShaderSource("vert");
       }
@@ -220,6 +224,7 @@ export class VisualState {
       }/${total} ${customName} ${name} `;
     this.statusContainer.innerHTML = `
             <span style="position:absolute; top:0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);">${customName}</span>
+            <span style="position:absolute; top:0px; right: 60px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);cursor: pointer;" class="clear">Clear</span>
             <span style="position:absolute; top:0px; right: 0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);cursor: pointer;" class="fragBtn">Frag</span>
             <span style="position:absolute; top:0px; right: 30px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5); cursor: pointer;" class="vertBtn">Vert</span>
             <span style="position:absolute; top:20px; right: 0px; display: inline-block; background: rgba(0.5, 0.5, 0.5,0.5);cursor: pointer;" class="blendBtn">Blend</span>
@@ -878,6 +883,7 @@ export class VisualState {
   }
   clear() {
     this.imgSrcAry = [];
+    this.programInfo = undefined;
     this.updateStatusContainer();
   }
   getThis() {
