@@ -1,5 +1,6 @@
 import * as twgl from 'twgl.js'
 class Camera {
+  canvas: HTMLCanvasElement
   _position: twgl.v3.Vec3
   _direction: twgl.v3.Vec3
   _right: twgl.v3.Vec3
@@ -9,7 +10,8 @@ class Camera {
   inverseViewMatrix: twgl.m4.Mat4
   frustum: PerspectiveFrustum | OrthographicFrustum
 
-  constructor(){
+  constructor(canvas: HTMLCanvasElement){
+    this.canvas = canvas;
     this._position = twgl.v3.create();
     this._direction = twgl.v3.create();
     this._right = twgl.v3.create();
@@ -178,6 +180,57 @@ class Camera {
     this.direction = twgl.v3.add(rotatedDirection, point);
     this.up = twgl.v3.add(rotatedUp, point);
   }
+
+  registerMouseEvent(){
+    const canvas = this.canvas;
+    let lastX = 0;
+    let lastY = 0;
+    let isDragging = false;
+
+    canvas.addEventListener('mousedown', (event) => {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      isDragging = true;
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+      if(isDragging){
+        const x = event.clientX;
+        const y = event.clientY;
+        const dx = x - lastX;
+        const dy = y - lastY;
+
+        if(event.shiftKey){
+          this.rotateAroundPointX(dy * 0.01, this.position);
+          this.rotateAroundPointY(dx * 0.01, this.position);
+        }else{
+          this.rotateAroundX(dy * 0.01, this.position);
+          this.rotateAroundY(dx * 0.01, this.position);
+        }
+
+        lastX = x;
+        lastY = y;
+      }
+    });
+
+    canvas.addEventListener('mouseup', (event) => {
+      isDragging = false;
+    });
+  }
+
+  registerMouseWheelEvent(){
+    const canvas = this.canvas;
+    canvas.addEventListener('wheel', (event) => {
+      const delta = event.deltaY * 0.01;
+      this.translateAlongDirection(delta);
+    });
+  }
+
+
+  translateAlongDirection(distance: number){
+    this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(this.direction, distance));
+  }
+
 
 }
 
