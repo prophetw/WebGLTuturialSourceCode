@@ -4,6 +4,7 @@ import MRTDemo from "./mrtDemo";
 import WaterDemo from "./water";
 import ZFighting from "./zFighting";
 import CameraDemo from "./cameraDemo";
+import ShadowMapDemo from "./ShadowMap";
 
 export {
   SimpleDemoMain,
@@ -11,4 +12,5 @@ export {
   WaterDemo,
   ZFighting,
   CameraDemo,
+  ShadowMapDemo,
 }
