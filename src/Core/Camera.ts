@@ -348,8 +348,24 @@ class Camera {
 
     }
 
+
   }
 
+  switchToOrthographicFrustum() {
+    // TODO:
+
+    if(this.frustum instanceof PerspectiveFrustum){
+      // 当前视角 模型的高度 10 希望占满整个屏幕高度  那么正交视锥体的高度就是 10
+      const orthHeight = 2
+      const orthWidth = orthHeight * this.frustum.aspect;
+      const orthFrustum = new OrthographicFrustum(-orthWidth / 2, orthWidth / 2, -orthHeight / 2, orthHeight / 2, this.frustum.near, this.frustum.far);
+      this.frustum = orthFrustum;
+    }
+  }
+
+  switchToPerspectiveFrustum() {
+
+  }
 
   destroy() {
     this.screenSpaceEventHandler.unregisterEvent();
@@ -407,9 +423,6 @@ class PerspectiveFrustum {
     this.projectionMatrix = twgl.m4.perspective(this.fov, this.aspect, this.near, this.far);
   }
 
-  switchToOrthographicFrustum() {
-    // TODO:
-  }
 
 }
 
@@ -429,7 +442,7 @@ class OrthographicFrustum {
     this._top = top;
     this._near = near;
     this._far = far;
-    this.projectionMatrix = twgl.m4.identity();
+    this.projectionMatrix = twgl.m4.ortho(this.left, this.right, this.bottom, this.top, this.near, this.far);
   }
   get left() {
     return this._left;

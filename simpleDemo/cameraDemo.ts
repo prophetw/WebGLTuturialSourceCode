@@ -40,7 +40,9 @@ function toAngle(radias: number) {
 function CameraDemo() {
 
   const canvas = document.getElementById('webgl') as HTMLCanvasElement
-  const gl = canvas.getContext('webgl')
+  const gl = canvas.getContext('webgl2', {
+    antialias: true,
+  })
   if (gl === null) {
     console.error(' gl is null ');
     return
@@ -84,6 +86,8 @@ function CameraDemo() {
   camera.position = [10, 10, 10];
   camera.direction = [0, 0, -1];
   camera.up = [0, 1, 0];
+  camera.frustum.near = 0.1
+  camera.frustum.far = 10
 
   const boundingBox = new BoundingBox([-1, -1, 0], [1,1,0]);
   camera.setViewToBoundingBox(boundingBox);
@@ -98,7 +102,7 @@ function CameraDemo() {
     // window.spector.startCapture(canvas, 1000)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    // gl.enable(gl.POLYGON_OFFSET_FILL)
+    gl.enable(gl.POLYGON_OFFSET_FILL)
     gl.useProgram(pInfo.program)
 
     // set uniforms
@@ -119,12 +123,12 @@ function CameraDemo() {
       model: model,
     })
 
-    // gl.polygonOffset(1.0, 0.1);
+    gl.polygonOffset(1.0, 0.1);
 
     twgl.drawBufferInfo(gl, quadBufInfo)
 
 
-    // gl.polygonOffset(1.0, 0.2);
+    gl.polygonOffset(1.0, 0.2);
     twgl.setUniforms(pInfo, {
       u_color: twgl.v3.create(0.0, 1.0, 0.0),
       model: model1,
