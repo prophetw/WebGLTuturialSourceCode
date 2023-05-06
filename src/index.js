@@ -98,7 +98,7 @@ import Space from '../Space/Space'
 // window.SPECTOR = SPECTOR
 
 import {EnvironmentMap, MultiCamera, Shadow as ShadowMap, Projection, SkyboxWFM, TextureDemo, VirtualCamera} from '../WebglFundemental/index'
-import { MRTDemo, SimpleDemoMain, WaterDemo, ZFighting  } from '../simpleDemo'
+import { CameraDemo, MRTDemo, SimpleDemoMain, WaterDemo, ZFighting  } from '../simpleDemo'
 
 
 const initSpector = (callback = () => {
@@ -174,10 +174,11 @@ ExampleFn = MRTDemo
 ExampleFn = ComputeShader
 ExampleFn = MultiCamera
 ExampleFn = VirtualCamera
-ExampleFn = ShadowMap
 ExampleFn = Projection
-ExampleFn = ZFighting
 ExampleFn = WaterDemo
+ExampleFn = ShadowMap
+ExampleFn = ZFighting
+ExampleFn = CameraDemo
 
 
 // const ExampleFn = LOGLTexturesTriangle

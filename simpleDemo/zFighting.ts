@@ -57,13 +57,13 @@ function ZFighting (){
   console.log(twgl.primitives.createCubeVertices());
   console.log(twgl.primitives.createXYQuadVertices());
 
-  const camera = twgl.m4.lookAt([1, 1, 1], [0, 0, 0], [0, 1, 0])
+  const camera = twgl.m4.lookAt([0, 0,  5], [0, 0, 0], [0, 1, 0])
   // const camera = twgl.m4.lookAt([0, 0, 1], [0, 0, 0], [0, 1, 0])
   const view = twgl.m4.inverse(camera)
 	// model1 z add offset can solve z-fighting
   const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0, 0.0])
   const model = twgl.m4.identity()
-  const projection = twgl.m4.perspective(toRadias(120), 1, 0.1, 10)
+  const projection = twgl.m4.perspective(toRadias(60), 1, 0.1, 100)
 
 
 	// window.spector.startCapture(canvas, 1000)
@@ -102,4 +102,4 @@ function ZFighting (){
 
 }
 
-export default ZFighting 
+export default ZFighting

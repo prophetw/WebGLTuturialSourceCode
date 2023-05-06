@@ -1,10 +1,10 @@
 import * as twgl from 'twgl.js'
 class Camera {
   canvas: HTMLCanvasElement
-  _position: twgl.v3.Vec3
-  _direction: twgl.v3.Vec3
-  _right: twgl.v3.Vec3
-  _up: twgl.v3.Vec3
+  private _position: twgl.v3.Vec3
+  private _direction: twgl.v3.Vec3
+  private _right: twgl.v3.Vec3
+  private _up: twgl.v3.Vec3
   viewMatrix: twgl.m4.Mat4
   projectionViewMatrix: twgl.m4.Mat4
   inverseViewMatrix: twgl.m4.Mat4
@@ -61,15 +61,18 @@ class Camera {
   }
 
   updateViewMatrix(){
-    this.inverseViewMatrix = twgl.m4.lookAt(this.position, this.direction, this.up);
+
+    const target = twgl.v3.add(this.position, this.direction);
+
+    this.inverseViewMatrix = twgl.m4.lookAt(this.position, target, this.up);
     this.viewMatrix = twgl.m4.inverse(this.inverseViewMatrix);
-    const front = twgl.v3.subtract(this.direction, this.position);
-    const normalizedFront = twgl.v3.normalize(front);
+    const normalizedFront = twgl.v3.normalize(this.direction);
     const normalizedUp = twgl.v3.normalize(this.up);
     const right = twgl.v3.cross(normalizedUp, normalizedFront);
-    this.right = twgl.v3.normalize(right);
-    this.up = normalizedUp;
-    this.direction = normalizedFront;
+    this._right = twgl.v3.normalize(right);
+    this._up = normalizedUp;
+    this._direction = normalizedFront;
+    // console.log(this.position, this.direction, this.up, this.right);
     this.updateProjectionViewMatrix();
   }
 
@@ -147,7 +150,7 @@ class Camera {
     const rotationMatrix = twgl.m4.axisRotation(axis, angle);
     const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
     const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this.direction = twgl.v3.add(rotatedDirection, point);
+    this._direction = twgl.v3.add(rotatedDirection, point);
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
@@ -156,8 +159,8 @@ class Camera {
     const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, point));
     const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
     const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this.position = twgl.v3.add(rotatedPosition, point);
-    this.direction = twgl.v3.add(rotatedDirection, point);
+    this._position = twgl.v3.add(rotatedPosition, point);
+    this._direction = twgl.v3.add(rotatedDirection, point);
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
@@ -166,8 +169,8 @@ class Camera {
     const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, point));
     const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
     const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this.position = twgl.v3.add(rotatedPosition, point);
-    this.direction = twgl.v3.add(rotatedDirection, point);
+    this._position = twgl.v3.add(rotatedPosition, point);
+    this._direction = twgl.v3.add(rotatedDirection, point);
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
@@ -176,8 +179,8 @@ class Camera {
     const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, point));
     const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
     const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this.position = twgl.v3.add(rotatedPosition, point);
-    this.direction = twgl.v3.add(rotatedDirection, point);
+    this._position = twgl.v3.add(rotatedPosition, point);
+    this._direction = twgl.v3.add(rotatedDirection, point);
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
@@ -221,33 +224,42 @@ class Camera {
   registerMouseWheelEvent(){
     const canvas = this.canvas;
     canvas.addEventListener('wheel', (event) => {
+      console.log(' wheel event', event.deltaY);
       const delta = event.deltaY * 0.01;
-      this.translateAlongDirection(delta);
+      if(delta > 0){
+        this.moveForward(delta);
+      }else{
+        this.moveBackward(delta);
+      }
     });
   }
 
   registerKeyboradEvent(){
-    const canvas = this.canvas;
-    canvas.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', (event) => {
       const key = event.key;
       switch(key){
+        // arrow keys
         case 'w':
           this.translateAlongDirection(0.1);
           break;
         case 's':
           this.translateAlongDirection(-0.1);
           break;
+        case 'ArrowLeft':
         case 'a':
-          this.moveLeft(-0.1);
+          this.moveLeft(0.1);
           break;
+        case 'ArrowRight':
         case 'd':
           this.moveRight(0.1);
           break;
+        case 'ArrowUp':
         case 'q':
           this.moveUp(0.1);
           break;
+        case 'ArrowDown':
         case 'e':
-          this.moveDown(-0.1);
+          this.moveDown(0.1);
           break;
       }
     });
@@ -264,12 +276,23 @@ class Camera {
     canvas.removeEventListener('wheel', () => {});
   }
   unregisterKeyboradEvent(){
-    const canvas = this.canvas;
-    canvas.removeEventListener('keydown', () => {});
+    document.removeEventListener('keydown', () => {});
+  }
+
+  initEvent(){
+    this.registerMouseEvent();
+    this.registerMouseWheelEvent();
+    this.registerKeyboradEvent();
+  }
+  unregisterEvent(){
+    this.unregisterMouseEvent();
+    this.unregisterMouseWheelEvent();
+    this.unregisterKeyboradEvent();
   }
 
   translateAlongDirection(distance: number){
-    this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(this.direction, distance));
+    const offset = twgl.v3.mulScalar(this.direction, distance);
+    this.position = twgl.v3.add(this.position, offset);
   }
 
 
