@@ -226,6 +226,47 @@ class Camera {
     });
   }
 
+  registerKeyboradEvent(){
+    const canvas = this.canvas;
+    canvas.addEventListener('keydown', (event) => {
+      const key = event.key;
+      switch(key){
+        case 'w':
+          this.translateAlongDirection(0.1);
+          break;
+        case 's':
+          this.translateAlongDirection(-0.1);
+          break;
+        case 'a':
+          this.moveLeft(-0.1);
+          break;
+        case 'd':
+          this.moveRight(0.1);
+          break;
+        case 'q':
+          this.moveUp(0.1);
+          break;
+        case 'e':
+          this.moveDown(-0.1);
+          break;
+      }
+    });
+  }
+
+  unregisterMouseEvent(){
+    const canvas = this.canvas;
+    canvas.removeEventListener('mousedown', () => {});
+    canvas.removeEventListener('mousemove', () => {});
+    canvas.removeEventListener('mouseup', () => {});
+  }
+  unregisterMouseWheelEvent(){
+    const canvas = this.canvas;
+    canvas.removeEventListener('wheel', () => {});
+  }
+  unregisterKeyboradEvent(){
+    const canvas = this.canvas;
+    canvas.removeEventListener('keydown', () => {});
+  }
 
   translateAlongDirection(distance: number){
     this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(this.direction, distance));
