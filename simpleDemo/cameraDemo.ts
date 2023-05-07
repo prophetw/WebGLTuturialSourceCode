@@ -2,6 +2,7 @@
 
 import * as twgl from 'twgl.js'
 import { BoundingBox, Camera } from '../src/Core/Camera'
+import { CustomBtn } from '../src/utils/utils'
 
 const cubeFS = `
   precision mediump float;
@@ -95,6 +96,18 @@ function CameraDemo() {
   // const cc = twgl.m4.perspective(toRadias(60), 1, 0.1, 100)
   const cam = twgl.m4.lookAt([0, 0, 10], [0, 0, 0], [0, 1, 0])
   console.log(cam);
+
+  const resetViewBtn = new CustomBtn('reset view', () => {
+    camera.setViewToBoundingBox(boundingBox);
+  })
+
+  const switchOrthOrPers = new CustomBtn('orth', () => {
+    camera.switchToOrthographicFrustum();
+  })
+
+  const switchPers = new CustomBtn('pers', () => {
+    camera.switchToPerspectiveFrustum();
+  })
 
   const render = (time: number) => {
     // console.log(' r ');

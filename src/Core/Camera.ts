@@ -76,8 +76,11 @@ class ScreenSpaceEventHandler {
     const canvas = this.canvas;
     canvas.addEventListener('wheel', (event) => {
       console.log(' wheel event', event.deltaY);
+      const x = event.clientX;
+      const y = event.clientY;
+      const NDC = this.camera.convertScreenCoordToNDC(x, y);
       const delta = event.deltaY * 0.01;
-      this.camera.moveForward(delta);
+      this.camera.moveForward(-delta);
     });
   }
 
@@ -334,7 +337,7 @@ class Camera {
 
   setViewToBoundingBox(boundingBox: BoundingBox) {
     // perspective camera
-    // 
+    //
     if (this.frustum instanceof PerspectiveFrustum) {
       const center = boundingBox.center;
       const distance = twgl.v3.distance(center, boundingBox.max) / Math.tan(this.frustum.fov / 2) / this.frustum.aspect;
@@ -365,6 +368,24 @@ class Camera {
 
   switchToPerspectiveFrustum() {
 
+  }
+
+  convertScreenCoordToNDC(screenCoord: twgl.v3.Vec3) {
+
+
+  }
+
+  projectPointToScreenSpace(point: twgl.v3.Vec3) {
+    const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
+    const projectedPoint = twgl.m4.transformPoint(viewProjectionMatrix, point);
+    return projectedPoint;
+  }
+
+  unprojectPointFromScreenSpace(point: twgl.v3.Vec3) {
+    const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
+    const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
+    const unprojectedPoint = twgl.m4.transformPoint(inverseViewProjectionMatrix, point);
+    return unprojectedPoint;
   }
 
   destroy() {
