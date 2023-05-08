@@ -441,35 +441,54 @@ class Frustum {
         1, 1, 1,
       ],
       indices: [
-        0, 1,
-        1, 2,
-        2, 3,
-        3, 0,
+        // 0, 1,
+        // 1, 2,
+        // 2, 3,
+        // 3, 0,
 
-        4, 5,
-        5, 6,
-        6, 7,
-        7, 4,
+        // 4, 5,
+        // 5, 6,
+        // 6, 7,
+        // 7, 4,
 
-        0, 5,
-        1, 4,
-        2, 7,
-        3, 6,
+        // 0, 5,
+        // 1, 4,
+        // 2, 7,
+        // 3, 6,
+
+      0, 1,
+      1, 3,
+      3, 2,
+      2, 0,
+
+      4, 5,
+      5, 7,
+      7, 6,
+      6, 4,
+
+      0, 4,
+      1, 5,
+      3, 7,
+      2, 6,
+
       ],
     }
     this.wireframeBufInfo = twgl.createBufferInfoFromArrays(gl, bufAry)
     this.gl = gl;
     this.programInfo = twgl.createProgramInfo(gl, [this.quadVS, this.quadFS]);
+    console.log(' frustumn ', this);
   }
-  debugWireframe(viewMatrix: twgl.m4.Mat4) {
+  debugWireframe(viewMatrix: twgl.m4.Mat4, projectionMatrix?: twgl.m4.Mat4, modelMatrix?: twgl.m4.Mat4) {
     if (this.gl && this.programInfo && this.wireframeBufInfo) {
       this.gl.useProgram(this.programInfo.program)
       twgl.setBuffersAndAttributes(this.gl, this.programInfo, this.wireframeBufInfo)
+      const projMat4 = projectionMatrix || this.projectionMatrix
+      const model = modelMatrix || twgl.m4.identity()
       twgl.setUniforms(this.programInfo, {
+        projection: projMat4,
         view: viewMatrix,
-        projection: this.projectionMatrix,
-        model: twgl.m4.identity(),
-        u_color: twgl.v3.create(1.0, 1.0, 0.0),
+        model,
+        u_color: twgl.v3.create(0.0, 0.0, 0.0),
       })
       twgl.drawBufferInfo(this.gl, this.wireframeBufInfo, this.gl.LINES);
     }

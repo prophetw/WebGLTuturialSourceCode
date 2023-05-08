@@ -25,7 +25,7 @@ async function main() {
     return;
   }
 
-  twgl.setAttributePrefix('a_')
+  // twgl.setAttributePrefix('a_')
 
 
   // setup GLSL programs
@@ -217,6 +217,9 @@ async function main() {
     mainCamera.position = cameraPosition
     mainCamera.direction = twgl.v3.normalize(twgl.v3.subtract(target, cameraPosition))
   })
+  const aspect = canvas.clientWidth / canvas.clientHeight;
+  mainCamera.frustum = new PerspectiveFrustum(60, aspect, 1, 2000)
+  mainCamera.frustum.initWireframe(gl)
 
   // camera event
   const screenSpaceEvt = new ScreenSpaceEventHandler(canvas, mainCamera);
@@ -230,7 +233,9 @@ async function main() {
   secondCamera.position = secCamPos
   secondCamera.direction = twgl.v3.normalize(twgl.v3.subtract(secCamTarget, secCamPos))
   const secPersFrustum = new PerspectiveFrustum(settings.fieldOfView, settings.projWidth / settings.projHeight, 0.1, 10)
+  // secPersFrustum.initWireframe(gl)
   const secOrthFrustum = new OrthographicFrustum(-settings.projWidth / 2, settings.projWidth / 2, -settings.projHeight / 2, settings.projHeight / 2, 0.1, 10)
+  // secOrthFrustum.initWireframe(gl)
   secondCamera.frustum = secPersFrustum
 
   console.log(' m4 ', m4);
@@ -300,17 +305,20 @@ async function main() {
 
 
     // ------ Draw the frustum wireframe
-    gl.useProgram(colorProgramInfo.program);
-    twgl.setBuffersAndAttributes(gl, colorProgramInfo, cubeLinesBufferInfo);
-    const invViewProjMat4 = m4.multiply(
+    const secondCaminvViewProjMat4 = m4.multiply(
         secondCamera.inverseViewMatrix, m4.inverse(secondCamera.frustum.projectionMatrix));
-    twgl.setUniforms(colorProgramInfo, {
-      u_color: [0, 0, 0, 1],
-      u_view: mainCamera.viewMatrix,
-      u_projection: mainCamera.frustum.projectionMatrix,
-      u_world: invViewProjMat4,  // projection space to world space
-    });
-    twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
+
+    // gl.useProgram(colorProgramInfo.program);
+    // twgl.setBuffersAndAttributes(gl, colorProgramInfo, cubeLinesBufferInfo);
+    // twgl.setUniforms(colorProgramInfo, {
+    //   u_color: [0, 0, 0, 1],
+    //   u_view: mainCamera.viewMatrix,
+    //   u_projection: mainCamera.frustum.projectionMatrix,
+    //   u_world: secondCaminvViewProjMat4,  // projection space to world space
+    // });
+    // twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
+
+    mainCamera.frustum.debugWireframe(mainCamera.viewMatrix, mainCamera.frustum.projectionMatrix, secondCaminvViewProjMat4)
 
     // ------- Draw the frustum far plane ------
     gl.useProgram(quadProgramInfo.program);
@@ -319,7 +327,7 @@ async function main() {
       // u_color: [0, 0, 0, 1],
       u_view: viewMatrix,
       u_projection: mainCamera.frustum.projectionMatrix,
-      u_world: invViewProjMat4,  // projection space to world space
+      u_world: secondCaminvViewProjMat4,  // projection space to world space
       u_texture: imageTexture,
     });
     twgl.drawBufferInfo(gl, farPlaneBufInfo, gl.TRIANGLES);

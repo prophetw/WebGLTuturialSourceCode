@@ -1,5 +1,5 @@
-attribute vec4 a_position;
-attribute vec2 a_texcoord;
+attribute vec4 position;
+attribute vec2 texcoord;
 
 uniform mat4 u_projection;
 uniform mat4 u_view;
@@ -12,12 +12,12 @@ varying vec4 v_posEC;
 
 void main() {
   // Multiply the position by the matrix.
-  vec4 worldPosition = u_world * a_position;
+  vec4 worldPosition = u_world * position;
 
   gl_Position = u_projection * u_view * worldPosition;
 
   // Pass the texture coord to the fragment shader.
-  v_texcoord = a_texcoord;
+  v_texcoord = texcoord;
 
   v_posEC = u_view * worldPosition;
 
