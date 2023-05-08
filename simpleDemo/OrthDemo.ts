@@ -1,6 +1,7 @@
 
 import * as twgl from 'twgl.js'
-import { BoundingBox, Camera, OrthographicFrustum, PerspectiveFrustum, ScreenSpaceEventHandler } from '../src/Core/Camera'
+import { Camera, OrthographicFrustum, PerspectiveFrustum, ScreenSpaceEventHandler } from '../src/Core/Camera'
+import BoundingBox from '../src/Core/BoundingBox'
 import { CustomBtn } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
 
