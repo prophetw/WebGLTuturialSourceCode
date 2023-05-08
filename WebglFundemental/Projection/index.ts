@@ -223,7 +223,6 @@ async function main() {
 
   // camera event
   const screenSpaceEvt = new ScreenSpaceEventHandler(canvas, mainCamera);
-  screenSpaceEvt.initEvent();
 
   // second Camera
   const secondCamera = new Camera(canvas);

@@ -178,8 +178,8 @@ ExampleFn = WaterDemo
 ExampleFn = ShadowMap
 ExampleFn = ZFighting
 ExampleFn = CameraDemo
-ExampleFn = OrthDemo
 ExampleFn = Projection
+ExampleFn = OrthDemo
 
 
 // const ExampleFn = LOGLTexturesTriangle

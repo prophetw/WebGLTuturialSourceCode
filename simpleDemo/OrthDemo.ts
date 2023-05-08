@@ -1,6 +1,6 @@
 
 import * as twgl from 'twgl.js'
-import { BoundingBox, Camera, OrthographicFrustum, PerspectiveFrustum } from '../src/Core/Camera'
+import { BoundingBox, Camera, OrthographicFrustum, PerspectiveFrustum, ScreenSpaceEventHandler } from '../src/Core/Camera'
 import { CustomBtn } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
 
@@ -99,6 +99,7 @@ function CameraDemo() {
   console.log(twgl.primitives.createXYQuadVertices());
 
   const camera = new Camera(canvas);
+  const screenSpaceEvt = new ScreenSpaceEventHandler(canvas, camera)
   camera.position = [10, 10, 10];
   camera.direction = [0, 0, -1];
   camera.up = [0, 1, 0];
@@ -134,8 +135,8 @@ function CameraDemo() {
 
 
   let isShowFrustum = false;
-  new CustomBtn('frustumWireframe', ()=>{
-    isShowFrustum = true
+  new CustomBtn('toggleFrustumWireframe', ()=>{
+    isShowFrustum = !isShowFrustum;
   })
 
   const fbo = twgl.createFramebufferInfo(gl, [
@@ -153,7 +154,7 @@ function CameraDemo() {
   })
 
   const model = twgl.m4.identity()
-  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0, 0.0])
+  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
   const model2 = twgl.m4.rotationY(toRadias(45))
   twgl.m4.translate(model2, [1, 1, 1], model2)
 
@@ -206,7 +207,9 @@ function CameraDemo() {
     }
     if(isShowFrustum){
       // camera.frustum.debugWireframe(camera.viewMatrix);
-      orthFrustum.debugWireframe(camera.viewMatrix)
+      // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
+      camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
+      // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
     }
   }
 

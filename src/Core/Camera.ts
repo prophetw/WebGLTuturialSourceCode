@@ -34,6 +34,7 @@ class ScreenSpaceEventHandler {
   constructor(canvas: HTMLCanvasElement, camera: Camera) {
     this.camera = camera
     this.canvas = canvas
+    this.initEvent();
   }
 
   registerMouseEvent() {
@@ -55,7 +56,7 @@ class ScreenSpaceEventHandler {
         const dx = x - lastX;
         const dy = y - lastY;
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
-        console.log(worldPos);
+        // console.log(worldPos);
         if (event.shiftKey) {
           this.camera.rotateAroundPointX(dy * 0.01, worldPos);
           this.camera.rotateAroundPointY(dx * 0.01, worldPos);
@@ -441,35 +442,35 @@ class Frustum {
         1, 1, 1,
       ],
       indices: [
-        // 0, 1,
-        // 1, 2,
-        // 2, 3,
-        // 3, 0,
+        0, 1,
+        1, 2,
+        2, 3,
+        3, 0,
 
-        // 4, 5,
-        // 5, 6,
-        // 6, 7,
-        // 7, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 4,
 
-        // 0, 5,
-        // 1, 4,
-        // 2, 7,
-        // 3, 6,
+        0, 5,
+        1, 4,
+        2, 7,
+        3, 6,
 
-      0, 1,
-      1, 3,
-      3, 2,
-      2, 0,
+      // 0, 1,
+      // 1, 3,
+      // 3, 2,
+      // 2, 0,
 
-      4, 5,
-      5, 7,
-      7, 6,
-      6, 4,
+      // 4, 5,
+      // 5, 7,
+      // 7, 6,
+      // 6, 4,
 
-      0, 4,
-      1, 5,
-      3, 7,
-      2, 6,
+      // 0, 4,
+      // 1, 5,
+      // 3, 7,
+      // 2, 6,
 
       ],
     }
