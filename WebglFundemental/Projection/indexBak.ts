@@ -5,8 +5,6 @@ import Shader3DFS from './shader3d.frag'
 import QuadVS from './quad.vert'
 import QuadFS from './quad.frag'
 import * as twgl from 'twgl.js'
-import { Camera, OrthographicFrustum, PerspectiveFrustum, ScreenSpaceEventHandler } from '../../src/Core/Camera'
-import { CustomBtn } from '../../src/utils/utils'
 
 const m4 = twgl.m4
 const primitives = twgl.primitives
@@ -207,62 +205,31 @@ async function main() {
     u_texture: checkerboardTexture,
   }
 
-  // main camera
-  const mainCamera = new Camera(canvas);
-  const cameraPosition = [settings.cameraX, settings.cameraY, 7];
-  const target = [0, 0, 0];
-  mainCamera.position = cameraPosition
-  mainCamera.direction = twgl.v3.normalize(twgl.v3.subtract(target, cameraPosition))
-  new CustomBtn('resetCamera', () => {
-    mainCamera.position = cameraPosition
-    mainCamera.direction = twgl.v3.normalize(twgl.v3.subtract(target, cameraPosition))
-  })
+  function drawScene(projectionMatrix: twgl.m4.Mat4, cameraMatrix: twgl.m4.Mat4) {
 
-  // camera event
-  const screenSpaceEvt = new ScreenSpaceEventHandler(canvas, mainCamera);
-  screenSpaceEvt.initEvent();
-
-  // second Camera
-  const secondCamera = new Camera(canvas);
-  const secCamPos = [settings.posX, settings.posY, settings.posZ] // position
-  const secCamTarget = [settings.targetX, settings.targetY, settings.targetZ] // target
-        // [0, 1, 0],                                              // up
-  secondCamera.position = secCamPos
-  secondCamera.direction = twgl.v3.normalize(twgl.v3.subtract(secCamTarget, secCamPos))
-  const secPersFrustum = new PerspectiveFrustum(settings.fieldOfView, settings.projWidth / settings.projHeight, 0.1, 10)
-  const secOrthFrustum = new OrthographicFrustum(-settings.projWidth / 2, settings.projWidth / 2, -settings.projHeight / 2, settings.projHeight / 2, 0.1, 10)
-  secondCamera.frustum = secPersFrustum
-
-  console.log(' m4 ', m4);
-
-  function drawScene() {
-    if(!gl) return
-    const canvas = gl.canvas as HTMLCanvasElement
-    twgl.resizeCanvasToDisplaySize(canvas);
-
-    // Tell WebGL how to convert from clip space to pixels
-    gl.viewport(0, 0, canvas.width, canvas.height);
-
-    gl.enable(gl.CULL_FACE);
-    gl.enable(gl.DEPTH_TEST);
-
-    // Clear the canvas AND the depth buffer.
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Compute the camera's matrix using look at.
-
-    if(!gl) return
+      if(!gl) return
     // Make a view matrix from the camera matrix.
-    const viewMatrix = mainCamera.viewMatrix;
+    const viewMatrix = m4.inverse(cameraMatrix);
 
     // camera matrix
-    const textureWorldMatrix = secondCamera.inverseViewMatrix;
-    if(settings.perspective){
-      secondCamera.frustum = secPersFrustum
-    }else{
-      secondCamera.frustum = secOrthFrustum
-    }
-    const textureProjectionMatrix = secondCamera.frustum.projectionMatrix
+    const textureWorldMatrix = m4.lookAt(
+        [settings.posX, settings.posY, settings.posZ],          // position
+        [settings.targetX, settings.targetY, settings.targetZ], // target
+        [0, 1, 0],                                              // up
+    );
+    const textureProjectionMatrix = settings.perspective
+        ? m4.perspective(
+            degToRad(settings.fieldOfView),
+            settings.projWidth / settings.projHeight,
+            0.1,  // near
+            10)  // far
+        : m4.ortho(
+            -settings.projWidth / 2,   // left
+             settings.projWidth / 2,   // right
+            -settings.projHeight / 2,  // bottom
+             settings.projHeight / 2,  // top
+             0.1,                      // near
+             10);                     // far
 
     let textureMatrix = m4.identity();
 
@@ -283,56 +250,118 @@ async function main() {
     // set uniforms that are the same for both the sphere and plane
     twgl.setUniforms(textureProgramInfo, {
       u_view: viewMatrix,
-      u_projection: mainCamera.frustum.projectionMatrix,
+      u_projection: projectionMatrix,
       u_textureMatrix: textureMatrix,
       u_projectedTexture: imageTexture,
     });
 
     // ------ Draw the sphere --------
+
+    // Setup all the needed attributes.
     twgl.setBuffersAndAttributes(gl, textureProgramInfo, sphereBufferInfo);
+
+    // Set the uniforms unique to the sphere
     twgl.setUniforms(textureProgramInfo, sphereUniforms);
+
+    // calls gl.drawArrays or gl.drawElements
     twgl.drawBufferInfo(gl, sphereBufferInfo);
 
     // ------ Draw the plane --------
+
+    // Setup all the needed attributes.
     twgl.setBuffersAndAttributes(gl, textureProgramInfo, planeBufferInfo);
+
+    // Set the uniforms we just computed
     twgl.setUniforms(textureProgramInfo, planeUniforms);
+
+    // calls gl.drawArrays or gl.drawElements
     twgl.drawBufferInfo(gl, planeBufferInfo);
 
+    // ------ Draw the cube ------
 
-    // ------ Draw the frustum wireframe
     gl.useProgram(colorProgramInfo.program);
+
+    // Setup all the needed attributes.
     twgl.setBuffersAndAttributes(gl, colorProgramInfo, cubeLinesBufferInfo);
-    const invViewProjMat4 = m4.multiply(
-        secondCamera.inverseViewMatrix, m4.inverse(secondCamera.frustum.projectionMatrix));
+
+    // scale the cube in Z so it's really long
+    // to represent the texture is being projected to
+    // infinity
+    // transform to world matrix
+    // projectPosition = p * v * m * pos
+    // v^-1 * p^-1 * p * v * m * pos = worldPos
+    // textureWorldMatrix = cameraMatrix
+    const mat = m4.multiply(
+        textureWorldMatrix, m4.inverse(textureProjectionMatrix));
+    // const mat = m4.identity();
+
+    // Set the uniforms we just computed
     twgl.setUniforms(colorProgramInfo, {
       u_color: [0, 0, 0, 1],
-      u_view: mainCamera.viewMatrix,
-      u_projection: mainCamera.frustum.projectionMatrix,
-      u_world: invViewProjMat4,  // projection space to world space
+      u_view: viewMatrix,
+      u_projection: projectionMatrix,
+      u_world: mat,  // projection space to world space
     });
+
+    // calls gl.drawArrays or gl.drawElements
+    // twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
     twgl.drawBufferInfo(gl, cubeLinesBufferInfo, gl.LINES);
 
+
     // ------- Draw the frustum far plane ------
+
     gl.useProgram(quadProgramInfo.program);
+
+    // twgl.setBuffersAndAttributes(gl, quadProgramInfo, plane2BufferInfo);
     twgl.setBuffersAndAttributes(gl, quadProgramInfo, farPlaneBufInfo);
+
+    // const mat2 = m4.multiply(
+    //     textureWorldMatrix, m4.inverse(textureProjectionMatrix));
+
     twgl.setUniforms(quadProgramInfo, {
       // u_color: [0, 0, 0, 1],
       u_view: viewMatrix,
-      u_projection: mainCamera.frustum.projectionMatrix,
-      u_world: invViewProjMat4,  // projection space to world space
+      u_projection: projectionMatrix,
+      u_world: mat,  // projection space to world space
       u_texture: imageTexture,
     });
+
+    // twgl.drawBufferInfo(gl, plane2BufferInfo, gl.TRIANGLES);
     twgl.drawBufferInfo(gl, farPlaneBufInfo, gl.TRIANGLES);
+
 
   }
 
   // Draw the scene.
-  function render(time: number) {
-    time*=0.01;
-    drawScene();
-    requestAnimationFrame(render);
+  function render() {
+    if(!gl) return
+    const canvas = gl.canvas as HTMLCanvasElement
+    twgl.resizeCanvasToDisplaySize(canvas);
+
+    // Tell WebGL how to convert from clip space to pixels
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
+
+    // Clear the canvas AND the depth buffer.
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // Compute the projection matrix
+    const aspect = canvas.clientWidth / canvas.clientHeight;
+    const projectionMatrix =
+        m4.perspective(fieldOfViewRadians, aspect, 1, 2000);
+
+    // Compute the camera's matrix using look at.
+    const cameraPosition = [settings.cameraX, settings.cameraY, 7];
+    const target = [0, 0, 0];
+    const up = [0, 1, 0];
+    const cameraMatrix = m4.lookAt(cameraPosition, target, up);
+
+    drawScene(projectionMatrix, cameraMatrix);
   }
-  render(1);
+  render();
+
 }
 
 export default main;

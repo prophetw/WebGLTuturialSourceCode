@@ -155,7 +155,6 @@ class Camera {
   projectionViewMatrix: twgl.m4.Mat4
   inverseViewMatrix: twgl.m4.Mat4
   frustum: PerspectiveFrustum | OrthographicFrustum
-  screenSpaceEventHandler: ScreenSpaceEventHandler
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -167,8 +166,6 @@ class Camera {
     this.inverseViewMatrix = twgl.m4.identity(); // camera matrix
     this.projectionViewMatrix = twgl.m4.identity();
     this.frustum = new PerspectiveFrustum(60, 1, 0.1, 100);
-    this.screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas, this);
-    this.screenSpaceEventHandler.initEvent();
   }
 
   get position() {
@@ -393,7 +390,7 @@ class Camera {
   }
 
   destroy() {
-    this.screenSpaceEventHandler.unregisterEvent();
+
   }
 
 }
@@ -445,19 +442,19 @@ class Frustum {
       ],
       indices: [
         0, 1,
-        1, 3,
-        3, 2,
-        2, 0,
+        1, 2,
+        2, 3,
+        3, 0,
 
         4, 5,
-        5, 7,
-        7, 6,
-        6, 4,
+        5, 6,
+        6, 7,
+        7, 4,
 
-        0, 4,
-        1, 5,
-        3, 7,
-        2, 6,
+        0, 5,
+        1, 4,
+        2, 7,
+        3, 6,
       ],
     }
     this.wireframeBufInfo = twgl.createBufferInfoFromArrays(gl, bufAry)
@@ -615,4 +612,5 @@ export {
   PerspectiveFrustum,
   OrthographicFrustum,
   BoundingBox,
+  ScreenSpaceEventHandler,
 }

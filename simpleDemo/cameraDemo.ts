@@ -1,7 +1,7 @@
 
 
 import * as twgl from 'twgl.js'
-import { BoundingBox, Camera } from '../src/Core/Camera'
+import { BoundingBox, Camera, ScreenSpaceEventHandler } from '../src/Core/Camera'
 import { CustomBtn } from '../src/utils/utils'
 
 const cubeFS = `
@@ -84,6 +84,7 @@ function CameraDemo() {
   console.log(twgl.primitives.createXYQuadVertices());
 
   const camera = new Camera(canvas);
+  const screenSpaceEvt = new ScreenSpaceEventHandler(canvas, camera);
   camera.position = [10, 10, 10];
   camera.direction = [0, 0, -1];
   camera.up = [0, 1, 0];
