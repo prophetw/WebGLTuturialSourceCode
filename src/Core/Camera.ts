@@ -54,13 +54,14 @@ class ScreenSpaceEventHandler {
         const y = event.clientY;
         const dx = x - lastX;
         const dy = y - lastY;
-
+        const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
+        console.log(worldPos);
         if (event.shiftKey) {
-          this.camera.rotateAroundPointX(dy * 0.01, this.camera.position);
-          this.camera.rotateAroundPointY(dx * 0.01, this.camera.position);
+          this.camera.rotateAroundPointX(dy * 0.01, worldPos);
+          this.camera.rotateAroundPointY(dx * 0.01, worldPos);
         } else {
-          this.camera.rotateAroundX(dy * 0.01, this.camera.position);
-          this.camera.rotateAroundY(dx * 0.01, this.camera.position);
+          this.camera.rotateAroundPointX(dy * 0.01, worldPos);
+          this.camera.rotateAroundPointY(dx * 0.01, worldPos);
         }
 
         lastX = x;
@@ -71,6 +72,8 @@ class ScreenSpaceEventHandler {
     canvas.addEventListener('mouseup', (event) => {
       isDragging = false;
     });
+    canvas.oncontextmenu = () => false;
+
   }
 
   registerMouseWheelEvent() {
@@ -79,7 +82,7 @@ class ScreenSpaceEventHandler {
       console.log(' wheel event', event.deltaY);
       const x = event.clientX;
       const y = event.clientY;
-      const NDC = this.camera.convertScreenCoordToNDC(x, y);
+      // const NDC = this.camera.convertScreenCoordToNDC(x, y);
       const delta = event.deltaY * 0.01;
       this.camera.moveForward(-delta);
     });
@@ -345,7 +348,6 @@ class Camera {
       console.log(' distance ', distance);
       const cameraPosition = twgl.v3.subtract(center, twgl.v3.mulScalar(this.direction, distance));
       this.position = cameraPosition;
-      console.log(' set view ', this, this.position);
     } else {
       console.log(' TODO: ');
     }
@@ -368,9 +370,13 @@ class Camera {
 
   }
 
-  convertScreenCoordToNDC(screenCoord: twgl.v3.Vec3) {
-
-
+  convertScreenCoordToWorldCoord(x: number, y: number){
+      // const screenCoord = [x, y, 0];
+      const NDCCoord = [x/this.canvas.width * 2 - 1, y/this.canvas.height * 2 - 1, -1]
+      const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
+      const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
+      const worldCoord = twgl.m4.transformPoint(inverseViewProjectionMatrix, NDCCoord);
+      return worldCoord;
   }
 
   projectPointToScreenSpace(point: twgl.v3.Vec3) {
