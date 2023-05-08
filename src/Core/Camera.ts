@@ -1,4 +1,5 @@
 import * as twgl from 'twgl.js'
+import { angleToRads } from '../../lib/utils'
 
 class BoundingBox {
   min: twgl.v3.Vec3
@@ -162,7 +163,7 @@ class Camera {
     this.viewMatrix = twgl.m4.identity();
     this.inverseViewMatrix = twgl.m4.identity(); // camera matrix
     this.projectionViewMatrix = twgl.m4.identity();
-    this.frustum = new PerspectiveFrustum(Math.PI / 3, 1, 0.01, 1000);
+    this.frustum = new PerspectiveFrustum(60, 1, 0.1, 100);
     this.screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas, this);
     this.screenSpaceEventHandler.initEvent();
   }
@@ -345,19 +346,16 @@ class Camera {
       const cameraPosition = twgl.v3.subtract(center, twgl.v3.mulScalar(this.direction, distance));
       this.position = cameraPosition;
       console.log(' set view ', this, this.position);
-
     } else {
       console.log(' TODO: ');
-
     }
-
 
   }
 
   switchToOrthographicFrustum() {
     // TODO:
 
-    if(this.frustum instanceof PerspectiveFrustum){
+    if (this.frustum instanceof PerspectiveFrustum) {
       // 当前视角 模型的高度 10 希望占满整个屏幕高度  那么正交视锥体的高度就是 10
       const orthHeight = 2
       const orthWidth = orthHeight * this.frustum.aspect;
@@ -394,16 +392,106 @@ class Camera {
 
 }
 
+class Frustum {
+  projectionMatrix: twgl.m4.Mat4
+  private quadVS?: string
+  private quadFS?: string
+  private programInfo?: twgl.ProgramInfo
+  private bufferInfo?: twgl.BufferInfo
+  private wireframeBufInfo?: twgl.BufferInfo
+  private gl?: WebGL2RenderingContext | WebGLRenderingContext
+  constructor() {
+    this.projectionMatrix = twgl.m4.identity();
+  }
+  initWireframe(gl: WebGL2RenderingContext | WebGLRenderingContext) {
+    this.quadVS = `
+  attribute vec4 position;
+  uniform mat4 model;
+  uniform mat4 view;
+  uniform mat4 projection;
+  void main(){
+    gl_Position = projection * view * model * position;
+  }
+    `;
+    this.quadFS = `
+  precision mediump float;
+	uniform vec3 u_color;
+  void main() {
+    gl_FragColor = vec4(u_color.xyz, 1.0);
+    // gl_FragColor = vec4(1.0);
+  }
+    `;
 
-class PerspectiveFrustum {
+    const bufAry = {
+
+      position: [
+        // 0, 0, 0, // camera position
+        // near plane
+        -1, -1, -1,
+        1, -1, -1,
+        -1, 1, -1,
+        1, 1, -1,
+        //  far plane
+        -1, -1, 1,
+        1, -1, 1,
+        -1, 1, 1,
+        1, 1, 1,
+      ],
+      indices: [
+        0, 1,
+        1, 3,
+        3, 2,
+        2, 0,
+
+        4, 5,
+        5, 7,
+        7, 6,
+        6, 4,
+
+        0, 4,
+        1, 5,
+        3, 7,
+        2, 6,
+      ],
+    }
+    this.wireframeBufInfo = twgl.createBufferInfoFromArrays(gl, bufAry)
+    this.gl = gl;
+    this.programInfo = twgl.createProgramInfo(gl, [this.quadVS, this.quadFS]);
+  }
+  debugWireframe(viewMatrix: twgl.m4.Mat4) {
+    if (this.gl && this.programInfo && this.wireframeBufInfo) {
+      this.gl.useProgram(this.programInfo.program)
+      twgl.setBuffersAndAttributes(this.gl, this.programInfo, this.wireframeBufInfo)
+      twgl.setUniforms(this.programInfo, {
+        view: viewMatrix,
+        projection: this.projectionMatrix,
+        model: twgl.m4.identity(),
+        u_color: twgl.v3.create(1.0, 1.0, 0.0),
+      })
+      twgl.drawBufferInfo(this.gl, this.wireframeBufInfo, this.gl.LINES);
+    }
+  }
+}
+
+class PerspectiveFrustum extends Frustum{
   _fov: number
+  fovAngle: number
   _aspect: number
   _near: number
   _far: number
   projectionMatrix: twgl.m4.Mat4
 
-  constructor(fov: number, aspect: number, near: number, far: number) {
-    this._fov = fov;
+  /**
+   *
+   * @param fov angle
+   * @param aspect
+   * @param near
+   * @param far
+   */
+  constructor(fovAngle: number, aspect: number, near: number, far: number) {
+    super()
+    this.fovAngle = fovAngle;
+    this._fov = angleToRads(fovAngle);
     this._aspect = aspect;
     this._near = near;
     this._far = far;
@@ -441,13 +529,13 @@ class PerspectiveFrustum {
 
 
   updateProjectionMatrix() {
-    this.projectionMatrix = twgl.m4.perspective(this.fov, this.aspect, this.near, this.far);
+    this.projectionMatrix = twgl.m4.perspective(angleToRads(this.fov), this.aspect, this.near, this.far);
   }
 
 
 }
 
-class OrthographicFrustum {
+class OrthographicFrustum extends Frustum{
   _left: number
   _right: number
   _bottom: number
@@ -457,6 +545,7 @@ class OrthographicFrustum {
   projectionMatrix: twgl.m4.Mat4
 
   constructor(left: number, right: number, bottom: number, top: number, near: number, far: number) {
+    super();
     this._left = left;
     this._right = right;
     this._bottom = bottom;

@@ -76,6 +76,25 @@ export class VisualState {
   private readonly workingContext2D: CanvasRenderingContext2D;
   private readonly captureContext2D: CanvasRenderingContext2D;
 
+  /**
+   *
+   * @param options
+   * @param imgPosition
+   * @param max_capture_img_num
+   * @example
+   * ```ts
+   * const visualState = new VisualState({
+   *  context: gl,
+   *  contextVersion: 2,
+   *  toggleCapture: (capture: boolean) => {
+   *   if (capture) {
+   *    visualState.capture();
+   *   } else {
+   *   visualState.stopCapture();
+   *   }
+   * }, "right-top", 30);
+   * ```
+   */
   constructor(
     options: IContextInformation,
     imgPosition: Position,
@@ -430,8 +449,8 @@ export class VisualState {
 
     const componentTypeName = WebGlConstantsByValue[componentType] && WebGlConstantsByValue[componentType].name
     const typeName = WebGlConstantsByValue[type] && WebGlConstantsByValue[type].name
-    console.log(`componentTypeName: ${componentTypeName} ${componentType}`);
-    console.log(`typeName: ${typeName}  ${type}`);
+    // console.log(`componentTypeName: ${componentTypeName} ${componentType}`);
+    // console.log(`typeName: ${typeName}  ${type}`);
     if (type === WebGlConstants.RENDERBUFFER.value) {
       this.readFrameBufferAttachmentFromRenderBuffer(
         gl,
