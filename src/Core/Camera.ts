@@ -1,6 +1,7 @@
 import * as twgl from 'twgl.js'
 import { angleToRads } from '../../lib/utils'
 import Ray from './Ray'
+import BoundingBox from './BoundingBox'
 
 class ScreenSpaceEventHandler {
   canvas: HTMLCanvasElement
@@ -29,15 +30,14 @@ class ScreenSpaceEventHandler {
         const y = event.clientY;
         const dx = x - lastX;
         const dy = y - lastY;
+        // dx dy 转换成四元数
+        
+        
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
         // console.log(worldPos);
-        if (event.shiftKey) {
-          this.camera.rotateAroundPointX(dy * 0.01, worldPos);
-          this.camera.rotateAroundPointY(dx * 0.01, worldPos);
-        } else {
-          this.camera.rotateAroundPointX(dy * 0.01, worldPos);
-          this.camera.rotateAroundPointY(dx * 0.01, worldPos);
-        }
+        this.camera.rotateAroundPointX(dy * 0.01, worldPos);
+        this.camera.rotateAroundPointY(dx * 0.01, worldPos);
+        // this.camera.rotateAroundPoint(dy * 0.01, dx * 0.01, worldPos);
 
         lastX = x;
         lastY = y;
@@ -267,6 +267,30 @@ class Camera {
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
+  rotateAroundPoint(yaw: number, pitch: number, point: twgl.v3.Vec3){
+
+    // move camera to point
+    const moveMatrix = twgl.m4.translation(twgl.v3.negate(point));
+    const invmoveMatrix = twgl.m4.inverse(moveMatrix)
+    twgl.m4.transformPoint(moveMatrix, this._position, this._position);
+
+    const rotationMatrix = twgl.m4.axisRotation(this.direction, pitch);
+    const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
+    this._up = twgl.v3.add(rotatedUp, point);
+
+    const rotationMatrix2 = twgl.m4.axisRotation(this.right, yaw);
+    const rotatedDirection = twgl.m4.transformDirection(rotationMatrix2, twgl.v3.subtract(this.direction, point));
+    this._direction = twgl.v3.add(rotatedDirection, point);
+
+    // move camera back
+    let result = twgl.v3.create()
+    twgl.m4.transformPoint(invmoveMatrix, this._position, result);
+
+
+    this.position = result;
+
+  }
+
   rotateAroundAxis(angle: number, axis: twgl.v3.Vec3, point: twgl.v3.Vec3) {
     const rotationMatrix = twgl.m4.axisRotation(axis, angle);
     const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
@@ -295,15 +319,6 @@ class Camera {
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
-  rotateAroundPointZ(angle: number, point: twgl.v3.Vec3) {
-    const rotationMatrix = twgl.m4.axisRotation(this.direction, angle);
-    const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, point));
-    const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
-    const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this._position = twgl.v3.add(rotatedPosition, point);
-    this._direction = twgl.v3.add(rotatedDirection, point);
-    this.up = twgl.v3.add(rotatedUp, point);
-  }
 
 
   translateAlongDirection(distance: number) {

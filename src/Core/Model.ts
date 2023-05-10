@@ -10,9 +10,13 @@ class Model3D{
 	modelMatrix: twgl.m4.Mat4
 	positions: number[]
 	indics: number
+	fragmentShader: string
+	vertexShader: string
 	constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, vertics: twgl.Arrays){
 		// positions
 		// const cubeVert = twgl.primitives.createCubeVertices()
+		this.fragmentShader = ``
+		this.vertexShader = ``
 		this.gl = gl;
 		this.positions = [];
 		this.indics = 3;
@@ -26,6 +30,19 @@ class Model3D{
 
 	setModelMatrix(modelMatrix: twgl.m4.Mat4){
 		this.modelMatrix = modelMatrix
+	}
+
+	render(){
+		const gl = this.gl;
+		const programInfo = twgl.createProgramInfo(gl, [this.vertexShader, this.fragmentShader]);
+		const uniforms = {
+			u_matrix: this.modelMatrix,
+			u_color: [Math.random(), Math.random(), Math.random(), 1],
+		};
+		gl.useProgram(programInfo.program);
+		twgl.setBuffersAndAttributes(gl, programInfo, this.bufferInfo);
+		twgl.setUniforms(programInfo, uniforms);
+		twgl.drawBufferInfo(gl, this.bufferInfo);
 	}
 
 }

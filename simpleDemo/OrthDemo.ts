@@ -4,6 +4,7 @@ import { Camera, OrthographicFrustum, PerspectiveFrustum, ScreenSpaceEventHandle
 import BoundingBox from '../src/Core/BoundingBox'
 import { CustomBtn } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
+import Model3D from '../src/Core/Model'
 
 // 透视相机 + 正交相机
 
@@ -68,7 +69,6 @@ function CameraDemo() {
   twgl.setAttributePrefix('a_')
   const pInfo = twgl.createProgramInfo(gl, [cubeVS, cubeFS])
   console.log(' program info ', pInfo);
-  const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
 
   const vertices = [
     -5, -5, 0, // 左下角
@@ -76,7 +76,6 @@ function CameraDemo() {
     5, 5, 0, // 右上角
     -5, 5, 0  // 左上角
   ];
-
   const indices = [
     0, 1, 2, // 第一个三角形
     0, 2, 3  // 第二个三角形
@@ -87,9 +86,16 @@ function CameraDemo() {
     indices: { numComponents: 3, data: indices }
   });
 
-  const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl)
+  const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
+  const quadModel1 = new Model3D(gl, quadVerticsInfo);
+  const quadModel2 = new Model3D(gl, quadVerticsInfo);
 
-  const cubeBufInfo = twgl.primitives.createCubeBufferInfo(gl, 2)
+  const cubeVertics = twgl.primitives.createCubeVertices();
+  const cubeModel = new Model3D(gl, cubeVertics);
+
+  const quadBufInfo = quadModel1.bufferInfo
+  const quadBufInfo2 = quadModel2.bufferInfo
+  const cubeBufInfo = cubeModel.bufferInfo
 
 
   console.log(' quadBufInfo2 ', quadBufInfo2);
