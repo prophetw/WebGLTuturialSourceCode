@@ -1,31 +1,59 @@
 
 import * as twgl from 'twgl.js';
+import shaderProgramCache from './ShaderProgram';
+import BoundingBox from './BoundingBox';
+import { Camera } from './Camera';
 
 type Vector3 = twgl.v3.Vec3;
 
 class Model3D{
-
 	gl: WebGL2RenderingContext | WebGLRenderingContext
 	bufferInfo: twgl.BufferInfo
 	modelMatrix: twgl.m4.Mat4
 	positions: number[]
-	indics: number
 	fragmentShader: string
 	vertexShader: string
-	constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, vertics: twgl.Arrays){
-		// positions
-		// const cubeVert = twgl.primitives.createCubeVertices()
-		this.fragmentShader = ``
-		this.vertexShader = ``
+	numComponents: number
+	boundingBox: BoundingBox
+	camera: Camera
+	color: twgl.v3.Vec3
+	constructor(
+		gl: WebGL2RenderingContext | WebGLRenderingContext, 
+		camera: Camera,
+		vertics: twgl.Arrays,
+		modelMatrix: twgl.m4.Mat4 = twgl.m4.identity(),
+		vs = '',
+		fs = '',
+		){
+		this.fragmentShader = fs;
+		this.vertexShader = vs;
 		this.gl = gl;
 		this.positions = [];
-		this.indics = 3;
+		this.numComponents = 3;
+		this.camera = camera;
 		if(Array.isArray(vertics.position)){
 			this.positions = vertics.position;
 		}
+		if(vertics.position && Array.isArray(vertics.position.data)){
+			this.positions = vertics.position.data;
+			this.numComponents = vertics.position.numComponents;
+		}
+		if(vertics.position instanceof Float32Array){
+			this.positions = Array.from(vertics.position);
+			this.numComponents = vertics.position.numComponents;
+		}
+		const pointAry = this.positions.map((v, i) => {
+			if(i % this.numComponents === 0){
+				return [v, this.positions[i + 1], this.positions[i + 2]];
+			}
+			return null;
+		}).filter(a=>a!==null) as twgl.v3.Vec3[];
+
+		this.boundingBox = BoundingBox.fromPoints(pointAry);
 
 		this.bufferInfo = twgl.createBufferInfoFromArrays(gl, vertics) 
-		this.modelMatrix = twgl.m4.identity()
+		this.modelMatrix = modelMatrix;
+		this.color = twgl.v3.create(Math.random(), Math.random(), Math.random());
 	}
 
 	setModelMatrix(modelMatrix: twgl.m4.Mat4){
@@ -34,10 +62,12 @@ class Model3D{
 
 	render(){
 		const gl = this.gl;
-		const programInfo = twgl.createProgramInfo(gl, [this.vertexShader, this.fragmentShader]);
+		const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
 		const uniforms = {
-			u_matrix: this.modelMatrix,
-			u_color: [Math.random(), Math.random(), Math.random(), 1],
+			projection: this.camera.frustum.projectionMatrix,
+			view: this.camera.viewMatrix,
+			model: this.modelMatrix,
+			u_color: this.color
 		};
 		gl.useProgram(programInfo.program);
 		twgl.setBuffersAndAttributes(gl, programInfo, this.bufferInfo);

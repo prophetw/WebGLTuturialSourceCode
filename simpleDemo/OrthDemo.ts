@@ -5,6 +5,7 @@ import BoundingBox from '../src/Core/BoundingBox'
 import { CustomBtn } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
 import Model3D from '../src/Core/Model'
+import Scene from '../src/Core/Scene'
 
 // 透视相机 + 正交相机
 
@@ -65,11 +66,6 @@ function CameraDemo() {
 
   gl.enable(gl.DEPTH_TEST)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
-
-  twgl.setAttributePrefix('a_')
-  const pInfo = twgl.createProgramInfo(gl, [cubeVS, cubeFS])
-  console.log(' program info ', pInfo);
-
   const vertices = [
     -5, -5, 0, // 左下角
     5, -5, 0, // 右下角
@@ -86,27 +82,29 @@ function CameraDemo() {
     indices: { numComponents: 3, data: indices }
   });
 
+
+
+  const scene = new Scene(gl, canvas);
+  const camera = scene.camera;
+  console.log(' scene ', scene);
+
+
+  const model = twgl.m4.identity()
+  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
+  const model2 = twgl.m4.rotationY(toRadias(45))
+  twgl.m4.translate(model2, [1, 1, 1], model2)
   const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
-  const quadModel1 = new Model3D(gl, quadVerticsInfo);
-  const quadModel2 = new Model3D(gl, quadVerticsInfo);
-
+  const quadModel1 = new Model3D(gl, camera, quadVerticsInfo, model );
+  const quadModel2 = new Model3D(gl, camera, quadVerticsInfo, model1);
   const cubeVertics = twgl.primitives.createCubeVertices();
-  const cubeModel = new Model3D(gl, cubeVertics);
+  const cubeModel = new Model3D(gl, camera, cubeVertics, model2);
 
-  const quadBufInfo = quadModel1.bufferInfo
-  const quadBufInfo2 = quadModel2.bufferInfo
-  const cubeBufInfo = cubeModel.bufferInfo
-
-
-  console.log(' quadBufInfo2 ', quadBufInfo2);
-  console.log(' triBufInfo  ', quadBufInfo);
+  scene.add(quadModel1);
+  scene.add(quadModel2);
+  scene.add(cubeModel);
 
   // window.spector.startCapture(canvas, 100)
-  console.log(twgl.primitives.createCubeVertices());
-  console.log(twgl.primitives.createXYQuadVertices());
 
-  const camera = new Camera(canvas);
-  const screenSpaceEvt = new ScreenSpaceEventHandler(canvas, camera)
   camera.position = [10, 10, 10];
   camera.direction = [0, 0, -1];
   camera.up = [0, 1, 0];
@@ -116,15 +114,10 @@ function CameraDemo() {
   perspectiveFrustum.initWireframe(gl);
   const orthFrustum = new OrthographicFrustum(-3, 3, -3, 3, 0.1, 100)
   orthFrustum.initWireframe(gl);
-  camera.frustum = perspectiveFrustum
-  console.log(' camera ', camera);
 
+  camera.frustum = perspectiveFrustum
   const boundingBox = new BoundingBox([-1, -1, 0], [1, 1, 0]);
   camera.setViewToBoundingBox(boundingBox);
-
-  const cc = twgl.m4.perspective(toRadias(60), 1, 0.1, 100)
-  const cam = twgl.m4.lookAt([10, 10, 10], [10, 10, 9], [0, 1, 0])
-  console.log(cam, cc);
 
   const resetViewBtn = new CustomBtn('reset view', () => {
     camera.setViewToBoundingBox(boundingBox);
@@ -142,17 +135,17 @@ function CameraDemo() {
 
 
   let isShowFrustum = false;
-  new CustomBtn('toggleFrustumWireframe', ()=>{
+  new CustomBtn('toggleFrustumWireframe', () => {
     isShowFrustum = !isShowFrustum;
   })
 
   const fbo = twgl.createFramebufferInfo(gl, [
     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
   ], canvas.width, canvas.height)
-  console.log(fbo);
+
   let isShowFbo = false;
 
-  new CustomBtn("渲染1frame", ()=>{
+  new CustomBtn("渲染1frame", () => {
     camera.frustum = orthFrustum;
     isShowFbo = true;
     render1Frame()
@@ -160,59 +153,23 @@ function CameraDemo() {
     isShowFbo = false;
   })
 
-  const model = twgl.m4.identity()
-  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
-  const model2 = twgl.m4.rotationY(toRadias(45))
-  twgl.m4.translate(model2, [1, 1, 1], model2)
 
-  const draw = ()=>{
+  const draw = () => {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
     gl.enable(gl.POLYGON_OFFSET_FILL)
-    gl.useProgram(pInfo.program)
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    if(isShowFbo){
+    if (isShowFbo) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.framebuffer)
     }
 
-    twgl.setUniforms(pInfo, {
-      view: camera.viewMatrix,
-      projection: camera.frustum.projectionMatrix
-    })
+    scene.render()
 
-
-    // draw quad 1
-    twgl.setBuffersAndAttributes(gl, pInfo, quadBufInfo);
-    twgl.setUniforms(pInfo, {
-      u_color: twgl.v3.create(1.0, 0.0, 0.0),
-      model: model,
-    })
-    twgl.drawBufferInfo(gl, quadBufInfo)
-
-
-    // draw quad 2
-    twgl.setUniforms(pInfo, {
-      u_color: twgl.v3.create(0.0, 1.0, 0.0),
-      model: model1,
-    })
-    twgl.setBuffersAndAttributes(gl, pInfo, quadBufInfo2);
-    twgl.drawBufferInfo(gl, quadBufInfo2)
-
-    // draw cube
-    twgl.setUniforms(pInfo, {
-      u_color: twgl.v3.create(1.0, 1.0, 0.0),
-      model: model2,
-    })
-    twgl.setBuffersAndAttributes(gl, pInfo, cubeBufInfo);
-    twgl.drawBufferInfo(gl, cubeBufInfo)
-
-    if(isShowFbo){
+    if (isShowFbo) {
       debugRT.readFromContext('fbo')
     }
-    if(isShowFrustum){
+    if (isShowFrustum) {
       // camera.frustum.debugWireframe(camera.viewMatrix);
       // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
       camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
@@ -220,7 +177,7 @@ function CameraDemo() {
     }
   }
 
-  const render1Frame = ()=>{
+  const render1Frame = () => {
     draw();
   }
 
