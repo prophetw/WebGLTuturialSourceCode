@@ -17,16 +17,14 @@ class ShaderProgramCache{
 		if(this.cache[key]){
 			return this.cache[key];
 		}
-    ShaderSource.compileShaderSource(vs, fs, defines);
-		const programInfo = twgl.createProgramInfo(gl, [vs, fs]);
+    const shaderSource = ShaderSource.compileShaderSource(vs, fs, defines);
+		const programInfo = twgl.createProgramInfo(gl, [shaderSource.vertexShader, shaderSource.fragmentShader]);
 		this.cache[key] = programInfo;
 		return programInfo;
 	}
 
 	public createBlinnPhongProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext, defines = []): twgl.ProgramInfo{
-		const definedStr = defines.map(define => `#define ${define}`).join('\n');
 		const vs = `
-		${definedStr}
 		attribute vec4 position;
 		attribute vec3 normal;
 		varying vec3 v_normal;
@@ -41,7 +39,6 @@ class ShaderProgramCache{
 		}
 		`
 		const fs = `
-		${definedStr}
 		precision mediump float;
 		varying vec3 v_normal;
 		varying vec3 v_position;
@@ -70,9 +67,7 @@ class ShaderProgramCache{
 		vs?: string,
 		fs?: string,
 		defines: string[] = []): twgl.ProgramInfo{
-		const definedStr = defines.map(define => `#define ${define}`).join('\n');
 		vs = vs ? vs : `
-		${definedStr}
 		attribute vec4 position;
 		varying vec4 v_Color;
 		uniform mat4 model;
@@ -84,12 +79,12 @@ class ShaderProgramCache{
 		}
 		`
 		fs = fs ? fs : `
-		${definedStr}
 		precision mediump float;
 		varying vec4 v_Color;
 		uniform vec3 u_color;
 		void main() {
 			gl_FragColor = vec4(u_color.xyz, 1.0);
+      vec4 cc = glb_view * position;
 		}
 		`;
 		return this.getProgramInfo(gl, vs, fs, defines);
