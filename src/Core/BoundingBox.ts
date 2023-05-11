@@ -11,6 +11,7 @@ class BoundingBox {
 		this.max = max;
 		this.center = twgl.v3.divScalar(twgl.v3.add(this.min, this.max), 2);
 		this.size = twgl.v3.subtract(this.max, this.min);
+
 	}
 
 	static fromPoints(vec3Ary: twgl.v3.Vec3[]) {

@@ -18,7 +18,7 @@ class Model3D{
 	camera: Camera
 	color: twgl.v3.Vec3
 	constructor(
-		gl: WebGL2RenderingContext | WebGLRenderingContext, 
+		gl: WebGL2RenderingContext | WebGLRenderingContext,
 		camera: Camera,
 		vertics: twgl.Arrays,
 		modelMatrix: twgl.m4.Mat4 = twgl.m4.identity(),
@@ -51,10 +51,12 @@ class Model3D{
 
 		this.boundingBox = BoundingBox.fromPoints(pointAry);
 
-		this.bufferInfo = twgl.createBufferInfoFromArrays(gl, vertics) 
+		this.bufferInfo = twgl.createBufferInfoFromArrays(gl, vertics)
 		this.modelMatrix = modelMatrix;
 		this.color = twgl.v3.create(Math.random(), Math.random(), Math.random());
 	}
+
+
 
 	setModelMatrix(modelMatrix: twgl.m4.Mat4){
 		this.modelMatrix = modelMatrix

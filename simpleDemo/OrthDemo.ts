@@ -5,7 +5,6 @@ import BoundingBox from '../src/Core/BoundingBox'
 import { CustomBtn } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
 import Model3D from '../src/Core/Model'
-import Scene from '../src/Core/Scene'
 
 // 透视相机 + 正交相机
 
@@ -16,26 +15,27 @@ import Scene from '../src/Core/Scene'
 
 const cubeFS = `
   precision mediump float;
-  varying vec4 v_Color;
+  varying vec4 v_posWC;
 	uniform vec3 u_color;
   void main() {
     gl_FragColor = vec4(u_color.xyz, 1.0);
-    // gl_FragColor = vec4(1.0);
+    gl_FragColor = v_posWC;
   }
 `
 const cubeVS = `
   attribute vec4 a_position;
   varying vec4 v_Color;
+  varying vec4 v_posWC;
 
   uniform mat4 model;
   uniform mat4 view;
   uniform mat4 projection;
   void main() {
     gl_Position =  projection * view * model * a_position;
+    v_posWC = model * a_position;
     // gl_Position =  view * model * a_position;
     // gl_Position =  model * a_position;
     // gl_Position =  a_position;
-    v_Color = a_position;
   }
 `
 
@@ -66,6 +66,18 @@ function CameraDemo() {
 
   gl.enable(gl.DEPTH_TEST)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
+
+  twgl.setAttributePrefix('a_')
+  const pInfo = twgl.createProgramInfo(gl, [cubeVS, cubeFS])
+  console.log(' program info ', pInfo);
+  const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
+
+  const vertics1 = twgl.primitives.createSphereVertices(1, 32, 32)
+  const vertics2 = twgl.primitives.createPlaneVertices(10, 10, 10, 10)
+
+  const sphereModel = new Model3D(gl, vertics2)
+  console.log(' sphe------- ', sphereModel );
+
   const vertices = [
     -5, -5, 0, // 左下角
     5, -5, 0, // 右下角
@@ -116,6 +128,15 @@ function CameraDemo() {
   orthFrustum.initWireframe(gl);
 
   camera.frustum = perspectiveFrustum
+  console.log(' camera ', camera);
+  console.log(' twgl ', twgl);
+
+
+  const model = twgl.m4.identity()
+  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
+  const model2 = twgl.m4.rotationY(toRadias(45))
+  twgl.m4.translate(model2, [-1, -1, -1], model2)
+
   const boundingBox = new BoundingBox([-1, -1, 0], [1, 1, 0]);
   camera.setViewToBoundingBox(boundingBox);
 

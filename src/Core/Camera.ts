@@ -1,7 +1,11 @@
 import * as twgl from 'twgl.js'
 import { angleToRads } from '../../lib/utils'
 import Ray from './Ray'
+import Vector4 from './Vector4'
 import BoundingBox from './BoundingBox'
+import Vector3 from './Vector3'
+import Euler from './Euler'
+
 
 class ScreenSpaceEventHandler {
   canvas: HTMLCanvasElement
@@ -28,11 +32,15 @@ class ScreenSpaceEventHandler {
       if (isDragging) {
         const x = event.clientX;
         const y = event.clientY;
-        const dx = x - lastX;
+
+        // heading/yaw
         const dy = y - lastY;
-        // dx dy 转换成四元数
-        
-        
+
+        // pitch
+        const dx = x - lastX;
+
+        // roll z 与鼠标偏移无关
+
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
         // console.log(worldPos);
         this.camera.rotateAroundPointX(dy * 0.01, worldPos);
@@ -126,6 +134,9 @@ class Camera {
   private _direction: twgl.v3.Vec3
   private _right: twgl.v3.Vec3
   private _up: twgl.v3.Vec3
+  private _heading: number
+  private _pitch: number
+  private _roll: number
   viewMatrix: twgl.m4.Mat4
   projectionViewMatrix: twgl.m4.Mat4
   inverseViewMatrix: twgl.m4.Mat4
@@ -141,6 +152,9 @@ class Camera {
     this.inverseViewMatrix = twgl.m4.identity(); // camera matrix
     this.projectionViewMatrix = twgl.m4.identity();
     this.frustum = new PerspectiveFrustum(60, 1, 0.1, 100);
+    this._heading = 0
+    this._pitch = 0
+    this._roll = 0
   }
 
   get position() {
@@ -172,6 +186,48 @@ class Camera {
     this.updateViewMatrix();
   }
 
+  get headingInAngle(){
+    return this._heading * 180 / Math.PI;
+  }
+  get pitchInAngle(){
+    return this._pitch * 180 / Math.PI;
+  }
+  get rollInAngle(){
+    return this._roll * 180 / Math.PI;
+  }
+  get heading(){
+    return this._heading;
+  }
+  set heading(heading: number){
+    this._heading = heading;
+    this.updateViewMatrix();
+  }
+  get pitch(){
+    return this._pitch;
+  }
+  set pitch(pitch: number){
+    this._pitch = pitch;
+    this.updateViewMatrix();
+  }
+  get roll(){
+    return this._roll;
+  }
+  set roll(roll: number){
+    this._roll = roll;
+    this.updateViewMatrix();
+  }
+
+  updateHeadingPitchRoll(){
+    // this._heading = Math.atan2(this._direction[0], this._direction[2]);
+    // this._position = twgl.v3.transformPoint(this.inverseViewMatrix, [0, 0, 0]);
+    // this._direction = twgl.v3.transformDirection(this.inverseViewMatrix, [0, 0, -1]);
+    const euler = Euler.fromMatrix4(this.inverseViewMatrix, 'XYZ');
+    this._heading = euler.yaw;
+    this._pitch = euler.pitch;
+    this._roll = euler.roll;
+
+  }
+
   setFrustum(frustum: PerspectiveFrustum | OrthographicFrustum) {
     this.frustum = frustum;
     this.updateProjectionViewMatrix();
@@ -194,6 +250,7 @@ class Camera {
     this._up = normalizedUp;
     this._direction = normalizedFront;
     // console.log(this.position, this.direction, this.up, this.right);
+    this.updateHeadingPitchRoll()
     this.updateProjectionViewMatrix();
   }
 
@@ -483,6 +540,42 @@ class Frustum {
       twgl.drawBufferInfo(this.gl, this.wireframeBufInfo, this.gl.LINES);
     }
   }
+
+  getFrustumPlanes(viewMatrix: twgl.m4.Mat4, projectionMatrix?: twgl.m4.Mat4) {
+    const projMat4 = projectionMatrix || this.projectionMatrix
+    const viewProjectionMatrix = twgl.m4.multiply(viewMatrix, projMat4);
+    const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
+    const planes = [
+      // left plane
+      Vector4.transformMat4(Vector4.create(1, 0, 0, 1), inverseViewProjectionMatrix),
+      // right plane
+      Vector4.transformMat4(Vector4.create(-1, 0, 0, 1), inverseViewProjectionMatrix),
+      // bottom plane
+      Vector4.transformMat4(Vector4.create(0, 1, 0, 1), inverseViewProjectionMatrix),
+      // top plane
+      Vector4.transformMat4(Vector4.create(0, -1, 0, 1), inverseViewProjectionMatrix),
+      // near plane
+      Vector4.transformMat4(Vector4.create(0, 0, 1, 1), inverseViewProjectionMatrix),
+      // far plane
+      Vector4.transformMat4(Vector4.create(0, 0, -1, 1), inverseViewProjectionMatrix),
+    ];
+    return planes;
+  }
+
+  frustumCulling(planes: Vector4[], boundingBox: BoundingBox) {
+    const center = boundingBox.center;
+    // const halfSize = twgl.v3.multiply(boundingBox.size);
+    // for (let i = 0; i < 6; i++) {
+    //   const plane = planes[i];
+    //   const dot = Vector4.dot(plane, center);
+    //   const radius = Vector4.dot(plane, halfSize);
+    //   if (dot + radius < 0) {
+    //     return false;
+    //   }
+    // }
+    return true;
+  }
+
 }
 
 class PerspectiveFrustum extends Frustum{
