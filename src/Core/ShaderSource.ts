@@ -4,8 +4,14 @@ import * as twgl from 'twgl.js';
 // like import other shader source code
 // automatic add uniform and attribute declaration
 class ShaderSource{
+
 	constructor(){
+
 	}
+
+  compileShaderSource(){
+
+  }
 
 
 

@@ -800,6 +800,30 @@ async function createTexture(gl: WebGLRenderingContext, texinfo: twgl.TextureOpt
     })
   })
 }
+
+
+function toRadias(angle: number) {
+  // 360 = 2PI
+  return Math.PI / 180 * angle
+}
+function toAngle(radias: number) {
+  // 360 = 2PI
+  return 180 / Math.PI * radias
+}
+
+function clamp(value: any, min: number, max: number, defaultValue: number) {
+  const numValue = Number(value);
+  if(value === undefined || value === null){
+    if(defaultValue!==undefined){
+        return defaultValue;
+    }
+  }
+  if (isNaN(numValue)) {
+    return min;
+  }
+  return Math.min(Math.max(numValue, min), max);
+}
+
 export {
   GraphicEngine,
   Camera,
@@ -815,4 +839,7 @@ export {
   loadImg,
   createTexture,
   createTextures,
+  toRadias,
+  toAngle,
+  clamp,
 }

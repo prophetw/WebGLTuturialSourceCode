@@ -1,3 +1,4 @@
+import * as twgl from 'twgl.js';
 
 // Global uniform state
 class UniformState{
@@ -6,6 +7,13 @@ class UniformState{
 
 	}
 
+  //
+  get glb_modelMatrix(): twgl.m4.Mat4{
+    return twgl.m4.identity();
+  }
+
 }
 
-export default UniformState;
+const unifromState = new UniformState();
+
+export default unifromState;

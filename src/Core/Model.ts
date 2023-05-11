@@ -44,6 +44,11 @@ class Model3D{
 		}
 		const pointAry = this.positions.map((v, i) => {
 			if(i % this.numComponents === 0){
+        const first = v
+        const second = this.positions[i + 1]
+        if(this.numComponents === 2){
+          return [first, second, 0]
+        }
 				return [v, this.positions[i + 1], this.positions[i + 2]];
 			}
 			return null;
@@ -56,7 +61,15 @@ class Model3D{
 		this.color = twgl.v3.create(Math.random(), Math.random(), Math.random());
 	}
 
-
+  get worldBox(): BoundingBox{
+    const modelMatrix = this.modelMatrix;
+    const boundingBox = this.boundingBox;
+    const min = boundingBox.min;
+    const max = boundingBox.max;
+    const minWorld = twgl.m4.transformPoint(modelMatrix, min);
+    const maxWorld = twgl.m4.transformPoint(modelMatrix, max);
+    return BoundingBox.fromPoints([minWorld, maxWorld]);
+  }
 
 	setModelMatrix(modelMatrix: twgl.m4.Mat4){
 		this.modelMatrix = modelMatrix

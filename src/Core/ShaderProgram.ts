@@ -1,4 +1,5 @@
 import * as twgl from 'twgl.js';
+import ShaderSource from './ShaderSource';
 
 class ShaderProgramCache{
 	cache: { [key: string]: twgl.ProgramInfo}
@@ -7,15 +8,16 @@ class ShaderProgramCache{
 	}
 
 	getProgramInfo(
-		gl: WebGL2RenderingContext | WebGLRenderingContext, 
-		vs: string, 
-		fs: string, 
+		gl: WebGL2RenderingContext | WebGLRenderingContext,
+		vs: string,
+		fs: string,
 		defines: string[] = []) : twgl.ProgramInfo{
 
 		const key = vs + defines.join('_') + fs;
 		if(this.cache[key]){
 			return this.cache[key];
 		}
+    ShaderSource.compileShaderSource(vs, fs, defines);
 		const programInfo = twgl.createProgramInfo(gl, [vs, fs]);
 		this.cache[key] = programInfo;
 		return programInfo;
@@ -64,9 +66,9 @@ class ShaderProgramCache{
 		return this.getProgramInfo(gl, vs, fs, defines);
 	}
 
-	public createColorProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext, 
-		vs?: string, 
-		fs?: string, 
+	public createColorProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext,
+		vs?: string,
+		fs?: string,
 		defines: string[] = []): twgl.ProgramInfo{
 		const definedStr = defines.map(define => `#define ${define}`).join('\n');
 		vs = vs ? vs : `

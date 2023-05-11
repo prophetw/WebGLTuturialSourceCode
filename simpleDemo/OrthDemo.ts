@@ -2,51 +2,14 @@
 import * as twgl from 'twgl.js'
 import { Camera, OrthographicFrustum, PerspectiveFrustum, ScreenSpaceEventHandler } from '../src/Core/Camera'
 import BoundingBox from '../src/Core/BoundingBox'
-import { CustomBtn } from '../src/utils/utils'
+import { CustomBtn, toRadias } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
 import Model3D from '../src/Core/Model'
+import Scene from '../src/Core/Scene'
 
 // 透视相机 + 正交相机
 
 // 正交相机 用于输出俯视图 正交相机的 近平面是可移动
-
-//
-
-
-const cubeFS = `
-  precision mediump float;
-  varying vec4 v_posWC;
-	uniform vec3 u_color;
-  void main() {
-    gl_FragColor = vec4(u_color.xyz, 1.0);
-    gl_FragColor = v_posWC;
-  }
-`
-const cubeVS = `
-  attribute vec4 a_position;
-  varying vec4 v_Color;
-  varying vec4 v_posWC;
-
-  uniform mat4 model;
-  uniform mat4 view;
-  uniform mat4 projection;
-  void main() {
-    gl_Position =  projection * view * model * a_position;
-    v_posWC = model * a_position;
-    // gl_Position =  view * model * a_position;
-    // gl_Position =  model * a_position;
-    // gl_Position =  a_position;
-  }
-`
-
-function toRadias(angle: number) {
-  // 360 = 2PI
-  return Math.PI / 180 * angle
-}
-function toAngle(radias: number) {
-  // 360 = 2PI
-  return 180 / Math.PI * radias
-}
 
 function CameraDemo() {
 
@@ -68,15 +31,9 @@ function CameraDemo() {
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
 
   twgl.setAttributePrefix('a_')
-  const pInfo = twgl.createProgramInfo(gl, [cubeVS, cubeFS])
-  console.log(' program info ', pInfo);
   const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
-
   const vertics1 = twgl.primitives.createSphereVertices(1, 32, 32)
   const vertics2 = twgl.primitives.createPlaneVertices(10, 10, 10, 10)
-
-  const sphereModel = new Model3D(gl, vertics2)
-  console.log(' sphe------- ', sphereModel );
 
   const vertices = [
     -5, -5, 0, // 左下角
@@ -95,7 +52,6 @@ function CameraDemo() {
   });
 
 
-
   const scene = new Scene(gl, canvas);
   const camera = scene.camera;
   console.log(' scene ', scene);
@@ -106,6 +62,7 @@ function CameraDemo() {
   const model2 = twgl.m4.rotationY(toRadias(45))
   twgl.m4.translate(model2, [1, 1, 1], model2)
   const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
+
   const quadModel1 = new Model3D(gl, camera, quadVerticsInfo, model );
   const quadModel2 = new Model3D(gl, camera, quadVerticsInfo, model1);
   const cubeVertics = twgl.primitives.createCubeVertices();
@@ -128,32 +85,31 @@ function CameraDemo() {
   orthFrustum.initWireframe(gl);
 
   camera.frustum = perspectiveFrustum
-  console.log(' camera ', camera);
-  console.log(' twgl ', twgl);
-
-
-  const model = twgl.m4.identity()
-  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
-  const model2 = twgl.m4.rotationY(toRadias(45))
-  twgl.m4.translate(model2, [-1, -1, -1], model2)
 
   const boundingBox = new BoundingBox([-1, -1, 0], [1, 1, 0]);
-  camera.setViewToBoundingBox(boundingBox);
+  const bbx = quadModel1.worldBox
+  console.log(bbx);
+  camera.setViewToBoundingBox(bbx);
 
-  const resetViewBtn = new CustomBtn('reset view', () => {
-    camera.setViewToBoundingBox(boundingBox);
-  })
 
-  const switchOrthOrPers = new CustomBtn('orth', () => {
-    // camera.switchToOrthographicFrustum();
-    camera.frustum = orthFrustum
-  })
+  const initBtnOptions = ()=>{
+    const resetViewBtn = new CustomBtn('reset view', () => {
+      camera.setViewToBoundingBox(boundingBox);
+    })
 
-  const switchPers = new CustomBtn('pers', () => {
-    // camera.switchToPerspectiveFrustum();
-    camera.frustum = perspectiveFrustum
-  })
+    const switchOrthOrPers = new CustomBtn('orth', () => {
+      // camera.switchToOrthographicFrustum();
+      camera.frustum = orthFrustum
+    })
 
+    const switchPers = new CustomBtn('pers', () => {
+      // camera.switchToPerspectiveFrustum();
+      camera.frustum = perspectiveFrustum
+    })
+
+  }
+
+  initBtnOptions()
 
   let isShowFrustum = false;
   new CustomBtn('toggleFrustumWireframe', () => {
@@ -207,6 +163,7 @@ function CameraDemo() {
     draw();
     requestAnimationFrame(render)
   }
+
   render(1);
 
 }
