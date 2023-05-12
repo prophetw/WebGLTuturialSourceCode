@@ -177,9 +177,9 @@ ExampleFn = VirtualCamera
 ExampleFn = WaterDemo
 ExampleFn = ShadowMap
 ExampleFn = ZFighting
-ExampleFn = CameraDemo
 ExampleFn = Projection
 ExampleFn = OrthDemo
+// ExampleFn = CameraDemo
 
 
 // const ExampleFn = LOGLTexturesTriangle

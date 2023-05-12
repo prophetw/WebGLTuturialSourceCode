@@ -30,7 +30,6 @@ function CameraDemo() {
   gl.enable(gl.DEPTH_TEST)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
 
-  twgl.setAttributePrefix('a_')
   const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
   const vertics1 = twgl.primitives.createSphereVertices(1, 32, 32)
   const vertics2 = twgl.primitives.createPlaneVertices(10, 10, 10, 10)
@@ -63,7 +62,7 @@ function CameraDemo() {
   twgl.m4.translate(model2, [1, 1, 1], model2)
   const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
 
-  const quadModel1 = new Model3D(gl, camera, quadVerticsInfo, model );
+  const quadModel1 = new Model3D(gl, camera, quadVerticsInfo, model);
   const quadModel2 = new Model3D(gl, camera, quadVerticsInfo, model1);
   const cubeVertics = twgl.primitives.createCubeVertices();
   const cubeModel = new Model3D(gl, camera, cubeVertics, model2);
@@ -87,9 +86,9 @@ function CameraDemo() {
   camera.frustum = perspectiveFrustum
 
   const boundingBox = new BoundingBox([-1, -1, 0], [1, 1, 0]);
-  const bbx = quadModel1.worldBox
-  console.log(bbx);
-  camera.setViewToBoundingBox(bbx);
+  // const bbx = quadModel1.worldBox
+  // console.log(bbx);
+  camera.setViewToBoundingBox(boundingBox);
 
 
   const initBtnOptions = ()=>{

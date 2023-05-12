@@ -1,8 +1,10 @@
 
 
 import * as twgl from 'twgl.js'
-import { BoundingBox, Camera, ScreenSpaceEventHandler } from '../src/Core/Camera'
+import { Camera, ScreenSpaceEventHandler } from '../src/Core/Camera'
 import { CustomBtn } from '../src/utils/utils'
+import BoundingBox from '../src/Core/BoundingBox'
+
 
 const cubeFS = `
   precision mediump float;
@@ -89,9 +91,12 @@ function CameraDemo() {
   camera.direction = [0, 0, -1];
   camera.up = [0, 1, 0];
   camera.frustum.near = 0.1
-  camera.frustum.far = 10
+  camera.frustum.far = 100
+
+  console.log(' camera ---- ',camera, twgl);
 
   const boundingBox = new BoundingBox([-1, -1, 0], [1,1,0]);
+  console.log(' bbx ', boundingBox);
   camera.setViewToBoundingBox(boundingBox);
 
   // const cc = twgl.m4.perspective(toRadias(60), 1, 0.1, 100)

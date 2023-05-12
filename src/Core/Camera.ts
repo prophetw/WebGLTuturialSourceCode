@@ -1,9 +1,7 @@
 import * as twgl from 'twgl.js'
 import { angleToRads } from '../../lib/utils'
-import Ray from './Ray'
 import Vector4 from './Vector4'
 import BoundingBox from './BoundingBox'
-import Vector3 from './Vector3'
 import Euler from './Euler'
 
 
@@ -25,6 +23,9 @@ class ScreenSpaceEventHandler {
     canvas.addEventListener('mousedown', (event) => {
       lastX = event.clientX;
       lastY = event.clientY;
+
+      const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
+      console.log(' world pos ', worldPos);
       isDragging = true;
     });
 
@@ -68,6 +69,7 @@ class ScreenSpaceEventHandler {
       // const NDC = this.camera.convertScreenCoordToNDC(x, y);
       const delta = event.deltaY * 0.01;
       this.camera.moveForward(-delta);
+      console.log(this.camera.position);
     });
   }
 
@@ -588,7 +590,7 @@ class PerspectiveFrustum extends Frustum{
 
   /**
    *
-   * @param fov angle
+   * @param fovAngle angle
    * @param aspect
    * @param near
    * @param far
@@ -634,7 +636,7 @@ class PerspectiveFrustum extends Frustum{
 
 
   updateProjectionMatrix() {
-    this.projectionMatrix = twgl.m4.perspective(angleToRads(this.fov), this.aspect, this.near, this.far);
+    this.projectionMatrix = twgl.m4.perspective(this.fov, this.aspect, this.near, this.far);
   }
 
 

@@ -1,6 +1,39 @@
 import * as twgl from 'twgl.js';
 import AutomaticUniforms from './AutomaticUniforms';
 
+
+type WebGLPrecision = 'highp' | 'mediump' | 'lowp';
+
+function addPrecision(shaderCode: string, precision: WebGLPrecision = 'mediump'){
+
+  if(shaderCode.includes('precision')){
+    return shaderCode;
+}
+  if(precision === 'highp'){
+      return `
+precision highp float;
+${shaderCode}
+`
+  }
+  if(precision === 'lowp'){
+    return `
+precision lowp float;
+${shaderCode}
+`
+  }
+  if(precision === 'mediump'){
+    return `
+precision mediump float;
+${shaderCode}
+`
+  }
+
+  return `
+precision mediump float;
+${shaderCode}
+`
+}
+
 // handle shader source code with some helper functions
 // like import other shader source code
 // automatic add uniform and attribute declaration
@@ -11,6 +44,10 @@ class ShaderSource{
 	constructor(vertexShader: string, fragmentShader: string){
     this.vertexShader = vertexShader;
     this.fragmentShader = fragmentShader;
+  }
+
+  addPrecision(){
+
   }
 
   public static compileShaderSource(vs: string, fs: string, defines: string[]){
@@ -52,7 +89,10 @@ ${fs}
       })
     }
 
-    return new ShaderSource(vs, fs);
+    fs = addPrecision(fs, 'mediump');
+    const shaderSource = new ShaderSource(vs, fs);
+    console.log(' shader source ----- ', shaderSource);
+    return shaderSource;
   }
 
 }

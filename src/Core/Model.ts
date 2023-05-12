@@ -84,6 +84,8 @@ class Model3D{
 			model: this.modelMatrix,
 			u_color: this.color
 		};
+    // console.log(uniforms);
+    // console.log(' programInfo ', programInfo);
 		gl.useProgram(programInfo.program);
 		twgl.setBuffersAndAttributes(gl, programInfo, this.bufferInfo);
 		twgl.setUniforms(programInfo, uniforms);
