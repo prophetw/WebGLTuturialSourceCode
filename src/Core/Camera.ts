@@ -3,6 +3,7 @@ import { angleToRads } from '../../lib/utils'
 import Vector4 from './Vector4'
 import BoundingBox from './BoundingBox'
 import Euler from './Euler'
+import Ray from './Ray'
 
 
 class ScreenSpaceEventHandler {
@@ -425,6 +426,32 @@ class Camera {
       return worldCoord;
   }
 
+  convertScreenCoordToNDC(x: number, y: number){
+      const NDCCoord = [x/this.canvas.width * 2 - 1, y/this.canvas.height * 2 - 1, -1]
+      return NDCCoord;
+  }
+
+  convertScreenCoordToClipCoord(x: number, y: number){
+      const clipCoord = [x/this.canvas.width * 2 - 1, y/this.canvas.height * 2 - 1, -1]
+      return clipCoord;
+  }
+
+  convertWorldCoordToScreenCoord(x: number, y: number, z: number) {
+    const worldCoord = [x, y, z];
+    const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
+    const projectedPoint = twgl.m4.transformPoint(viewProjectionMatrix, worldCoord);
+    const screenCoord = [projectedPoint[0] / projectedPoint[3], projectedPoint[1] / projectedPoint[3], projectedPoint[2] / projectedPoint[3]];
+    return screenCoord;
+  }
+
+  convertScreenCoordToViewCoord(x: number, y: number) {
+    const screenCoord = [x, y, 0];
+    const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
+    const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
+    const worldCoord = twgl.m4.transformPoint(inverseViewProjectionMatrix, screenCoord);
+    return worldCoord;
+  }
+
   projectPointToScreenSpace(point: twgl.v3.Vec3) {
     const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
     const projectedPoint = twgl.m4.transformPoint(viewProjectionMatrix, point);
@@ -436,6 +463,22 @@ class Camera {
     const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
     const unprojectedPoint = twgl.m4.transformPoint(inverseViewProjectionMatrix, point);
     return unprojectedPoint;
+  }
+
+  getPickRay(x: number, y: number) {
+    const pointInEyeSpace = this.convertScreenCoordToViewCoord(x, y);
+    const rayInEyeSpace = new Ray([0,0,0], twgl.v3.subtract(pointInEyeSpace, [0,0,0]));
+
+    const eyePosiInEyeSpace = [0,0,0]
+    const eyePosiInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, eyePosiInEyeSpace);
+
+    const pointInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, pointInEyeSpace);
+    const rayInWorldSpace = new Ray(eyePosiInWorldSpace, twgl.v3.subtract(pointInWorldSpace, eyePosiInWorldSpace));
+
+    console.log(' get pick ray ', this);
+    console.log(' rayEC ', rayInEyeSpace);
+    console.log(' rayWC', rayInWorldSpace);
+    return rayInWorldSpace;
   }
 
   destroy() {
@@ -490,35 +533,35 @@ class Frustum {
         1, 1, 1,
       ],
       indices: [
-        0, 1,
-        1, 2,
-        2, 3,
-        3, 0,
+        // 0, 1,
+        // 1, 2,
+        // 2, 3,
+        // 3, 0,
 
-        4, 5,
-        5, 6,
-        6, 7,
-        7, 4,
+        // 4, 5,
+        // 5, 6,
+        // 6, 7,
+        // 7, 4,
 
-        0, 5,
-        1, 4,
-        2, 7,
-        3, 6,
+        // 0, 5,
+        // 1, 4,
+        // 2, 7,
+        // 3, 6,
 
-      // 0, 1,
-      // 1, 3,
-      // 3, 2,
-      // 2, 0,
+      0, 1,
+      1, 3,
+      3, 2,
+      2, 0,
 
-      // 4, 5,
-      // 5, 7,
-      // 7, 6,
-      // 6, 4,
+      4, 5,
+      5, 7,
+      7, 6,
+      6, 4,
 
-      // 0, 4,
-      // 1, 5,
-      // 3, 7,
-      // 2, 6,
+      0, 4,
+      1, 5,
+      3, 7,
+      2, 6,
 
       ],
     }

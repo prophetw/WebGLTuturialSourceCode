@@ -108,7 +108,18 @@ function CameraDemo() {
 
   }
 
+  const initEvt = ()=>{
+    canvas.addEventListener('click', e=>{
+      const {clientX, clientY} = e
+      const ray = camera.getPickRay(clientX, clientY)
+      console.log(' ray ', ray);
+    })
+  }
+
+
+
   initBtnOptions()
+  initEvt()
 
   let isShowFrustum = false;
   new CustomBtn('toggleFrustumWireframe', () => {

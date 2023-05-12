@@ -92,6 +92,10 @@ class Model3D{
 		twgl.drawBufferInfo(gl, this.bufferInfo);
 	}
 
+  generateOCTreeData(){
+
+  }
+
 }
 
 export default Model3D

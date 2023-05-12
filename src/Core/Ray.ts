@@ -10,7 +10,7 @@ class Ray {
 
 	constructor(origin: Vector3, direction: Vector3) {
 		this.origin = origin;
-		this.direction = direction;
+		this.direction = twgl.v3.normalize(direction);
 	}
 
 	intersectBox(box: BoundingBox): boolean {
