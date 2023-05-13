@@ -68,21 +68,25 @@ void main() {
 		defines: string[] = []): twgl.ProgramInfo{
 		vs = vs ? vs : `
 attribute vec4 position;
-varying vec4 v_Color;
+varying vec4 posEC;
+varying vec4 posWC;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 void main() {
   gl_Position =  projection * view * model * position;
-  v_Color = position;
+  posEC = view * model * position;
+  posWC = model * position;
   vec4 cc = glb_view * position;
 }
 		`
 		fs = fs ? fs : `
-varying vec4 v_Color;
+varying vec4 posEC;
+varying vec4 posWC;
 uniform vec3 u_color;
 void main() {
   gl_FragColor = vec4(u_color.xyz, 1.0);
+  gl_FragColor = vec4(posWC.xyz, 1.0);
 }
 		`;
 		return this.getProgramInfo(gl, vs, fs, defines);

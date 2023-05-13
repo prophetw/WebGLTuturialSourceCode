@@ -6,6 +6,7 @@ import { CustomBtn, toRadias } from '../src/utils/utils'
 import { VisualState } from '../src/utils/visualState'
 import Model3D from '../src/Core/Model'
 import Scene from '../src/Core/Scene'
+import Ray from '../src/Core/Ray'
 
 // 透视相机 + 正交相机
 
@@ -68,8 +69,8 @@ function CameraDemo() {
   const cubeModel = new Model3D(gl, camera, cubeVertics, model2);
 
   scene.add(quadModel1);
-  scene.add(quadModel2);
-  scene.add(cubeModel);
+  // scene.add(quadModel2);
+  // scene.add(cubeModel);
 
   // window.spector.startCapture(canvas, 100)
 
@@ -112,7 +113,12 @@ function CameraDemo() {
     canvas.addEventListener('click', e=>{
       const {clientX, clientY} = e
       const ray = camera.getPickRay(clientX, clientY)
-      console.log(' ray ', ray);
+      console.log(' ray is ', ray);
+      scene.objects.map(model3D=>{
+        const result = model3D.intersectRay(ray)
+        console.log(' result ', result);
+      })
+
     })
   }
 

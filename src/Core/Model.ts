@@ -3,17 +3,22 @@ import * as twgl from 'twgl.js';
 import shaderProgramCache from './ShaderProgram';
 import BoundingBox from './BoundingBox';
 import { Camera } from './Camera';
+import Ray from './Ray';
 
 type Vector3 = twgl.v3.Vec3;
 
-class Model3D{
+class Model3D {
 	gl: WebGL2RenderingContext | WebGLRenderingContext
 	bufferInfo: twgl.BufferInfo
 	modelMatrix: twgl.m4.Mat4
 	positions: number[]
+	pointAry: twgl.v3.Vec3[]
+	triangleAry: twgl.v3.Vec3[]
 	fragmentShader: string
 	vertexShader: string
 	numComponents: number
+	indices: twgl.ArraySpec
+	vertics: twgl.Arrays
 	boundingBox: BoundingBox
 	camera: Camera
 	color: twgl.v3.Vec3
@@ -24,58 +29,76 @@ class Model3D{
 		modelMatrix: twgl.m4.Mat4 = twgl.m4.identity(),
 		vs = '',
 		fs = '',
-		){
+	) {
+		this.vertics = vertics;
 		this.fragmentShader = fs;
 		this.vertexShader = vs;
 		this.gl = gl;
 		this.positions = [];
 		this.numComponents = 3;
 		this.camera = camera;
-		if(Array.isArray(vertics.position)){
+		if (Array.isArray(vertics.position)) {
 			this.positions = vertics.position;
 		}
-		if(vertics.position && Array.isArray(vertics.position.data)){
+		if (vertics.position && Array.isArray(vertics.position.data)) {
 			this.positions = vertics.position.data;
 			this.numComponents = vertics.position.numComponents;
 		}
-		if(vertics.position instanceof Float32Array){
+		if (vertics.position instanceof Float32Array) {
 			this.positions = Array.from(vertics.position);
 			this.numComponents = vertics.position.numComponents;
 		}
+		this.indices = this.vertics.indices
 		const pointAry = this.positions.map((v, i) => {
-			if(i % this.numComponents === 0){
-        const first = v
-        const second = this.positions[i + 1]
-        if(this.numComponents === 2){
-          return [first, second, 0]
-        }
+			if (i % this.numComponents === 0) {
+				const first = v
+				const second = this.positions[i + 1]
+				if (this.numComponents === 2) {
+					return [first, second, 0]
+				}
 				return [v, this.positions[i + 1], this.positions[i + 2]];
 			}
 			return null;
-		}).filter(a=>a!==null) as twgl.v3.Vec3[];
+		}).filter(a => a !== null) as twgl.v3.Vec3[];
+
+		this.pointAry = pointAry
+		this.triangleAry = []
+		if(Array.isArray(this.indices) || this.indices instanceof Float32Array){
+			const indices = [...this.indices]
+			indices.forEach((v, i) => {
+				if (i % 3 === 0) {
+					const first = pointAry[v]
+					const second = pointAry[indices[i + 1]]
+					const third = pointAry[indices[i + 2]]
+					this.triangleAry.push(first, second, third)
+				}
+			})
+			if(this.indices.length !== this.triangleAry.length){
+				console.error(' this.indices.length !== this.triangleAry.length ');
+			}
+		}
 
 		this.boundingBox = BoundingBox.fromPoints(pointAry);
-
 		this.bufferInfo = twgl.createBufferInfoFromArrays(gl, vertics)
 		this.modelMatrix = modelMatrix;
 		this.color = twgl.v3.create(Math.random(), Math.random(), Math.random());
 	}
 
-  get worldBox(): BoundingBox{
-    const modelMatrix = this.modelMatrix;
-    const boundingBox = this.boundingBox;
-    const min = boundingBox.min;
-    const max = boundingBox.max;
-    const minWorld = twgl.m4.transformPoint(modelMatrix, min);
-    const maxWorld = twgl.m4.transformPoint(modelMatrix, max);
-    return BoundingBox.fromPoints([minWorld, maxWorld]);
-  }
+	get worldBox(): BoundingBox {
+		const modelMatrix = this.modelMatrix;
+		const boundingBox = this.boundingBox;
+		const min = boundingBox.min;
+		const max = boundingBox.max;
+		const minWorld = twgl.m4.transformPoint(modelMatrix, min);
+		const maxWorld = twgl.m4.transformPoint(modelMatrix, max);
+		return BoundingBox.fromPoints([minWorld, maxWorld]);
+	}
 
-	setModelMatrix(modelMatrix: twgl.m4.Mat4){
+	setModelMatrix(modelMatrix: twgl.m4.Mat4) {
 		this.modelMatrix = modelMatrix
 	}
 
-	render(){
+	render() {
 		const gl = this.gl;
 		const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
 		const uniforms = {
@@ -84,17 +107,36 @@ class Model3D{
 			model: this.modelMatrix,
 			u_color: this.color
 		};
-    // console.log(uniforms);
-    // console.log(' programInfo ', programInfo);
+		// console.log(uniforms);
+		// console.log(' programInfo ', programInfo);
 		gl.useProgram(programInfo.program);
 		twgl.setBuffersAndAttributes(gl, programInfo, this.bufferInfo);
 		twgl.setUniforms(programInfo, uniforms);
 		twgl.drawBufferInfo(gl, this.bufferInfo);
 	}
 
-  generateOCTreeData(){
+	generateOCTreeData() {
 
-  }
+	}
+
+	intersectRay(ray: Ray): null | twgl.v3.Vec3 {
+		let result = null;
+		const transformdTriangleAry = this.triangleAry.map(v => {
+			return twgl.m4.transformPoint(this.modelMatrix, v)
+		})
+		const resultAry: twgl.v3.Vec3[] = [];
+		transformdTriangleAry.forEach((v, i) => {
+			if (i % 3 === 0) {
+				result = ray.rayTriangleIntersection(v, transformdTriangleAry[i + 1], transformdTriangleAry[i + 2]);
+				if (result) {
+					// console.log('isIntersect', result);
+					resultAry.push(result);
+				}
+			}
+		})
+		console.log(' ______ ', resultAry);
+		return result;
+	}
 
 }
 

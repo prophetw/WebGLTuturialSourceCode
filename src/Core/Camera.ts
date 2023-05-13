@@ -25,8 +25,6 @@ class ScreenSpaceEventHandler {
       lastX = event.clientX;
       lastY = event.clientY;
 
-      const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
-      console.log(' world pos ', worldPos);
       isDragging = true;
     });
 
@@ -44,6 +42,8 @@ class ScreenSpaceEventHandler {
         // roll z 与鼠标偏移无关
 
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
+        // const ray = this.camera.getPickRay(lastX, lastY);
+
         // console.log(worldPos);
         this.camera.rotateAroundPointX(dy * 0.01, worldPos);
         this.camera.rotateAroundPointY(dx * 0.01, worldPos);
@@ -445,11 +445,10 @@ class Camera {
   }
 
   convertScreenCoordToViewCoord(x: number, y: number) {
-    const screenCoord = [x, y, 0];
-    const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
-    const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
-    const worldCoord = twgl.m4.transformPoint(inverseViewProjectionMatrix, screenCoord);
-    return worldCoord;
+    const NDC = this.convertScreenCoordToNDC(x, y);
+    const inverseProjection = twgl.m4.inverse(this.frustum.projectionMatrix);
+    const coordInEyeSpace = twgl.m4.transformPoint(inverseProjection, NDC);
+    return coordInEyeSpace;
   }
 
   projectPointToScreenSpace(point: twgl.v3.Vec3) {
@@ -467,7 +466,6 @@ class Camera {
 
   getPickRay(x: number, y: number) {
     const pointInEyeSpace = this.convertScreenCoordToViewCoord(x, y);
-    const rayInEyeSpace = new Ray([0,0,0], twgl.v3.subtract(pointInEyeSpace, [0,0,0]));
 
     const eyePosiInEyeSpace = [0,0,0]
     const eyePosiInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, eyePosiInEyeSpace);
@@ -475,9 +473,9 @@ class Camera {
     const pointInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, pointInEyeSpace);
     const rayInWorldSpace = new Ray(eyePosiInWorldSpace, twgl.v3.subtract(pointInWorldSpace, eyePosiInWorldSpace));
 
-    console.log(' get pick ray ', this);
-    console.log(' rayEC ', rayInEyeSpace);
-    console.log(' rayWC', rayInWorldSpace);
+    // console.log(' get pick ray ', this);
+    // console.log(' rayEC ', rayInEyeSpace);
+    // console.log(' rayWC', rayInWorldSpace);
     return rayInWorldSpace;
   }
 
