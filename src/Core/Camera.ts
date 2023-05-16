@@ -42,7 +42,7 @@ class ScreenSpaceEventHandler {
         // roll z 与鼠标偏移无关
 
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
-        // const ray = this.camera.getPickRay(lastX, lastY);
+        const ray = this.camera.getPickRay(lastX, lastY);
 
         // console.log(worldPos);
         this.camera.rotateAroundPointX(dy * 0.01, worldPos);
@@ -147,8 +147,8 @@ class Camera {
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this._position = twgl.v3.create();
-    this._direction = twgl.v3.create();
+    this._position = twgl.v3.create(0, 0, 5);
+    this._direction = twgl.v3.create(0, 0, -1);
     this._right = twgl.v3.create();
     this._up = twgl.v3.create(0, 1, 0);
     this.viewMatrix = twgl.m4.identity();
@@ -419,7 +419,8 @@ class Camera {
 
   convertScreenCoordToWorldCoord(x: number, y: number){
       // const screenCoord = [x, y, 0];
-      const NDCCoord = [x/this.canvas.width * 2 - 1, y/this.canvas.height * 2 - 1, -1]
+      const NDCCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]
+
       const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
       const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
       const worldCoord = twgl.m4.transformPoint(inverseViewProjectionMatrix, NDCCoord);
@@ -427,12 +428,18 @@ class Camera {
   }
 
   convertScreenCoordToNDC(x: number, y: number){
-      const NDCCoord = [x/this.canvas.width * 2 - 1, y/this.canvas.height * 2 - 1, -1]
-      return NDCCoord;
+    // 右手坐标系
+    // 中心 0 0 
+    // x 轴 从左往右 -1 1
+    // y 轴 从下往上 -1 1 
+    // 左上角点 -1 1
+    // 右下角点 1 -1
+    const NDCCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]
+    return NDCCoord;
   }
 
   convertScreenCoordToClipCoord(x: number, y: number){
-      const clipCoord = [x/this.canvas.width * 2 - 1, y/this.canvas.height * 2 - 1, -1]
+      const clipCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]
       return clipCoord;
   }
 
@@ -444,11 +451,15 @@ class Camera {
     return screenCoord;
   }
 
-  convertScreenCoordToViewCoord(x: number, y: number) {
+  convertScreenCoordToViewCoord(x: number, y: number): Vector4 {
     const NDC = this.convertScreenCoordToNDC(x, y);
+    const NDCVec4 = new Vector4(NDC[0], NDC[1], NDC[2], 1);
     const inverseProjection = twgl.m4.inverse(this.frustum.projectionMatrix);
-    const coordInEyeSpace = twgl.m4.transformPoint(inverseProjection, NDC);
-    return coordInEyeSpace;
+    const coordInEyeSpace1 = Vector4.transformMat4(NDCVec4, inverseProjection);
+    // console.log(' coordInEyeSpace1 ', coordInEyeSpace1);
+    // const coordInEyeSpace = twgl.m4.transformPoint(inverseProjection, NDC);
+    // console.log(' coordInEyeSpace ', coordInEyeSpace);
+    return coordInEyeSpace1;
   }
 
   projectPointToScreenSpace(point: twgl.v3.Vec3) {
@@ -466,16 +477,14 @@ class Camera {
 
   getPickRay(x: number, y: number) {
     const pointInEyeSpace = this.convertScreenCoordToViewCoord(x, y);
+    const pointInWorldSpace = Vector4.transformMat4(pointInEyeSpace, this.inverseViewMatrix);
+    console.log(' pointInWorldSpace ', pointInWorldSpace);
 
-    const eyePosiInEyeSpace = [0,0,0]
+    const eyePosiInEyeSpace = [0,0,0];
     const eyePosiInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, eyePosiInEyeSpace);
 
-    const pointInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, pointInEyeSpace);
-    const rayInWorldSpace = new Ray(eyePosiInWorldSpace, twgl.v3.subtract(pointInWorldSpace, eyePosiInWorldSpace));
+    const rayInWorldSpace = new Ray(eyePosiInWorldSpace, twgl.v3.subtract([pointInWorldSpace.x/pointInWorldSpace.w, pointInWorldSpace.y/pointInWorldSpace.w, pointInWorldSpace.z/pointInWorldSpace.w], eyePosiInWorldSpace));
 
-    // console.log(' get pick ray ', this);
-    // console.log(' rayEC ', rayInEyeSpace);
-    // console.log(' rayWC', rayInWorldSpace);
     return rayInWorldSpace;
   }
 

@@ -135,6 +135,14 @@ class Model3D {
 			}
 		})
 		console.log(' ______ ', resultAry);
+		if(resultAry.length>0){
+			result = resultAry[0];
+			for(let i = 1; i<resultAry.length; i++){
+				if(twgl.v3.distance(resultAry[i], ray.origin) < twgl.v3.distance(result, ray.origin)){
+					result = resultAry[i];
+				}
+			}
+		}
 		return result;
 	}
 

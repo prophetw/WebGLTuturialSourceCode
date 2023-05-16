@@ -54,10 +54,9 @@ function CameraDemo() {
 
   const scene = new Scene(gl, canvas);
   const camera = scene.camera;
-  console.log(' scene ', scene);
 
-
-  const model = twgl.m4.identity()
+  // const model = twgl.m4.identity()
+  const model = twgl.m4.translate(twgl.m4.identity(), [0.0, 0.0, -1.000001])
   const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
   const model2 = twgl.m4.rotationY(toRadias(45))
   twgl.m4.translate(model2, [1, 1, 1], model2)
@@ -105,6 +104,10 @@ function CameraDemo() {
     const switchPers = new CustomBtn('pers', () => {
       // camera.switchToPerspectiveFrustum();
       camera.frustum = perspectiveFrustum
+    })
+
+    new CustomBtn('print Scene', () => {
+      console.log(' scene ', scene);
     })
 
   }
