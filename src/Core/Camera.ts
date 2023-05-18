@@ -272,7 +272,7 @@ class Camera {
 
   moveForward(distance: number, position?: twgl.v3.Vec3) {
     if(position){
-      const offsetVec = twgl.v3.subtract(this.position, position);
+      const offsetVec = twgl.v3.subtract(position, this.position);
       const normalize = twgl.v3.normalize(offsetVec);
       this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
       this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
