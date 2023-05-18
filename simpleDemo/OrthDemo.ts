@@ -85,10 +85,10 @@ function CameraDemo() {
 
   camera.frustum = perspectiveFrustum
 
-  const boundingBox = new BoundingBox([-1, -1, 0], [1, 1, 0]);
+  const boundingBox = cubeModel.worldBox
   // const bbx = quadModel1.worldBox
   // console.log(bbx);
-  camera.setViewToBoundingBox(cubeModel.worldBox);
+  camera.setViewToBoundingBox(boundingBox);
 
 
   const initBtnOptions = ()=>{

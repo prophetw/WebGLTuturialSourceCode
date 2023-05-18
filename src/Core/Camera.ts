@@ -72,7 +72,8 @@ class ScreenSpaceEventHandler {
       const y = event.clientY;
       // const NDC = this.camera.convertScreenCoordToNDC(x, y);
       const delta = event.deltaY * 0.01;
-      this.camera.moveForward(-delta);
+      const rayPoint = this.camera.scene?.pick([x, y]);
+      this.camera.moveForward(-delta, rayPoint );
       console.log(this.camera.position);
     });
   }
@@ -269,35 +270,44 @@ class Camera {
     this.updateProjectionViewMatrix();
   }
 
-  moveForward(distance: number) {
-    const scaledFront = twgl.v3.mulScalar(this.direction, distance);
-    this.position = twgl.v3.add(this.position, scaledFront);
+  moveForward(distance: number, position?: twgl.v3.Vec3) {
+    if(position){
+      const offsetVec = twgl.v3.subtract(this.position, position);
+      const normalize = twgl.v3.normalize(offsetVec);
+      this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
+      this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
+    }else{
+      const scaledFront = twgl.v3.mulScalar(this.direction, distance);
+      this.position = twgl.v3.add(this.position, scaledFront);
+    }
   }
 
   moveBackward(distance: number) {
-    const front = twgl.v3.subtract(this.direction, this.position);
-    const normalizedFront = twgl.v3.normalize(front);
-    const scaledFront = twgl.v3.mulScalar(normalizedFront, distance);
+    const scaledFront = twgl.v3.mulScalar(this.direction, distance);
     this.position = twgl.v3.subtract(this.position, scaledFront);
   }
 
   moveLeft(distance: number) {
     const scaledRight = twgl.v3.mulScalar(this.right, distance);
+    this._target = twgl.v3.subtract(this.target, scaledRight);
     this.position = twgl.v3.subtract(this.position, scaledRight);
   }
 
   moveRight(distance: number) {
     const scaledRight = twgl.v3.mulScalar(this.right, distance);
+    this._target = twgl.v3.add(this.target, scaledRight);
     this.position = twgl.v3.add(this.position, scaledRight);
   }
 
   moveUp(distance: number) {
     const scaledUp = twgl.v3.mulScalar(this.up, distance);
+    this._target = twgl.v3.add(this.target, scaledUp);
     this.position = twgl.v3.add(this.position, scaledUp);
   }
 
   moveDown(distance: number) {
     const scaledUp = twgl.v3.mulScalar(this.up, distance);
+    this._target = twgl.v3.subtract(this.target, scaledUp);
     this.position = twgl.v3.subtract(this.position, scaledUp);
   }
 
