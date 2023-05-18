@@ -1,5 +1,6 @@
 import { Camera, ScreenSpaceEventHandler } from "./Camera";
 import Model3D from "./Model";
+import * as twgl from "twgl.js";
 
 class Scene {
 	objects: Array<Model3D>;
@@ -11,7 +12,7 @@ class Scene {
 		this.gl = gl;
 		this.canvas = canvas;
 		this.objects = [];
-		this.camera = new Camera(canvas)
+		this.camera = new Camera(canvas, this)
   	this.screenSpaceEvt = new ScreenSpaceEventHandler(canvas, this.camera)
 	}
 
@@ -24,6 +25,23 @@ class Scene {
 			this.objects[i].render();
 		}
 	}
+
+  pick(windowPosition: [number, number]){
+    const [screenX, screenY] = windowPosition
+    const ray = this.camera.getPickRay(screenX, screenY)
+
+    const pickResult = this.objects.map(obj => {
+      return obj.intersectRay(ray)
+    }).filter(a => a !== null) as twgl.v3.Vec3[]
+    console.log([...pickResult]);
+
+    // z sort
+    pickResult.sort((a, b) => {
+      return a[2] - b[2]
+    })
+    return pickResult[0]
+  }
+
 }
 
 export default Scene;

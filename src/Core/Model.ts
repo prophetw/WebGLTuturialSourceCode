@@ -130,7 +130,7 @@ class Model3D {
 				}
 			}
 		})
-		console.log(' ______ ', resultAry);
+		// console.log(' ______ ', resultAry);
 		if(resultAry.length>0){
 			result = resultAry[0];
 			for(let i = 1; i<resultAry.length; i++){

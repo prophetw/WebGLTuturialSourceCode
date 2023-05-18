@@ -114,13 +114,7 @@ function CameraDemo() {
 
   const initEvt = ()=>{
     canvas.addEventListener('click', e=>{
-      const {clientX, clientY} = e
-      const ray = camera.getPickRay(clientX, clientY)
-      console.log(' ray is ', ray);
-      scene.objects.map(model3D=>{
-        const result = model3D.intersectRay(ray)
-        console.log(' result ', result);
-      })
+      console.log(' click ', e);
 
     })
   }

@@ -4,6 +4,7 @@ import Vector4 from './Vector4'
 import BoundingBox from './BoundingBox'
 import Euler from './Euler'
 import Ray from './Ray'
+import Scene from './Scene'
 
 
 class ScreenSpaceEventHandler {
@@ -42,7 +43,9 @@ class ScreenSpaceEventHandler {
         // roll z 与鼠标偏移无关
 
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
-        const ray = this.camera.getPickRay(lastX, lastY);
+        // const ray = this.camera.getPickRay(lastX, lastY);
+        const pickRes = this.camera.scene?.pick([lastX, lastY]);
+        console.log(' ______ ', pickRes);
 
         // console.log(worldPos);
         this.camera.rotateAroundPointX(dy * 0.01, worldPos);
@@ -133,6 +136,7 @@ class ScreenSpaceEventHandler {
 
 class Camera {
   canvas: HTMLCanvasElement
+  scene?: Scene
   private _position: twgl.v3.Vec3
   private _direction: twgl.v3.Vec3
   private _target: twgl.v3.Vec3
@@ -146,7 +150,8 @@ class Camera {
   inverseViewMatrix: twgl.m4.Mat4
   frustum: PerspectiveFrustum | OrthographicFrustum
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, scene?: Scene) {
+    this.scene = scene;
     this.canvas = canvas;
     this._position = twgl.v3.create(0, 0, 5);
     this._direction = twgl.v3.create(0, 0, -1);
@@ -265,9 +270,7 @@ class Camera {
   }
 
   moveForward(distance: number) {
-    const front = twgl.v3.subtract(this.direction, this.position);
-    const normalizedFront = twgl.v3.normalize(front);
-    const scaledFront = twgl.v3.mulScalar(normalizedFront, distance);
+    const scaledFront = twgl.v3.mulScalar(this.direction, distance);
     this.position = twgl.v3.add(this.position, scaledFront);
   }
 
