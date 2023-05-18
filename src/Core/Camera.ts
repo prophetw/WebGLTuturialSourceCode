@@ -135,6 +135,7 @@ class Camera {
   canvas: HTMLCanvasElement
   private _position: twgl.v3.Vec3
   private _direction: twgl.v3.Vec3
+  private _target: twgl.v3.Vec3
   private _right: twgl.v3.Vec3
   private _up: twgl.v3.Vec3
   private _heading: number
@@ -149,6 +150,7 @@ class Camera {
     this.canvas = canvas;
     this._position = twgl.v3.create(0, 0, 5);
     this._direction = twgl.v3.create(0, 0, -1);
+    this._target = twgl.v3.create(0, 0, 0);
     this._right = twgl.v3.create();
     this._up = twgl.v3.create(0, 1, 0);
     this.viewMatrix = twgl.m4.identity();
@@ -172,6 +174,12 @@ class Camera {
   }
   set direction(direction: twgl.v3.Vec3) {
     this._direction = direction;
+  }
+  get target() {
+    return this._target;
+  }
+  set target(val: twgl.v3.Vec3) {
+    this._target = val;
     this.updateViewMatrix();
   }
   get right() {
@@ -179,7 +187,6 @@ class Camera {
   }
   set right(right: twgl.v3.Vec3) {
     this._right = right;
-    this.updateViewMatrix();
   }
   get up() {
     return this._up;
@@ -242,11 +249,11 @@ class Camera {
 
   updateViewMatrix() {
 
-    const target = twgl.v3.add(this.position, this.direction);
+    const dir = twgl.v3.subtract(this.target, this.position);
 
-    this.inverseViewMatrix = twgl.m4.lookAt(this.position, target, this.up);
+    this.inverseViewMatrix = twgl.m4.lookAt(this.position, this.target, this.up);
     this.viewMatrix = twgl.m4.inverse(this.inverseViewMatrix);
-    const normalizedFront = twgl.v3.normalize(this.direction);
+    const normalizedFront = twgl.v3.normalize(dir);
     const normalizedUp = twgl.v3.normalize(this.up);
     const right = twgl.v3.cross(normalizedUp, normalizedFront);
     this._right = twgl.v3.normalize(right);
@@ -394,6 +401,7 @@ class Camera {
       const distance = twgl.v3.distance(center, boundingBox.max) / Math.tan(this.frustum.fov / 2) / this.frustum.aspect;
       console.log(' distance ', distance);
       const cameraPosition = twgl.v3.subtract(center, twgl.v3.mulScalar(this.direction, distance));
+      this.target = center;
       this.position = cameraPosition;
     } else {
       console.log(' TODO: ');
@@ -429,9 +437,9 @@ class Camera {
 
   convertScreenCoordToNDC(x: number, y: number){
     // 右手坐标系
-    // 中心 0 0 
+    // 中心 0 0
     // x 轴 从左往右 -1 1
-    // y 轴 从下往上 -1 1 
+    // y 轴 从下往上 -1 1
     // 左上角点 -1 1
     // 右下角点 1 -1
     const NDCCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]

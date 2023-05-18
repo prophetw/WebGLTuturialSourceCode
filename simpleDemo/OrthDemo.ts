@@ -55,8 +55,8 @@ function CameraDemo() {
   const scene = new Scene(gl, canvas);
   const camera = scene.camera;
 
-  // const model = twgl.m4.identity()
-  const model = twgl.m4.translate(twgl.m4.identity(), [0.0, 0.0, -1.000001])
+  const model = twgl.m4.identity()
+  // const model = twgl.m4.translate(twgl.m4.identity(), [0.0, 0.0, -1.000001])
   const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
   const model2 = twgl.m4.rotationY(toRadias(45))
   twgl.m4.translate(model2, [1, 1, 1], model2)
@@ -67,14 +67,14 @@ function CameraDemo() {
   const cubeVertics = twgl.primitives.createCubeVertices();
   const cubeModel = new Model3D(gl, camera, cubeVertics, model2);
 
-  scene.add(quadModel1);
+  // scene.add(quadModel1);
   // scene.add(quadModel2);
-  // scene.add(cubeModel);
+  scene.add(cubeModel);
 
   // window.spector.startCapture(canvas, 100)
 
-  camera.position = [10, 10, 10];
-  camera.direction = [0, 0, -1];
+  camera.position = [0, 0, 10];
+  camera.target = [0, 0, 0];
   camera.up = [0, 1, 0];
   // camera.frustum.near = 0.1
   // camera.frustum.far = 100
@@ -88,7 +88,7 @@ function CameraDemo() {
   const boundingBox = new BoundingBox([-1, -1, 0], [1, 1, 0]);
   // const bbx = quadModel1.worldBox
   // console.log(bbx);
-  camera.setViewToBoundingBox(boundingBox);
+  camera.setViewToBoundingBox(cubeModel.worldBox);
 
 
   const initBtnOptions = ()=>{

@@ -63,7 +63,7 @@ class Model3D {
 
 		this.pointAry = pointAry
 		this.triangleAry = []
-		if(Array.isArray(this.indices) || this.indices instanceof Float32Array){
+		if(Array.isArray(this.indices) || this.indices instanceof Uint16Array){
 			const indices = [...this.indices]
 			indices.forEach((v, i) => {
 				if (i % 3 === 0) {
@@ -86,12 +86,8 @@ class Model3D {
 
 	get worldBox(): BoundingBox {
 		const modelMatrix = this.modelMatrix;
-		const boundingBox = this.boundingBox;
-		const min = boundingBox.min;
-		const max = boundingBox.max;
-		const minWorld = twgl.m4.transformPoint(modelMatrix, min);
-		const maxWorld = twgl.m4.transformPoint(modelMatrix, max);
-		return BoundingBox.fromPoints([minWorld, maxWorld]);
+    const transformdPointAry = this.pointAry.map(v => twgl.m4.transformPoint(modelMatrix, v))
+		return BoundingBox.fromPoints([...transformdPointAry]);
 	}
 
 	setModelMatrix(modelMatrix: twgl.m4.Mat4) {
