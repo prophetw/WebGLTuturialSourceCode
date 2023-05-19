@@ -21,12 +21,16 @@ class ScreenSpaceEventHandler {
     let lastX = 0;
     let lastY = 0;
     let isDragging = false;
+    let isMiddleDown = false;
 
     canvas.addEventListener('mousedown', (event) => {
       lastX = event.clientX;
       lastY = event.clientY;
 
       isDragging = true;
+      if(event.button === 1){
+        isMiddleDown = true;
+      }
     });
 
     canvas.addEventListener('mousemove', (event) => {
@@ -43,14 +47,13 @@ class ScreenSpaceEventHandler {
         // roll z 与鼠标偏移无关
 
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
-        // const ray = this.camera.getPickRay(lastX, lastY);
-        const pickRes = this.camera.scene?.pick([lastX, lastY]);
-        console.log(' ______ ', pickRes);
 
-        // console.log(worldPos);
-        this.camera.rotateAroundPointX(dy * 0.01, worldPos);
-        this.camera.rotateAroundPointY(dx * 0.01, worldPos);
-        // this.camera.rotateAroundPoint(dy * 0.01, dx * 0.01, worldPos);
+        if(isMiddleDown){
+          this.camera.moveRight(dx * 0.01);
+          this.camera.moveUp(dy * 0.01);
+        }else{
+          this.camera.rotateAroundPoint(dx * 0.01, dy * 0.01, worldPos);
+        }
 
         lastX = x;
         lastY = y;
@@ -59,6 +62,7 @@ class ScreenSpaceEventHandler {
 
     canvas.addEventListener('mouseup', (event) => {
       isDragging = false;
+      isMiddleDown = false;
     });
     canvas.oncontextmenu = () => false;
 
@@ -73,8 +77,10 @@ class ScreenSpaceEventHandler {
       // const NDC = this.camera.convertScreenCoordToNDC(x, y);
       const delta = event.deltaY * 0.01;
       const rayPoint = this.camera.scene?.pick([x, y]);
+      if(rayPoint){
+        this.camera.anchor = rayPoint;
+      }
       this.camera.moveForward(-delta, rayPoint );
-      console.log(this.camera.position);
     });
   }
 
@@ -146,6 +152,7 @@ class Camera {
   private _heading: number
   private _pitch: number
   private _roll: number
+  private _anchor: twgl.v3.Vec3 // 旋转相对中心点
   viewMatrix: twgl.m4.Mat4
   projectionViewMatrix: twgl.m4.Mat4
   inverseViewMatrix: twgl.m4.Mat4
@@ -154,6 +161,7 @@ class Camera {
   constructor(canvas: HTMLCanvasElement, scene?: Scene) {
     this.scene = scene;
     this.canvas = canvas;
+    this._anchor = twgl.v3.create(0, 0, 0);
     this._position = twgl.v3.create(0, 0, 5);
     this._direction = twgl.v3.create(0, 0, -1);
     this._target = twgl.v3.create(0, 0, 0);
@@ -168,6 +176,12 @@ class Camera {
     this._roll = 0
   }
 
+  get anchor() {
+    return this._anchor;
+  }
+  set anchor(anchor: twgl.v3.Vec3) {
+    this._anchor = anchor;
+  }
   get position() {
     return this._position;
   }
@@ -349,25 +363,26 @@ class Camera {
 
   rotateAroundPoint(yaw: number, pitch: number, point: twgl.v3.Vec3){
 
-    // move camera to point
-    const moveMatrix = twgl.m4.translation(twgl.v3.negate(point));
-    const invmoveMatrix = twgl.m4.inverse(moveMatrix)
-    twgl.m4.transformPoint(moveMatrix, this._position, this._position);
+    const rotateAnchor = this.anchor || point;
+    console.log(rotateAnchor.toString());
 
-    const rotationMatrix = twgl.m4.axisRotation(this.direction, pitch);
-    const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this._up = twgl.v3.add(rotatedUp, point);
+    // 相对于旋转中心点的位置
+    const newPosition = twgl.v3.subtract(this.position, rotateAnchor);
+    const newTarget = twgl.v3.subtract(this.target, rotateAnchor);
+    const newUp = twgl.v3.subtract(this.up, rotateAnchor);
 
-    const rotationMatrix2 = twgl.m4.axisRotation(this.right, yaw);
-    const rotatedDirection = twgl.m4.transformDirection(rotationMatrix2, twgl.v3.subtract(this.direction, point));
-    this._direction = twgl.v3.add(rotatedDirection, point);
+    const rotationPitch = twgl.m4.axisRotation(this.right, pitch); // 仰角
+    const rotationYaw = twgl.m4.axisRotation(this.up, yaw);  // 朝向
 
-    // move camera back
-    let result = twgl.v3.create()
-    twgl.m4.transformPoint(invmoveMatrix, this._position, result);
+    const rotation = twgl.m4.multiply(rotationYaw, rotationPitch)
 
+    const rotatedPosition = twgl.m4.transformPoint(rotation, newPosition);
+    const rotatedTarget = twgl.m4.transformPoint(rotation, newTarget);
+    const rotatedUp = twgl.m4.transformPoint(rotation, newUp);
 
-    this.position = result;
+    this._up = twgl.v3.add(rotatedUp, rotateAnchor);
+    this._target = twgl.v3.add(rotatedTarget, rotateAnchor);
+    this.position = twgl.v3.add(rotatedPosition, rotateAnchor);
 
   }
 
@@ -380,16 +395,19 @@ class Camera {
   }
 
   rotateAroundPointX(angle: number, point: twgl.v3.Vec3) {
+    const rotateTargetPoint = this.anchor || point;
     const rotationMatrix = twgl.m4.axisRotation(this.right, angle);
-    const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, point));
-    const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
-    const rotatedUp = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.up, point));
-    this._position = twgl.v3.add(rotatedPosition, point);
-    this._direction = twgl.v3.add(rotatedDirection, point);
-    this.up = twgl.v3.add(rotatedUp, point);
+    const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, rotateTargetPoint));
+    // camera position update
+    this._position = twgl.v3.add(rotatedPosition, rotateTargetPoint);
+    // camera target update
+    const rotatedTarget = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.target, rotateTargetPoint));
+    this.target = twgl.v3.add(rotatedTarget, rotateTargetPoint);
+    // this.position = twgl.v3.add(rotatedPosition, point);
   }
 
   rotateAroundPointY(angle: number, point: twgl.v3.Vec3) {
+    const rotateTargetPoint = this.anchor || point;
     const rotationMatrix = twgl.m4.axisRotation(this.up, angle);
     const rotatedPosition = twgl.m4.transformPoint(rotationMatrix, twgl.v3.subtract(this.position, point));
     const rotatedDirection = twgl.m4.transformDirection(rotationMatrix, twgl.v3.subtract(this.direction, point));
