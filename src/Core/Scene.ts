@@ -33,7 +33,7 @@ class Scene {
     const pickResult = this.objects.map(obj => {
       return obj.intersectRay(ray)
     }).filter(a => a !== null) as twgl.v3.Vec3[]
-    console.log([...pickResult]);
+    // console.log([...pickResult]);
 
     // z sort
     pickResult.sort((a, b) => {

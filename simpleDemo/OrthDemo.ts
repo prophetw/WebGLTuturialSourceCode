@@ -115,6 +115,8 @@ function CameraDemo() {
   const initEvt = ()=>{
     canvas.addEventListener('click', e=>{
       console.log(' click ', e);
+      const pickRes = scene.pick([e.offsetX, e.offsetY]);
+      console.log(' pickRes ', pickRes);
 
     })
   }

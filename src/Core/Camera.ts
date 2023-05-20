@@ -89,6 +89,10 @@ class ScreenSpaceEventHandler {
       const key = event.key;
       switch (key) {
         // arrow keys
+
+        case 'c':
+          this.camera.rotateAroundPoint(0.01, 0, [0, 0, 0]);
+          break;
         case 'w':
           this.camera.translateAlongDirection(0.1);
           break;
@@ -364,23 +368,42 @@ class Camera {
   rotateAroundPoint(yaw: number, pitch: number, point: twgl.v3.Vec3){
 
     const rotateAnchor = this.anchor || point;
+    // const rotateAnchor = [0, 0, 0]
     console.log(rotateAnchor.toString());
 
     // 相对于旋转中心点的位置
+    // const moveTranslate = twgl.m4.translation(twgl.v3.subtract(this.position, rotateAnchor));
+    // const inverseMoveTranslate = twgl.m4.inverse(moveTranslate);
+    // const newPosition = twgl.m4.transformPoint(inverseMoveTranslate, this.position);
+    // const newTarget = twgl.m4.transformPoint(inverseMoveTranslate, this.target);
+    // let newUp = twgl.m4.transformPoint(inverseMoveTranslate, this.up);
+    // newUp = twgl.v3.normalize(newUp);
     const newPosition = twgl.v3.subtract(this.position, rotateAnchor);
     const newTarget = twgl.v3.subtract(this.target, rotateAnchor);
-    const newUp = twgl.v3.subtract(this.up, rotateAnchor);
 
-    const rotationPitch = twgl.m4.axisRotation(this.right, pitch); // 仰角
+
+    // this._target = newTarget;
+    // this._up = newUp;
+    // this.position = newPosition;
+
+    // let right = twgl.v3.cross(newUp, newTarget);
+    // right = twgl.v3.normalize(right);
+
+    const rotationPitch = twgl.m4.axisRotation(this.right, -pitch); // 仰角
     const rotationYaw = twgl.m4.axisRotation(this.up, yaw);  // 朝向
 
     const rotation = twgl.m4.multiply(rotationYaw, rotationPitch)
+    // const rotation = rotationPitch
+    // const rotation = rotationYaw
 
     const rotatedPosition = twgl.m4.transformPoint(rotation, newPosition);
     const rotatedTarget = twgl.m4.transformPoint(rotation, newTarget);
-    const rotatedUp = twgl.m4.transformPoint(rotation, newUp);
+    const rotatedUp = twgl.m4.transformPoint(rotation, this.up);
+    console.log('', rotatedUp);
 
-    this._up = twgl.v3.add(rotatedUp, rotateAnchor);
+    // this._up = rotatedUp;
+    // this._target = twgl.m4.transformPoint(moveTranslate, rotatedTarget);
+    // this.position = twgl.m4.transformPoint(moveTranslate, rotatedPosition);
     this._target = twgl.v3.add(rotatedTarget, rotateAnchor);
     this.position = twgl.v3.add(rotatedPosition, rotateAnchor);
 
