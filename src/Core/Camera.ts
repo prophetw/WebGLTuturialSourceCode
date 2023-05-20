@@ -71,7 +71,6 @@ class ScreenSpaceEventHandler {
   registerMouseWheelEvent() {
     const canvas = this.canvas;
     canvas.addEventListener('wheel', (event) => {
-      console.log(' wheel event', event.deltaY);
       const x = event.clientX;
       const y = event.clientY;
       // const NDC = this.camera.convertScreenCoordToNDC(x, y);
@@ -398,8 +397,7 @@ class Camera {
 
     const rotatedPosition = twgl.m4.transformPoint(rotation, newPosition);
     const rotatedTarget = twgl.m4.transformPoint(rotation, newTarget);
-    const rotatedUp = twgl.m4.transformPoint(rotation, this.up);
-    console.log('', rotatedUp);
+    // const rotatedUp = twgl.m4.transformPoint(rotation, this.up);
 
     // this._up = rotatedUp;
     // this._target = twgl.m4.transformPoint(moveTranslate, rotatedTarget);
@@ -540,7 +538,6 @@ class Camera {
   getPickRay(x: number, y: number) {
     const pointInEyeSpace = this.convertScreenCoordToViewCoord(x, y);
     const pointInWorldSpace = Vector4.transformMat4(pointInEyeSpace, this.inverseViewMatrix);
-    console.log(' pointInWorldSpace ', pointInWorldSpace);
 
     const eyePosiInEyeSpace = [0,0,0];
     const eyePosiInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, eyePosiInEyeSpace);

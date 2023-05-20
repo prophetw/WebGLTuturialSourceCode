@@ -109,6 +109,9 @@ function CameraDemo() {
     new CustomBtn('print Scene', () => {
       console.log(' scene ', scene);
     })
+    new CustomBtn('printcamera', () => {
+      console.log(' camera ', camera);
+    })
 
   }
 
