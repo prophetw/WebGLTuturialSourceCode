@@ -136,7 +136,10 @@ function CameraDemo() {
 
   const fbo = twgl.createFramebufferInfo(gl, [
     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
+    // depth component
+    { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST}
   ], canvas.width, canvas.height)
+  console.log(' ---- fbo ---- ', fbo);
 
   let isShowFbo = false;
 
@@ -163,6 +166,8 @@ function CameraDemo() {
 
     if (isShowFbo) {
       debugRT.readFromContext('fbo')
+      const depthTexture = fbo.attachments[1]
+
     }
     if (isShowFrustum) {
       // camera.frustum.debugWireframe(camera.viewMatrix);
