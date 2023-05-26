@@ -88,7 +88,7 @@ function CameraDemo() {
   // camera.frustum.far = 100
   const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.1, 10)
   perspectiveFrustum.initWireframe(gl);
-  const orthFrustum = new OrthographicFrustum(-1, 1, -1, 1, 0.1, 10)
+  const orthFrustum = new OrthographicFrustum(-3, 3, -3, 3, 0.1, 10)
   orthFrustum.initWireframe(gl);
 
   camera.frustum = perspectiveFrustum

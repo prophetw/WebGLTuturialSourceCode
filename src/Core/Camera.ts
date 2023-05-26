@@ -28,7 +28,7 @@ class ScreenSpaceEventHandler {
       lastY = event.clientY;
 
       isDragging = true;
-      if(event.button === 1){
+      if (event.button === 1) {
         isMiddleDown = true;
       }
     });
@@ -48,10 +48,10 @@ class ScreenSpaceEventHandler {
 
         const worldPos = this.camera.convertScreenCoordToWorldCoord(lastX, lastY);
 
-        if(isMiddleDown){
+        if (isMiddleDown) {
           this.camera.moveRight(dx * 0.01);
           this.camera.moveUp(dy * 0.01);
-        }else{
+        } else {
           this.camera.rotateAroundPoint(dx * 0.01, dy * 0.01, worldPos);
         }
 
@@ -76,10 +76,10 @@ class ScreenSpaceEventHandler {
       // const NDC = this.camera.convertScreenCoordToNDC(x, y);
       const delta = event.deltaY * 0.01;
       const rayPoint = this.camera.scene?.pick([x, y]);
-      if(rayPoint){
+      if (rayPoint) {
         this.camera.anchor = rayPoint;
       }
-      this.camera.moveForward(-delta, rayPoint );
+      this.camera.moveForward(-delta, rayPoint);
     });
   }
 
@@ -219,38 +219,38 @@ class Camera {
     this.updateViewMatrix();
   }
 
-  get headingInAngle(){
+  get headingInAngle() {
     return this._heading * 180 / Math.PI;
   }
-  get pitchInAngle(){
+  get pitchInAngle() {
     return this._pitch * 180 / Math.PI;
   }
-  get rollInAngle(){
+  get rollInAngle() {
     return this._roll * 180 / Math.PI;
   }
-  get heading(){
+  get heading() {
     return this._heading;
   }
-  set heading(heading: number){
+  set heading(heading: number) {
     this._heading = heading;
     this.updateViewMatrix();
   }
-  get pitch(){
+  get pitch() {
     return this._pitch;
   }
-  set pitch(pitch: number){
+  set pitch(pitch: number) {
     this._pitch = pitch;
     this.updateViewMatrix();
   }
-  get roll(){
+  get roll() {
     return this._roll;
   }
-  set roll(roll: number){
+  set roll(roll: number) {
     this._roll = roll;
     this.updateViewMatrix();
   }
 
-  updateHeadingPitchRoll(){
+  updateHeadingPitchRoll() {
     // this._heading = Math.atan2(this._direction[0], this._direction[2]);
     // this._position = twgl.v3.transformPoint(this.inverseViewMatrix, [0, 0, 0]);
     // this._direction = twgl.v3.transformDirection(this.inverseViewMatrix, [0, 0, -1]);
@@ -288,14 +288,28 @@ class Camera {
   }
 
   moveForward(distance: number, position?: twgl.v3.Vec3) {
-    if(position){
-      const offsetVec = twgl.v3.subtract(position, this.position);
-      const normalize = twgl.v3.normalize(offsetVec);
-      this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
-      this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
-    }else{
-      const scaledFront = twgl.v3.mulScalar(this.direction, distance);
-      this.position = twgl.v3.add(this.position, scaledFront);
+    if (this.frustum instanceof OrthographicFrustum) {
+      console.log(' distance  ', distance, position);
+      if(distance>0){
+        // 拉近
+        this.frustum.width -= distance * 0.1;
+        this.frustum.height -= distance * 0.1;
+      }else{
+        // 远离
+        this.frustum.width += Math.abs(distance * 0.1);
+        this.frustum.height += Math.abs(distance * 0.1);
+      }
+
+    } else {
+      if (position) {
+        const offsetVec = twgl.v3.subtract(position, this.position);
+        const normalize = twgl.v3.normalize(offsetVec);
+        this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
+        this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
+      } else {
+        const scaledFront = twgl.v3.mulScalar(this.direction, distance);
+        this.position = twgl.v3.add(this.position, scaledFront);
+      }
     }
   }
 
@@ -364,7 +378,7 @@ class Camera {
     this.up = twgl.v3.add(rotatedUp, point);
   }
 
-  rotateAroundPoint(yaw: number, pitch: number, point: twgl.v3.Vec3){
+  rotateAroundPoint(yaw: number, pitch: number, point: twgl.v3.Vec3) {
 
     const rotateAnchor = this.anchor || point;
     // const rotateAnchor = [0, 0, 0]
@@ -457,6 +471,8 @@ class Camera {
       this.position = cameraPosition;
     } else {
       console.log(' TODO: ');
+
+
     }
 
   }
@@ -477,30 +493,30 @@ class Camera {
 
   }
 
-  convertScreenCoordToWorldCoord(x: number, y: number){
-      // const screenCoord = [x, y, 0];
-      const NDCCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]
+  convertScreenCoordToWorldCoord(x: number, y: number) {
+    // const screenCoord = [x, y, 0];
+    const NDCCoord = [x / this.canvas.width * 2 - 1, 1 - y / this.canvas.height * 2, -1]
 
-      const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
-      const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
-      const worldCoord = twgl.m4.transformPoint(inverseViewProjectionMatrix, NDCCoord);
-      return worldCoord;
+    const viewProjectionMatrix = twgl.m4.multiply(this.viewMatrix, this.frustum.projectionMatrix);
+    const inverseViewProjectionMatrix = twgl.m4.inverse(viewProjectionMatrix);
+    const worldCoord = twgl.m4.transformPoint(inverseViewProjectionMatrix, NDCCoord);
+    return worldCoord;
   }
 
-  convertScreenCoordToNDC(x: number, y: number){
+  convertScreenCoordToNDC(x: number, y: number) {
     // 右手坐标系
     // 中心 0 0
     // x 轴 从左往右 -1 1
     // y 轴 从下往上 -1 1
     // 左上角点 -1 1
     // 右下角点 1 -1
-    const NDCCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]
+    const NDCCoord = [x / this.canvas.width * 2 - 1, 1 - y / this.canvas.height * 2, -1]
     return NDCCoord;
   }
 
-  convertScreenCoordToClipCoord(x: number, y: number){
-      const clipCoord = [x/this.canvas.width * 2 - 1, 1 - y/this.canvas.height * 2, -1]
-      return clipCoord;
+  convertScreenCoordToClipCoord(x: number, y: number) {
+    const clipCoord = [x / this.canvas.width * 2 - 1, 1 - y / this.canvas.height * 2, -1]
+    return clipCoord;
   }
 
   convertWorldCoordToScreenCoord(x: number, y: number, z: number) {
@@ -538,12 +554,9 @@ class Camera {
   getPickRay(x: number, y: number) {
     const pointInEyeSpace = this.convertScreenCoordToViewCoord(x, y);
     const pointInWorldSpace = Vector4.transformMat4(pointInEyeSpace, this.inverseViewMatrix);
-
-    const eyePosiInEyeSpace = [0,0,0];
+    const eyePosiInEyeSpace = [0, 0, 0];
     const eyePosiInWorldSpace = twgl.m4.transformPoint(this.inverseViewMatrix, eyePosiInEyeSpace);
-
-    const rayInWorldSpace = new Ray(eyePosiInWorldSpace, twgl.v3.subtract([pointInWorldSpace.x/pointInWorldSpace.w, pointInWorldSpace.y/pointInWorldSpace.w, pointInWorldSpace.z/pointInWorldSpace.w], eyePosiInWorldSpace));
-
+    const rayInWorldSpace = new Ray(eyePosiInWorldSpace, twgl.v3.subtract([pointInWorldSpace.x / pointInWorldSpace.w, pointInWorldSpace.y / pointInWorldSpace.w, pointInWorldSpace.z / pointInWorldSpace.w], eyePosiInWorldSpace));
     return rayInWorldSpace;
   }
 
@@ -614,20 +627,20 @@ class Frustum {
         // 2, 7,
         // 3, 6,
 
-      0, 1,
-      1, 3,
-      3, 2,
-      2, 0,
+        0, 1,
+        1, 3,
+        3, 2,
+        2, 0,
 
-      4, 5,
-      5, 7,
-      7, 6,
-      6, 4,
+        4, 5,
+        5, 7,
+        7, 6,
+        6, 4,
 
-      0, 4,
-      1, 5,
-      3, 7,
-      2, 6,
+        0, 4,
+        1, 5,
+        3, 7,
+        2, 6,
 
       ],
     }
@@ -689,7 +702,7 @@ class Frustum {
 
 }
 
-class PerspectiveFrustum extends Frustum{
+class PerspectiveFrustum extends Frustum {
   _fov: number
   fovAngle: number
   _aspect: number
@@ -751,13 +764,15 @@ class PerspectiveFrustum extends Frustum{
 
 }
 
-class OrthographicFrustum extends Frustum{
+class OrthographicFrustum extends Frustum {
   _left: number
   _right: number
   _bottom: number
   _top: number
   _near: number
   _far: number
+  _width: number
+  _height: number
   projectionMatrix: twgl.m4.Mat4
 
   constructor(left: number, right: number, bottom: number, top: number, near: number, far: number) {
@@ -766,6 +781,8 @@ class OrthographicFrustum extends Frustum{
     this._right = right;
     this._bottom = bottom;
     this._top = top;
+    this._width = right - left;
+    this._height = top - bottom;
     this._near = near;
     this._far = far;
     this.projectionMatrix = twgl.m4.ortho(this.left, this.right, this.bottom, this.top, this.near, this.far);
@@ -775,6 +792,7 @@ class OrthographicFrustum extends Frustum{
   }
   set left(left: number) {
     this._left = left;
+    this.updateWidthHeight();
     this.updateProjectionMatrix();
   }
   get right() {
@@ -782,6 +800,7 @@ class OrthographicFrustum extends Frustum{
   }
   set right(right: number) {
     this._right = right;
+    this.updateWidthHeight();
     this.updateProjectionMatrix();
   }
   get bottom() {
@@ -789,6 +808,7 @@ class OrthographicFrustum extends Frustum{
   }
   set bottom(bottom: number) {
     this._bottom = bottom;
+    this.updateWidthHeight();
     this.updateProjectionMatrix();
   }
   get top() {
@@ -796,6 +816,7 @@ class OrthographicFrustum extends Frustum{
   }
   set top(top: number) {
     this._top = top;
+    this.updateWidthHeight();
     this.updateProjectionMatrix();
   }
   get near() {
@@ -811,6 +832,29 @@ class OrthographicFrustum extends Frustum{
   set far(far: number) {
     this._far = far;
     this.updateProjectionMatrix();
+  }
+  get width() {
+    return this._width;
+  }
+  set width(width: number) {
+    this._width = width;
+    this._left = width / -2;
+    this._right = width / 2;
+    this.updateProjectionMatrix();
+  }
+  get height() {
+    return this._height;
+  }
+  set height(height: number) {
+    this._height = height;
+    this._top = height / 2;
+    this._bottom = height / -2;
+    this.updateProjectionMatrix();
+  }
+
+  updateWidthHeight(){
+    this._width = this.right - this.left;
+    this._height = this.top - this.bottom;
   }
 
   updateProjectionMatrix() {
