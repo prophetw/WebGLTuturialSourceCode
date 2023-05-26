@@ -113,5 +113,5 @@ class Rectangle {
 
 // 点类
 class Point {
-  constructor(public x: number, public y: number) {}
+  constructor(public x: number, public y: number, public z: number) {}
 }
