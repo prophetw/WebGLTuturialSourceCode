@@ -1,6 +1,8 @@
 import { Camera, ScreenSpaceEventHandler } from "./Camera";
 import Model3D from "./Model";
 import * as twgl from "twgl.js";
+import shaderProgramCache from "./ShaderProgram";
+import VertexBuffer from "./VertexBuffer";
 
 class Scene {
 	objects: Array<Model3D>;
@@ -40,6 +42,41 @@ class Scene {
       return a[2] - b[2]
     })
     return pickResult[0]
+  }
+
+  debugDepthTex(tex: WebGLTexture, fbo?: WebGLFramebuffer){
+    const gl = this.gl;
+    const quad = twgl.primitives.createXYQuadBufferInfo(gl)
+    const pInfo = shaderProgramCache.createScreenDebugDepthProgramInfo(gl);
+    gl.useProgram(pInfo.program)
+    if(fbo){
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+    }
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    twgl.setBuffersAndAttributes(gl, pInfo, quad)
+    twgl.setUniforms(pInfo, {
+      u_texture: tex
+    })
+    twgl.drawBufferInfo(gl, quad)
+
+  }
+
+  printTexToScreen(tex: WebGLTexture, fbo?: WebGLFramebuffer){
+    const gl = this.gl;
+    const quad = twgl.primitives.createXYQuadBufferInfo(gl)
+    const pInfo = shaderProgramCache.createScreenProgramInfo(gl);
+    gl.useProgram(pInfo.program)
+    if(fbo){
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    }else{
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    twgl.setBuffersAndAttributes(gl, pInfo, quad)
+    twgl.setUniforms(pInfo, {
+      u_texture: tex
+    })
+    twgl.drawBufferInfo(gl, quad)
   }
 
 }

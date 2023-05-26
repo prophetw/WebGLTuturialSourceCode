@@ -92,6 +92,62 @@ void main() {
 		return this.getProgramInfo(gl, vs, fs, defines);
 	}
 
+
+  public createScreenProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext,
+		vs?: string,
+		fs?: string,
+		defines: string[] = []): twgl.ProgramInfo{
+      vs = vs ? vs : `
+attribute vec4 position;
+attribute vec2 texcoord;
+varying vec2 v_texcoord;
+void main() {
+  gl_Position =  position;
+  v_texcoord = texcoord;
+}
+  `
+      fs = fs ? fs : `
+precision mediump float;
+varying vec2 v_texcoord;
+uniform sampler2D u_texture;
+void main() {
+  gl_FragColor = texture2D(u_texture, v_texcoord);
+}
+  `;
+      return this.getProgramInfo(gl, vs, fs, defines);
+    }
+
+  public createScreenDebugDepthProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext,
+		vs?: string,
+		fs?: string,
+		defines: string[] = []): twgl.ProgramInfo{
+      vs = vs ? vs : `
+attribute vec4 position;
+attribute vec2 texcoord;
+varying vec2 v_texcoord;
+void main() {
+  gl_Position =  position;
+  v_texcoord = texcoord;
+}
+  `
+      fs = fs ? fs : `
+precision mediump float;
+varying vec2 v_texcoord;
+uniform sampler2D u_texture;
+void main() {
+  float depth = texture2D(u_texture, v_texcoord).r;
+  // 使用彩虹色映射
+  float R = abs(depth * 6.0 - 3.0) - 1.0;
+  float G = 2.0 - abs(depth * 6.0 - 2.0);
+  float B = 2.0 - abs(depth * 6.0 - 4.0);
+  // 这是因为在这个特定的映射函数中，我们将深度值映射到了一个颜色梯度上，
+  // 这个梯度从蓝色（深度值小）过渡到红色（深度值大）。
+  gl_FragColor = vec4(clamp(vec3(R, G, B), 0.0, 1.0), 1.0);
+  // gl_FragColor = vec4(vec3(depth), 1.0);
+}
+  `;
+      return this.getProgramInfo(gl, vs, fs, defines);
+    }
 }
 
 const shaderProgramCache = new ShaderProgramCache();

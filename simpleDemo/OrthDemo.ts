@@ -27,6 +27,14 @@ function CameraDemo() {
     context: gl,
     contextVersion: 2,
   }, 'right-top', 30)
+  const debugRM = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-mid', 30)
+  const debugRB = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-bottom', 30)
 
   gl.enable(gl.DEPTH_TEST)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
@@ -78,9 +86,9 @@ function CameraDemo() {
   camera.up = [0, 1, 0];
   // camera.frustum.near = 0.1
   // camera.frustum.far = 100
-  const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.1, 100)
+  const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.1, 10)
   perspectiveFrustum.initWireframe(gl);
-  const orthFrustum = new OrthographicFrustum(-3, 3, -3, 3, 0.1, 100)
+  const orthFrustum = new OrthographicFrustum(-1, 1, -1, 1, 0.1, 10)
   orthFrustum.initWireframe(gl);
 
   camera.frustum = perspectiveFrustum
@@ -151,30 +159,61 @@ function CameraDemo() {
     isShowFbo = false;
   })
 
+  let isDebugDepth = false;
+  new CustomBtn("debugDepth", () => {
+    isDebugDepth = true;
+    render1Frame()
+    isDebugDepth = false;
+  })
+
+  const screenFbo = twgl.createFramebufferInfo(gl,
+    [
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
+      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST}
+    ],
+  canvas.width, canvas.height)
+  const screenTexture = screenFbo.attachments[0];
+  const screenDepthTexture = screenFbo.attachments[1];
 
   const draw = () => {
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    gl.enable(gl.POLYGON_OFFSET_FILL)
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
+    gl.bindFramebuffer(gl.FRAMEBUFFER, screenFbo.framebuffer);
     if (isShowFbo) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.framebuffer)
     }
 
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    gl.enable(gl.POLYGON_OFFSET_FILL)
+
     scene.render()
 
     if (isShowFbo) {
-      debugRT.readFromContext('fbo')
+      debugRT.readFromContext('orthFbo')
       const depthTexture = fbo.attachments[1]
+      // print depth texture
+      console.log(' depthTexture ', depthTexture);
+      const fbo2 = twgl.createFramebufferInfo(gl, [
+        { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
+      scene.debugDepthTex(depthTexture, fbo2.framebuffer);
+      debugRM.readFromContext('orthDepth');
 
     }
+    if(isDebugDepth){
+
+      const fbo3 = twgl.createFramebufferInfo(gl, [
+        { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
+      scene.debugDepthTex(screenDepthTexture, fbo3.framebuffer);
+      debugRB.readFromContext('persDepth');
+    }
+
+
     if (isShowFrustum) {
       // camera.frustum.debugWireframe(camera.viewMatrix);
       // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
       camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
       // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
     }
+    scene.printTexToScreen(screenTexture)
   }
 
   const render1Frame = () => {
