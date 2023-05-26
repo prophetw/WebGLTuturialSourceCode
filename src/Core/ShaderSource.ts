@@ -57,6 +57,7 @@ class ShaderSource{
     fs = definedStr + fs;
 
     // import other shader source code
+    // support import util functions
 
     // add uniform and attribute declaration
     const globalRegExp = /glb_\w+/g;
@@ -91,7 +92,6 @@ ${fs}
 
     fs = addPrecision(fs, 'mediump');
     const shaderSource = new ShaderSource(vs, fs);
-    console.log(' shader source ----- ', shaderSource);
     return shaderSource;
   }
 

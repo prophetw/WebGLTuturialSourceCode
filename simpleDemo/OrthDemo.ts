@@ -99,36 +99,53 @@ function CameraDemo() {
   camera.setViewToBoundingBox(boundingBox);
 
 
-  const initBtnOptions = ()=>{
-    const resetViewBtn = new CustomBtn('reset view', () => {
+  let isShowFbo = false;
+  let isDebugDepth = false;
+  let isShowFrustum = false;
+
+  const initBtnOptions = () => {
+    new CustomBtn('reset view', () => {
       camera.setViewToBoundingBox(boundingBox);
     })
-
-    const switchOrthOrPers = new CustomBtn('orth', () => {
+    new CustomBtn('orth', () => {
       // camera.switchToOrthographicFrustum();
       camera.frustum = orthFrustum
     })
-
-    const switchPers = new CustomBtn('pers', () => {
+    new CustomBtn('pers', () => {
       // camera.switchToPerspectiveFrustum();
       camera.frustum = perspectiveFrustum
     })
-
     new CustomBtn('print Scene', () => {
       console.log(' scene ', scene);
     })
     new CustomBtn('printcamera', () => {
       console.log(' camera ', camera);
     })
-
+    new CustomBtn("渲染1frame", () => {
+      camera.frustum = orthFrustum;
+      isShowFbo = true;
+      render1Frame()
+      camera.frustum = perspectiveFrustum;
+      isShowFbo = false;
+    })
+    new CustomBtn("debugDepth", () => {
+      isDebugDepth = true;
+      render1Frame()
+      isDebugDepth = false;
+    })
+    new CustomBtn('frus线框', () => {
+      isShowFrustum = !isShowFrustum;
+    })
+    new CustomBtn('twgl', () => {
+      console.log(twgl);
+    })
   }
 
-  const initEvt = ()=>{
-    canvas.addEventListener('click', e=>{
+  const initEvt = () => {
+    canvas.addEventListener('click', e => {
       console.log(' click ', e);
       const pickRes = scene.pick([e.offsetX, e.offsetY]);
       console.log(' pickRes ', pickRes);
-
     })
   }
 
@@ -137,41 +154,20 @@ function CameraDemo() {
   initBtnOptions()
   initEvt()
 
-  let isShowFrustum = false;
-  new CustomBtn('toggleFrustumWireframe', () => {
-    isShowFrustum = !isShowFrustum;
-  })
-
   const fbo = twgl.createFramebufferInfo(gl, [
     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
     // depth component
-    { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST}
+    { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST }
   ], canvas.width, canvas.height)
   console.log(' ---- fbo ---- ', fbo);
 
-  let isShowFbo = false;
-
-  new CustomBtn("渲染1frame", () => {
-    camera.frustum = orthFrustum;
-    isShowFbo = true;
-    render1Frame()
-    camera.frustum = perspectiveFrustum;
-    isShowFbo = false;
-  })
-
-  let isDebugDepth = false;
-  new CustomBtn("debugDepth", () => {
-    isDebugDepth = true;
-    render1Frame()
-    isDebugDepth = false;
-  })
 
   const screenFbo = twgl.createFramebufferInfo(gl,
     [
       { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
-      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST}
+      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST }
     ],
-  canvas.width, canvas.height)
+    canvas.width, canvas.height)
   const screenTexture = screenFbo.attachments[0];
   const screenDepthTexture = screenFbo.attachments[1];
 
@@ -198,7 +194,7 @@ function CameraDemo() {
       debugRM.readFromContext('orthDepth');
 
     }
-    if(isDebugDepth){
+    if (isDebugDepth) {
 
       const fbo3 = twgl.createFramebufferInfo(gl, [
         { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
