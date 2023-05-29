@@ -54,11 +54,28 @@ class AutomaticUniform {
 }
 
 const AutomaticUniforms = {
+
+  glb_frustumDepth: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT_VEC2,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.frustumDepth;
+      }
+  }),
+
+  glb_camera_is_ortho: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.camera_is_ortho;
+      }
+  }),
+
   glb_viewport: new AutomaticUniform({
     size: 1,
     datatype: WebGLConstants.FLOAT_VEC4,
     getValue: function (uniformState: UniformState) {
-      return uniformState.viewportCartesian4;
+      return uniformState.viewport;
     }
   }),
 
@@ -81,4 +98,10 @@ const AutomaticUniforms = {
 
 }
 
+type AutomaticUniformsType = typeof AutomaticUniforms;
+
+export {
+  AutomaticUniformsType,
+  AutomaticUniform,
+}
 export default AutomaticUniforms;

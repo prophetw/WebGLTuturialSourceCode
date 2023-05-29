@@ -3,6 +3,7 @@ import Model3D from "./Model";
 import * as twgl from "twgl.js";
 import shaderProgramCache from "./ShaderProgram";
 import VertexBuffer from "./VertexBuffer";
+import unifromState from "./UniformState";
 
 class Scene {
 	objects: Array<Model3D>;
@@ -48,15 +49,17 @@ class Scene {
     const gl = this.gl;
     const quad = twgl.primitives.createXYQuadBufferInfo(gl)
     const pInfo = shaderProgramCache.createScreenDebugDepthProgramInfo(gl);
+    const uniforms = {
+      u_texture: tex,
+    }
+    unifromState.updateGlobalUniforms(uniforms, pInfo)
     gl.useProgram(pInfo.program)
     if(fbo){
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
     }
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     twgl.setBuffersAndAttributes(gl, pInfo, quad)
-    twgl.setUniforms(pInfo, {
-      u_texture: tex
-    })
+    twgl.setUniforms(pInfo, uniforms)
     twgl.drawBufferInfo(gl, quad)
 
   }

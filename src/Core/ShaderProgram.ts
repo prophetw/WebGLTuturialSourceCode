@@ -70,6 +70,7 @@ void main() {
 attribute vec4 position;
 varying vec4 posEC;
 varying vec4 posWC;
+varying vec4 cc;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -77,7 +78,7 @@ void main() {
   gl_Position =  projection * view * model * position;
   posEC = view * model * position;
   posWC = model * position;
-  vec4 cc = glb_view * position;
+  cc = glb_view * position;
 }
 		`
 		fs = fs ? fs : `
@@ -131,19 +132,34 @@ void main() {
 }
   `
       fs = fs ? fs : `
-precision mediump float;
 varying vec2 v_texcoord;
 uniform sampler2D u_texture;
+vec4 packDepth(float depth) {
+    vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * depth;
+    enc = fract(enc);
+    enc -= enc.yzww * vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);
+    return enc;
+}
 void main() {
-  float depth = texture2D(u_texture, v_texcoord).r;
+  float originDepth = texture2D(u_texture, v_texcoord).r;
+  float near = glb_frustumDepth.x;
+  float far = glb_frustumDepth.y;
+
+  // 对于使 正交相机很近的 0.1 0.00001 变化变大
+  float depth = log(originDepth * (far - 1.0) + 1.0) / log(far);
+
   // 使用彩虹色映射
   float R = abs(depth * 6.0 - 3.0) - 1.0;
   float G = 2.0 - abs(depth * 6.0 - 2.0);
   float B = 2.0 - abs(depth * 6.0 - 4.0);
   // 这是因为在这个特定的映射函数中，我们将深度值映射到了一个颜色梯度上，
   // 这个梯度从蓝色（深度值小）过渡到红色（深度值大）。
-  gl_FragColor = vec4(clamp(vec3(R, G, B), 0.0, 1.0), 1.0);
-  // gl_FragColor = vec4(vec3(depth), 1.0);
+  if(glb_camera_is_ortho >= 1.0){
+    gl_FragColor = vec4(clamp(vec3(R, G, B), 0.0, 1.0), 1.0);
+  }else{
+    gl_FragColor = vec4(vec3(originDepth), 1.0);
+  }
+
 }
   `;
       return this.getProgramInfo(gl, vs, fs, defines);

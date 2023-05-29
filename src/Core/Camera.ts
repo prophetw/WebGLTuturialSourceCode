@@ -5,6 +5,7 @@ import BoundingBox from './BoundingBox'
 import Euler from './Euler'
 import Ray from './Ray'
 import Scene from './Scene'
+import unifromState, { UniformState } from './UniformState'
 
 
 class ScreenSpaceEventHandler {
@@ -159,7 +160,7 @@ class Camera {
   viewMatrix: twgl.m4.Mat4
   projectionViewMatrix: twgl.m4.Mat4
   inverseViewMatrix: twgl.m4.Mat4
-  frustum: PerspectiveFrustum | OrthographicFrustum
+  _frustum: PerspectiveFrustum | OrthographicFrustum
 
   constructor(canvas: HTMLCanvasElement, scene?: Scene) {
     this.scene = scene;
@@ -173,10 +174,28 @@ class Camera {
     this.viewMatrix = twgl.m4.identity();
     this.inverseViewMatrix = twgl.m4.identity(); // camera matrix
     this.projectionViewMatrix = twgl.m4.identity();
-    this.frustum = new PerspectiveFrustum(60, 1, 0.1, 100);
+    this._frustum = new PerspectiveFrustum(60, 1, 0.1, 100.0);
     this._heading = 0
     this._pitch = 0
     this._roll = 0
+    this.updateUniformState();
+  }
+
+  updateUniformState(){
+
+    unifromState.frustumDepth = [this.frustum.near, this.frustum.far];
+    unifromState.projection = this.frustum.projectionMatrix;
+    unifromState.view = this.viewMatrix;
+    unifromState.camera_is_ortho = this.frustum instanceof OrthographicFrustum ? 1.0 : 0.0;
+
+  }
+
+  get frustum(): PerspectiveFrustum | OrthographicFrustum{
+    return this._frustum
+  }
+  set frustum(frustum: PerspectiveFrustum | OrthographicFrustum) {
+    this._frustum = frustum
+    this.updateUniformState();
   }
 
   get anchor() {
@@ -289,7 +308,6 @@ class Camera {
 
   moveForward(distance: number, position?: twgl.v3.Vec3) {
     if (this.frustum instanceof OrthographicFrustum) {
-      console.log(' distance  ', distance, position);
       if(distance>0){
         // 拉近
         this.frustum.width -= distance * 0.1;

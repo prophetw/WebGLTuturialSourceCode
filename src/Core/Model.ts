@@ -4,6 +4,8 @@ import shaderProgramCache from './ShaderProgram';
 import BoundingBox from './BoundingBox';
 import { Camera } from './Camera';
 import Ray from './Ray';
+import AutomaticUniforms from './AutomaticUniforms';
+import unifromState from './UniformState';
 
 type Vector3 = twgl.v3.Vec3;
 
@@ -22,6 +24,7 @@ class Model3D {
 	boundingBox: BoundingBox
 	camera: Camera
 	color: twgl.v3.Vec3
+  programInfo: twgl.ProgramInfo | undefined
 	constructor(
 		gl: WebGL2RenderingContext | WebGLRenderingContext,
 		camera: Camera,
@@ -36,6 +39,7 @@ class Model3D {
 		this.gl = gl;
 		this.positions = [];
 		this.numComponents = 3;
+    this.programInfo = undefined;
 		this.camera = camera;
 		if (Array.isArray(vertics.position)) {
 			this.positions = vertics.position;
@@ -97,12 +101,14 @@ class Model3D {
 	render() {
 		const gl = this.gl;
 		const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
+    this.programInfo = programInfo;
 		const uniforms = {
 			projection: this.camera.frustum.projectionMatrix,
 			view: this.camera.viewMatrix,
 			model: this.modelMatrix,
-			u_color: this.color
+			u_color: this.color,
 		};
+    unifromState.updateGlobalUniforms(uniforms, programInfo)
 		// console.log(uniforms);
 		// console.log(' programInfo ', programInfo);
 		gl.useProgram(programInfo.program);

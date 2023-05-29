@@ -1,5 +1,5 @@
 import * as twgl from 'twgl.js';
-import AutomaticUniforms from './AutomaticUniforms';
+import AutomaticUniforms, {AutomaticUniform, AutomaticUniformsType} from './AutomaticUniforms';
 
 
 type WebGLPrecision = 'highp' | 'mediump' | 'lowp';
@@ -41,9 +41,11 @@ class ShaderSource{
 
   vertexShader: string;
   fragmentShader: string;
-	constructor(vertexShader: string, fragmentShader: string){
+  globalUniforms: Map<string, AutomaticUniform>;
+	constructor(vertexShader: string, fragmentShader: string, globalUniforms: Map<string, AutomaticUniform>){
     this.vertexShader = vertexShader;
     this.fragmentShader = fragmentShader;
+    this.globalUniforms = globalUniforms;
   }
 
   addPrecision(){
@@ -63,12 +65,19 @@ class ShaderSource{
     const globalRegExp = /glb_\w+/g;
     const vsmatches = vs.match(globalRegExp);
     const fsmatches = fs.match(globalRegExp);
+    const globalUniforms = new Map();
     if(vsmatches !== null){
-      vsmatches.map(str => {
-        // @ts-ignore
-        const unifInfo = AutomaticUniforms[str]
+      const uniq = [...new Set()];
+      vsmatches.map((str) => {
+        const key = str as keyof AutomaticUniformsType;
+        const unifInfo = AutomaticUniforms[key]
         if(unifInfo){
-          const unifStr = unifInfo.getDeclaration(str);
+          const unifStr = unifInfo.getDeclaration(key);
+          if(uniq.includes(key)){
+            return;
+          }
+          uniq.push(key);
+          globalUniforms.set(key, unifInfo);
           vs = `
 ${unifStr}
 ${vs}
@@ -77,9 +86,14 @@ ${vs}
       })
     }
     if(fsmatches !== null){
+      const uniq = [...new Set()];
       fsmatches.map(str => {
-        // @ts-ignore
-        const unifInfo = AutomaticUniforms[str]
+        const key = str as keyof AutomaticUniformsType;
+        const unifInfo = AutomaticUniforms[key]
+        if(uniq.includes(key)){
+          return;
+        }
+        uniq.push(key);
         if(unifInfo){
           const unifStr = unifInfo.getDeclaration(str);
           fs = `
@@ -91,7 +105,7 @@ ${fs}
     }
 
     fs = addPrecision(fs, 'mediump');
-    const shaderSource = new ShaderSource(vs, fs);
+    const shaderSource = new ShaderSource(vs, fs, globalUniforms);
     return shaderSource;
   }
 
