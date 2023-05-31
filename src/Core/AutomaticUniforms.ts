@@ -63,11 +63,63 @@ const AutomaticUniforms = {
       }
   }),
 
-  glb_camera_is_ortho: new AutomaticUniform({
+
+  /**
+   * direction light
+   */
+  glb_lightDirectionWC: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT_VEC3,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.lightDirectionWC;
+      }
+  }),
+
+  glb_lightDirectionEC: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT_VEC3,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.lightDirectionEC;
+      }
+  }),
+
+  glb_ambientColor: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT_VEC3,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.ambientColor;
+      }
+  }),
+
+  glb_lightColor: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT_VEC3,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.lightColor;
+      }
+  }),
+
+  glb_cameraPosition: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT_VEC3,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.cameraPosition;
+      }
+  }),
+
+  glb_isOrthoCamera: new AutomaticUniform({
       size : 1,
       datatype : WebGLConstants.FLOAT,
       getValue : function(uniformState: UniformState) {
-          return uniformState.camera_is_ortho;
+          return uniformState.isOrthoCamera;
+      }
+  }),
+
+  glb_shininess: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.shininess;
       }
   }),
 
@@ -76,6 +128,14 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT_VEC4,
     getValue: function (uniformState: UniformState) {
       return uniformState.viewport;
+    }
+  }),
+
+  glb_viewInverse: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_MAT4,
+    getValue: function (uniformState: UniformState) {
+      return uniformState.viewInverse;
     }
   }),
 

@@ -804,7 +804,7 @@ export class VisualState {
             name: name,
             uname: this.statusName,
           });
-          this.showFirstImg();
+          this.showLastImg();
         }
       } catch (e) {
         console.error("Spector can not capture the visual state: " + e);
@@ -814,6 +814,10 @@ export class VisualState {
   }
   showFirstImg() {
     const imgData = this.imgSrcAry[0];
+    this.show(imgData);
+  }
+  showLastImg() {
+    const imgData = this.imgSrcAry[this.imgSrcAry.length-1];
     this.show(imgData);
   }
   show(imgData: ImgData) {

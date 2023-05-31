@@ -4,48 +4,84 @@ import AutomaticUniforms, { AutomaticUniformsType } from './AutomaticUniforms';
 // Global uniform state
 class UniformState{
   private _frustumDepth: [number, number];
-  private _camera_is_ortho: number;
-  private _camera_view_mat4: twgl.m4.Mat4
+  private _isOrthoCamera: number;
+  private _shininess: number;
+  private _viewMat4: twgl.m4.Mat4
   private _viewport: [number, number, number, number]
   private _projection: twgl.m4.Mat4
-  private _lightPosition: twgl.v3.Vec3
-  private _lightDirection: twgl.v3.Vec3
+  private _lightPositionAry: twgl.v3.Vec3[] // point light
+  private _lightDirection: twgl.v3.Vec3 // direction light
+  private _lightColor: twgl.v3.Vec3
+  private _ambientColor: twgl.v3.Vec3
 
 	constructor(){
     this._frustumDepth = [0.1, 10000];
-    this._camera_is_ortho = 0.0;
-    this._camera_view_mat4 = twgl.m4.identity()
+    this._isOrthoCamera = 0.0;
+    this._viewMat4 = twgl.m4.identity()
     this._viewport = [0, 0, 0, 0]
     this._projection = twgl.m4.identity()
-    this._lightPosition = twgl.v3.create(0, 0, 0)
-    this._lightDirection = twgl.v3.create(0, 0, 0)
+    this._shininess = 32.0;  // blinPhong default shininess
+
+    // direction light should be array
+    this._lightDirection = twgl.v3.create(1, 1, 1)
+
+    // point light should be array
+    this._lightPositionAry = []
+
+    this._lightColor = twgl.v3.create(1, 1, 1)
+    this._ambientColor = twgl.v3.create(0.3, 0.3, 0.3)
     console.log(' --- uniformstate --- ', this);
 	}
 
+  get shininess(): number{
+    return this._shininess;
+  }
+  set shininess(value: number){
+    this._shininess = value;
+  }
+  get lightColor (): twgl.v3.Vec3 {
+    return this._lightColor
+  }
+  set lightColor (value: twgl.v3.Vec3) {
+    this._lightColor = value
+  }
+  get ambientColor (): twgl.v3.Vec3 {
+    return this._ambientColor
+  }
+  set ambientColor (value: twgl.v3.Vec3) {
+    this._ambientColor = value
+  }
   get projectionInverse (): twgl.m4.Mat4 {
     return twgl.m4.inverse(this._projection)
   }
   get viewInverse (): twgl.m4.Mat4 {
-    return twgl.m4.inverse(this._camera_view_mat4)
+    return twgl.m4.inverse(this._viewMat4)
   }
   get viewProjection (): twgl.m4.Mat4 {
-    return twgl.m4.multiply(this._projection, this._camera_view_mat4)
+    return twgl.m4.multiply(this._projection, this._viewMat4)
   }
   get cameraPosition (): twgl.v3.Vec3 {
     return twgl.m4.getTranslation(this.viewInverse)
   }
 
-  get lightDirection (): twgl.v3.Vec3 {
+  get lightDirectionWC (): twgl.v3.Vec3 {
+    twgl.v3.normalize(this._lightDirection, this._lightDirection)
     return this._lightDirection
   }
-  set lightDirection (value: twgl.v3.Vec3) {
+  set lightDirectionWC (value: twgl.v3.Vec3) {
     this._lightDirection = value
   }
-  get lightPosition (): twgl.v3.Vec3 {
-    return this._lightPosition
+  get lightDirectionEC (): twgl.v3.Vec3 {
+    const dirEc = twgl.m4.transformDirection(this.viewInverse, this._lightDirection)
+    const normalizeDir = twgl.v3.normalize(dirEc, dirEc)
+    return normalizeDir
   }
-  set lightPosition (value: twgl.v3.Vec3) {
-    this._lightPosition = value
+
+  get lightPositionAry () {
+    return this._lightPositionAry
+  }
+  set lightPositionAry (value: twgl.v3.Vec3[]) {
+    this._lightPositionAry = value
   }
 
   get frustumDepth(){
@@ -55,11 +91,11 @@ class UniformState{
     this._frustumDepth = value;
   }
 
-  get camera_is_ortho(){
-    return this._camera_is_ortho
+  get isOrthoCamera(){
+    return this._isOrthoCamera
   }
-  set camera_is_ortho(value: number){
-    this._camera_is_ortho = value;
+  set isOrthoCamera(value: number){
+    this._isOrthoCamera = value;
   }
   //
   get glb_modelMatrix(): twgl.m4.Mat4{
@@ -74,10 +110,10 @@ class UniformState{
   }
 
   get view(): twgl.m4.Mat4{
-    return this._camera_view_mat4
+    return this._viewMat4
   }
   set view(viewMat4: twgl.m4.Mat4){
-    this._camera_view_mat4 = viewMat4;
+    this._viewMat4 = viewMat4;
   }
 
   get projection(): twgl.m4.Mat4{

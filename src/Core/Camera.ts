@@ -186,7 +186,7 @@ class Camera {
     unifromState.frustumDepth = [this.frustum.near, this.frustum.far];
     unifromState.projection = this.frustum.projectionMatrix;
     unifromState.view = this.viewMatrix;
-    unifromState.camera_is_ortho = this.frustum instanceof OrthographicFrustum ? 1.0 : 0.0;
+    unifromState.isOrthoCamera = this.frustum instanceof OrthographicFrustum ? 1.0 : 0.0;
 
   }
 
@@ -400,7 +400,6 @@ class Camera {
 
     const rotateAnchor = this.anchor || point;
     // const rotateAnchor = [0, 0, 0]
-    console.log(rotateAnchor.toString());
 
     // 相对于旋转中心点的位置
     // const moveTranslate = twgl.m4.translation(twgl.v3.subtract(this.position, rotateAnchor));

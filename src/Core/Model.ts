@@ -100,7 +100,8 @@ class Model3D {
 
 	render() {
 		const gl = this.gl;
-		const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
+    const programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl)
+		// const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
     this.programInfo = programInfo;
 		const uniforms = {
 			projection: this.camera.frustum.projectionMatrix,

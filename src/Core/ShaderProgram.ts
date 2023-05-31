@@ -23,15 +23,17 @@ class ShaderProgramCache{
 		return programInfo;
 	}
 
-	public createBlinnPhongProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext, defines = []): twgl.ProgramInfo{
+	public createBlinnPhongProgramInfo(
+    gl: WebGL2RenderingContext | WebGLRenderingContext, defines = []): twgl.ProgramInfo{
 		const vs = `
 attribute vec4 position;
 attribute vec3 normal;
-varying vec3 v_normalWC;
-varying vec3 v_positionWC;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+
+varying vec3 v_normalWC;
+varying vec3 v_positionWC;
 void main() {
   gl_Position =  projection * view * model * position;
   v_normalWC = mat3(model) * normal;
@@ -42,30 +44,28 @@ void main() {
 varying vec3 v_normalWC;
 varying vec3 v_positionWC;
 uniform vec3 u_color;
-uniform vec3 u_lightDirection;
-uniform vec3 u_lightColor;
-uniform vec3 u_ambientColor;
-uniform vec3 u_cameraPosition;
-uniform float u_shininess;
 void main() {
+  // calculate light in world coodiantes
   vec3 normal = normalize(v_normalWC);
-  vec3 lightDirection = normalize(u_lightDirection);
+  vec3 lightDirection = glb_lightDirectionWC;
   float lambertTerm = max(dot(normal, lightDirection), 0.0);
-  vec3 diffuse = u_lightColor * u_color * lambertTerm;
-  vec3 ambient = u_ambientColor * u_color;
-  vec3 viewDirection = normalize(u_cameraPosition - v_positionWC);
+  vec3 diffuse = glb_lightColor * u_color * lambertTerm;
+  vec3 ambient = glb_ambientColor * u_color;
+  vec3 viewDirection = normalize(glb_cameraPosition - v_positionWC);
   vec3 halfVector = normalize(lightDirection + viewDirection);
-  float specular = pow(max(dot(normal, halfVector), 0.0), u_shininess);
+  float specular = pow(max(dot(normal, halfVector), 0.0), glb_shininess);
   gl_FragColor = vec4(diffuse + ambient + specular, 1.0);
 }
 		`;
 		return this.getProgramInfo(gl, vs, fs, defines);
 	}
 
-	public createColorProgramInfo(gl: WebGL2RenderingContext | WebGLRenderingContext,
+	public createColorProgramInfo(
+    gl: WebGL2RenderingContext | WebGLRenderingContext,
 		vs?: string,
 		fs?: string,
-		defines: string[] = []): twgl.ProgramInfo{
+		defines: string[] = []
+  ): twgl.ProgramInfo{
 		vs = vs ? vs : `
 attribute vec4 position;
 varying vec4 posEC;
@@ -145,7 +145,7 @@ void main() {
   float near = glb_frustumDepth.x;
   float far = glb_frustumDepth.y;
 
-  // 对于使 正交相机很近的 0.1 0.00001 变化变大
+  // 使离正交相机很近的点 0.1 0.00001 变化变大
   float depth = log(originDepth * (far - 1.0) + 1.0) / log(far);
 
   // 使用彩虹色映射
@@ -154,7 +154,7 @@ void main() {
   float B = 2.0 - abs(depth * 6.0 - 4.0);
   // 这是因为在这个特定的映射函数中，我们将深度值映射到了一个颜色梯度上，
   // 这个梯度从蓝色（深度值小）过渡到红色（深度值大）。
-  if(glb_camera_is_ortho >= 1.0){
+  if(glb_isOrthoCamera >= 1.0){
     gl_FragColor = vec4(clamp(vec3(R, G, B), 0.0, 1.0), 1.0);
   }else{
     gl_FragColor = vec4(vec3(originDepth), 1.0);
