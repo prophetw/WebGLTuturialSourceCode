@@ -15,29 +15,28 @@ import Ray from '../src/Core/Ray'
 function CameraDemo() {
 
   const canvas = document.getElementById('webgl') as HTMLCanvasElement
-  const gl = canvas.getContext('webgl2', {
-    antialias: true,
-  })
+  const gl = canvas.getContext('webgl2')
   if (gl === null) {
     console.error(' gl is null ');
     return
   }
 
-  const debugRT = new VisualState({
-    context: gl,
-    contextVersion: 2,
-  }, 'right-top', 30)
-  const debugRM = new VisualState({
-    context: gl,
-    contextVersion: 2,
-  }, 'right-mid', 30)
-  const debugRB = new VisualState({
-    context: gl,
-    contextVersion: 2,
-  }, 'right-bottom', 30)
+  // const debugRT = new VisualState({
+  //   context: gl,
+  //   contextVersion: 2,
+  // }, 'right-top', 30)
+  // const debugRM = new VisualState({
+  //   context: gl,
+  //   contextVersion: 2,
+  // }, 'right-mid', 30)
+  // const debugRB = new VisualState({
+  //   context: gl,
+  //   contextVersion: 2,
+  // }, 'right-bottom', 30)
 
   gl.enable(gl.DEPTH_TEST)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
+  gl.clearDepth(1.0)
 
   const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
   const vertics1 = twgl.primitives.createSphereVertices(1, 32, 32)
@@ -61,6 +60,7 @@ function CameraDemo() {
 
 
   const scene = new Scene(gl, canvas);
+  scene.enableMSAA = true;
   const camera = scene.camera;
 
   const model = twgl.m4.identity()
@@ -99,7 +99,7 @@ function CameraDemo() {
   camera.setViewToBoundingBox(boundingBox);
 
 
-  let isShowFbo = false;
+  let isRenderOrth1FrameInFbo = false;
   let isDebugDepth = false;
   let isShowFrustum = false;
 
@@ -123,10 +123,10 @@ function CameraDemo() {
     })
     new CustomBtn("渲染1frame", () => {
       camera.frustum = orthFrustum;
-      isShowFbo = true;
+      isRenderOrth1FrameInFbo = true;
       render1Frame()
       camera.frustum = perspectiveFrustum;
-      isShowFbo = false;
+      isRenderOrth1FrameInFbo = false;
     })
     new CustomBtn("debugDepth", () => {
       isDebugDepth = true;
@@ -159,56 +159,63 @@ function CameraDemo() {
     // depth component
     { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST }
   ], canvas.width, canvas.height)
+
   console.log(' ---- fbo ---- ', fbo);
 
 
   const screenFbo = twgl.createFramebufferInfo(gl,
     [
-      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
-      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST }
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
+      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST,}
     ],
     canvas.width, canvas.height)
+
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+      console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER))
+      console.log(" fbo 帧缓冲不完整");
+    }
+
   const screenTexture = screenFbo.attachments[0];
   const screenDepthTexture = screenFbo.attachments[1];
+  console.log(' screenFbo ----- ', screenFbo);
 
   const draw = () => {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, screenFbo.framebuffer);
-    if (isShowFbo) {
+
+    if (isRenderOrth1FrameInFbo) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.framebuffer)
     }
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    gl.enable(gl.POLYGON_OFFSET_FILL)
 
     scene.render()
 
-    if (isShowFbo) {
-      debugRT.readFromContext('orthFbo')
-      const depthTexture = fbo.attachments[1]
-      // print depth texture
-      console.log(' depthTexture ', depthTexture);
-      const fbo2 = twgl.createFramebufferInfo(gl, [
-        { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
-      scene.debugDepthTex(depthTexture, fbo2.framebuffer);
-      debugRM.readFromContext('orthDepth');
+    // if (isRenderOrth1FrameInFbo) {
+    //   debugRT.readFromContext('orthFbo')
+    //   const depthTexture = fbo.attachments[1]
+    //   // print depth texture
+    //   console.log(' depthTexture ', depthTexture);
+    //   const fbo2 = twgl.createFramebufferInfo(gl, [
+    //     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
+    //   scene.debugDepthTex(depthTexture, fbo2.framebuffer);
+    //   debugRM.readFromContext('orthDepth');
 
-    }
-    if (isDebugDepth) {
+    // }
+    // if (isDebugDepth) {
 
-      const fbo3 = twgl.createFramebufferInfo(gl, [
-        { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
-      scene.debugDepthTex(screenDepthTexture, fbo3.framebuffer);
-      debugRB.readFromContext('persDepth');
-    }
+    //   const fbo3 = twgl.createFramebufferInfo(gl, [
+    //     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
+    //   scene.debugDepthTex(screenDepthTexture, fbo3.framebuffer);
+    //   debugRB.readFromContext('persDepth');
+    // }
 
 
-    if (isShowFrustum) {
-      // camera.frustum.debugWireframe(camera.viewMatrix);
-      // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
-      camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
-      // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
-    }
+    // if (isShowFrustum) {
+    //   // camera.frustum.debugWireframe(camera.viewMatrix);
+    //   // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
+    //   camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
+    //   // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
+    // }
     scene.printTexToScreen(screenTexture)
   }
 
