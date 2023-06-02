@@ -21,18 +21,18 @@ function CameraDemo() {
     return
   }
 
-  // const debugRT = new VisualState({
-  //   context: gl,
-  //   contextVersion: 2,
-  // }, 'right-top', 30)
-  // const debugRM = new VisualState({
-  //   context: gl,
-  //   contextVersion: 2,
-  // }, 'right-mid', 30)
-  // const debugRB = new VisualState({
-  //   context: gl,
-  //   contextVersion: 2,
-  // }, 'right-bottom', 30)
+  const debugRT = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-top', 30)
+  const debugRM = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-mid', 30)
+  const debugRB = new VisualState({
+    context: gl,
+    contextVersion: 2,
+  }, 'right-bottom', 30)
 
   gl.enable(gl.DEPTH_TEST)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
@@ -190,32 +190,32 @@ function CameraDemo() {
 
     scene.render()
 
-    // if (isRenderOrth1FrameInFbo) {
-    //   debugRT.readFromContext('orthFbo')
-    //   const depthTexture = fbo.attachments[1]
-    //   // print depth texture
-    //   console.log(' depthTexture ', depthTexture);
-    //   const fbo2 = twgl.createFramebufferInfo(gl, [
-    //     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
-    //   scene.debugDepthTex(depthTexture, fbo2.framebuffer);
-    //   debugRM.readFromContext('orthDepth');
+    if (isRenderOrth1FrameInFbo) {
+      debugRT.readFromContext('orthFbo')
+      const depthTexture = fbo.attachments[1]
+      // print depth texture
+      console.log(' depthTexture ', depthTexture);
+      const fbo2 = twgl.createFramebufferInfo(gl, [
+        { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
+      scene.debugDepthTex(depthTexture, fbo2.framebuffer);
+      debugRM.readFromContext('orthDepth');
 
-    // }
-    // if (isDebugDepth) {
+    }
+    if (isDebugDepth) {
 
-    //   const fbo3 = twgl.createFramebufferInfo(gl, [
-    //     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
-    //   scene.debugDepthTex(screenDepthTexture, fbo3.framebuffer);
-    //   debugRB.readFromContext('persDepth');
-    // }
+      const fbo3 = twgl.createFramebufferInfo(gl, [
+        { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },], canvas.width, canvas.height)
+      scene.debugDepthTex(screenDepthTexture, fbo3.framebuffer);
+      debugRB.readFromContext('persDepth');
+    }
 
 
-    // if (isShowFrustum) {
-    //   // camera.frustum.debugWireframe(camera.viewMatrix);
-    //   // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
-    //   camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
-    //   // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
-    // }
+    if (isShowFrustum) {
+      // camera.frustum.debugWireframe(camera.viewMatrix);
+      // const inverseViewProjectionMatrix = twgl.m4.inverse(twgl.m4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix))
+      camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
+      // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
+    }
     scene.printTexToScreen(screenTexture)
   }
 
