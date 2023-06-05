@@ -86,12 +86,13 @@ function CameraDemo() {
   camera.up = [0, 1, 0];
   // camera.frustum.near = 0.1
   // camera.frustum.far = 100
-  const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.1, 50.0)
+  const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.1, 1000000000.0)
   perspectiveFrustum.initWireframe(gl);
-  const orthFrustum = new OrthographicFrustum(-3, 3, -3, 3, 0.1, 50.0)
+  const orthFrustum = new OrthographicFrustum(-3, 3, -3, 3, 0.1, 5000.0)
   orthFrustum.initWireframe(gl);
 
   camera.frustum = perspectiveFrustum
+  // camera.frustum = orthFrustum
 
   const boundingBox = cubeModel.worldBox
   // const bbx = quadModel1.worldBox

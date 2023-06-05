@@ -155,9 +155,12 @@ void main() {
   // 这是因为在这个特定的映射函数中，我们将深度值映射到了一个颜色梯度上，
   // 这个梯度从蓝色（深度值小）过渡到红色（深度值大）。
   if(glb_isOrthoCamera >= 1.0){
-    gl_FragColor = vec4(clamp(vec3(R, G, B), 0.0, 1.0), 1.0);
+
+    gl_FragColor = packDepth(originDepth);
+    // gl_FragColor = vec4(clamp(vec3(R, G, B), 0.0, 1.0), 1.0);
   }else{
-    gl_FragColor = vec4(vec3(originDepth), 1.0);
+    gl_FragColor = packDepth(originDepth);
+    // gl_FragColor = vec4(vec3(originDepth), 1.0);
   }
 
 }

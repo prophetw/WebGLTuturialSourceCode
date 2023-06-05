@@ -2,7 +2,7 @@
 import * as twgl from 'twgl.js';
 import shaderProgramCache from './ShaderProgram';
 import BoundingBox from './BoundingBox';
-import { Camera } from './Camera';
+import { Camera, PerspectiveFrustum } from './Camera';
 import Ray from './Ray';
 import AutomaticUniforms from './AutomaticUniforms';
 import unifromState from './UniformState';
@@ -101,7 +101,14 @@ class Model3D {
 	render() {
 		const gl = this.gl;
     // const programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
-    const programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, ['LOG_DEPTH'])
+    let programInfo;
+
+    // programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
+    if(this.camera.frustum instanceof PerspectiveFrustum){
+      programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, ['LOG_DEPTH'])
+    }else{
+      programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
+    }
 		// const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
     this.programInfo = programInfo;
 		const uniforms = {
