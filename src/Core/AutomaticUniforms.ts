@@ -63,6 +63,13 @@ const AutomaticUniforms = {
       }
   }),
 
+  glb_oneOverLogOnePlusFarMinusNear: new AutomaticUniform({
+      size : 1,
+      datatype : WebGLConstants.FLOAT,
+      getValue : function(uniformState: UniformState) {
+          return uniformState.oneOverLogOnePlusFarMinusNear;
+      }
+  }),
 
   /**
    * direction light

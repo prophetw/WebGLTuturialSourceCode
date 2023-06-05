@@ -100,7 +100,8 @@ class Model3D {
 
 	render() {
 		const gl = this.gl;
-    const programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl)
+    // const programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
+    const programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, ['LOG_DEPTH'])
 		// const programInfo = shaderProgramCache.createColorProgramInfo(gl, this.vertexShader, this.fragmentShader)
     this.programInfo = programInfo;
 		const uniforms = {

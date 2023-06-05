@@ -91,6 +91,10 @@ class UniformState{
     this._frustumDepth = value;
   }
 
+  get oneOverLogOnePlusFarMinusNear(): number{
+    return 1.0 / Math.log2(1.0 + this.frustumDepth[1] - this.frustumDepth[0]);
+  }
+
   get isOrthoCamera(){
     return this._isOrthoCamera
   }

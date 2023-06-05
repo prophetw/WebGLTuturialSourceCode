@@ -24,7 +24,7 @@ class ShaderProgramCache{
 	}
 
 	public createBlinnPhongProgramInfo(
-    gl: WebGL2RenderingContext | WebGLRenderingContext, defines = []): twgl.ProgramInfo{
+    gl: WebGL2RenderingContext | WebGLRenderingContext, defines: string[] = []): twgl.ProgramInfo{
 		const vs = `
 attribute vec4 position;
 attribute vec3 normal;
