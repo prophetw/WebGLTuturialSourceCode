@@ -181,7 +181,7 @@ class Camera {
     this.updateUniformState();
   }
 
-  updateUniformState(){
+  updateUniformState() {
 
     unifromState.frustumDepth = [this.frustum.near, this.frustum.far];
     unifromState.projection = this.frustum.projectionMatrix;
@@ -190,7 +190,7 @@ class Camera {
 
   }
 
-  get frustum(): PerspectiveFrustum | OrthographicFrustum{
+  get frustum(): PerspectiveFrustum | OrthographicFrustum {
     return this._frustum
   }
   set frustum(frustum: PerspectiveFrustum | OrthographicFrustum) {
@@ -308,26 +308,35 @@ class Camera {
 
   moveForward(distance: number, position?: twgl.v3.Vec3) {
     if (this.frustum instanceof OrthographicFrustum) {
-      if(distance>0){
-        // 拉近
-        this.frustum.width -= distance * 0.1;
-        this.frustum.height -= distance * 0.1;
-      }else{
-        // 远离
-        this.frustum.width += Math.abs(distance * 0.1);
-        this.frustum.height += Math.abs(distance * 0.1);
-      }
 
+    if (position) {
+      const offsetVec = twgl.v3.subtract(position, this.position);
+      const normalize = twgl.v3.normalize(offsetVec);
+      this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
+      this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
     } else {
-      if (position) {
-        const offsetVec = twgl.v3.subtract(position, this.position);
-        const normalize = twgl.v3.normalize(offsetVec);
-        this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
-        this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
-      } else {
-        const scaledFront = twgl.v3.mulScalar(this.direction, distance);
-        this.position = twgl.v3.add(this.position, scaledFront);
-      }
+      const scaledFront = twgl.v3.mulScalar(this.direction, distance);
+      this.position = twgl.v3.add(this.position, scaledFront);
+    }
+
+      // if (distance > 0) {
+      //   // 拉近
+      //   this.frustum.width -= distance * 0.1;
+      //   this.frustum.height -= distance * 0.1;
+      // } else {
+      //   // 远离
+      //   this.frustum.width += Math.abs(distance * 0.1);
+      //   this.frustum.height += Math.abs(distance * 0.1);
+      // }
+    }
+    if (position) {
+      const offsetVec = twgl.v3.subtract(position, this.position);
+      const normalize = twgl.v3.normalize(offsetVec);
+      this._target = twgl.v3.add(this.target, twgl.v3.mulScalar(normalize, distance));
+      this.position = twgl.v3.add(this.position, twgl.v3.mulScalar(normalize, distance));
+    } else {
+      const scaledFront = twgl.v3.mulScalar(this.direction, distance);
+      this.position = twgl.v3.add(this.position, scaledFront);
     }
   }
 
@@ -857,6 +866,7 @@ class OrthographicFrustum extends Frustum {
     this._width = width;
     this._left = width / -2;
     this._right = width / 2;
+    // this._height = this.aspect;
     this.updateProjectionMatrix();
   }
   get height() {
@@ -869,7 +879,7 @@ class OrthographicFrustum extends Frustum {
     this.updateProjectionMatrix();
   }
 
-  updateWidthHeight(){
+  updateWidthHeight() {
     this._width = this.right - this.left;
     this._height = this.top - this.bottom;
   }
