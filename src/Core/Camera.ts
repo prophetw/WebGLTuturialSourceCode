@@ -278,6 +278,25 @@ class Camera {
     this._pitch = euler.pitch;
     this._roll = euler.roll;
 
+    // heading 0   rotateWithZ  =>  +y 0  +x 90
+    // pitch 0   rotateWithZ  =>  +y 0  +x 90
+
+    const dir = this.direction;
+    // const planeNormal = new Cartesian3(0, 0, 1);
+    // const q = Cartesian3.dot(dir, planeNormal);
+    // const planeN = Cartesian3.multiplyByScalar(planeNormal, q, new Cartesian3());
+    // const dirIn2D = Cartesian3.subtract(dir, planeN, new Cartesian3());
+    // const normDirIn2D = Cartesian3.normalize(dirIn2D, new Cartesian3());
+    // // const angleInRadians = Math.atan2(normDirIn2D.y, normDirIn2D.x);
+    // const angleInRadiansCos = Cartesian3.dot(normDirIn2D, Cartesian3.UNIT_Y);
+    // const crossProduct = Cartesian3.cross(normDirIn2D, Cartesian3.UNIT_Y, new Cartesian3());
+    // const angleInRadians = Math.acos(angleInRadiansCos);
+    // let angle = angleInRadians * 180 / Math.PI;
+    // if(crossProduct.z < 0){
+    //     angle = 360 - angle;
+    // }
+
+
   }
 
   setFrustum(frustum: PerspectiveFrustum | OrthographicFrustum) {
