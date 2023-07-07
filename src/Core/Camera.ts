@@ -555,6 +555,14 @@ class Camera {
     // y 轴 从下往上 -1 1
     // 左上角点 -1 1
     // 右下角点 1 -1
+
+    // 而对于 屏幕 点击事件的  offsetX offsetY 针对的是左上角是 (0,0)  右下角是 (width, height)
+    // 所以需要转换一下  y 轴和 NDC 的 y 轴是反的
+
+    // 需要的是 从下往上的 y 的值  不是从上往下的 offsetY
+    // (1-y/this.canvas.height)*2 - 1 = 1 - y/this.canvas.height * 2
+    // (this.canvas.height - y / this.canvas.height) * 2 - 1 = 1 - y / this.canvas.height * 2
+
     const NDCCoord = [x / this.canvas.width * 2 - 1, 1 - y / this.canvas.height * 2, -1]
     return NDCCoord;
   }
@@ -574,6 +582,7 @@ class Camera {
 
   convertScreenCoordToViewCoord(x: number, y: number): Vector4 {
     const NDC = this.convertScreenCoordToNDC(x, y);
+    // 齐次裁剪空间坐标
     const NDCVec4 = new Vector4(NDC[0], NDC[1], NDC[2], 1);
     const inverseProjection = twgl.m4.inverse(this.frustum.projectionMatrix);
     const coordInEyeSpace1 = Vector4.transformMat4(NDCVec4, inverseProjection);
