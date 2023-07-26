@@ -76,7 +76,17 @@ class Scene {
       {
         format: this.gl.RGBA8, // internal format must be  gl.RGBA8 not gl.RGBA not same
         type: this.gl.UNSIGNED_BYTE,
-        minMag: this.gl.LINEAR,
+        minMag: this.gl.NEAREST,
+        wrap: this.gl.CLAMP_TO_EDGE,
+        target: this.gl.RENDERBUFFER,
+        width: this.gl.drawingBufferWidth,
+        height: this.gl.drawingBufferHeight,
+        samples: 4,
+      },
+      {
+        format: this.gl.RGBA8, // internal format must be  gl.RGBA8 not gl.RGBA not same
+        type: this.gl.UNSIGNED_BYTE,
+        minMag: this.gl.NEAREST,
         wrap: this.gl.CLAMP_TO_EDGE,
         target: this.gl.RENDERBUFFER,
         width: this.gl.drawingBufferWidth,
@@ -108,22 +118,60 @@ class Scene {
     return fbo;
   }
 
-  msaaToFbo(msaaFbo: twgl.FramebufferInfo, colorFbo: WebGLFramebuffer){
+  msaaToFbo(msaaFbo: twgl.FramebufferInfo, colorFbo: twgl.FramebufferInfo){
     const gl = this.gl as WebGL2RenderingContext;
     const canvas = this.canvas;
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, msaaFbo.framebuffer);
+    const isMultipleRenderTargerts = true; // color_attachment > 1
 
-    // if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-    //   console.log("帧缓冲不完整");
-    // }
+    if ( isMultipleRenderTargerts ) {
 
-    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, colorFbo);
-    gl.blitFramebuffer(
-      0, 0, canvas.width, canvas.height,
-      0, 0, canvas.width, canvas.height,
-      gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
-      gl.NEAREST
-    );
+      for ( let i = 0; i < msaaFbo.attachments.length-1; i ++ ) {
+
+        gl.bindFramebuffer( gl.FRAMEBUFFER, msaaFbo.framebuffer );
+        gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.RENDERBUFFER, null );
+
+        gl.bindFramebuffer( gl.FRAMEBUFFER, colorFbo.framebuffer );
+        gl.framebufferTexture2D( gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0 );
+
+      }
+
+    }
+    for(let i=0; i<msaaFbo.attachments.length-1; i++){
+
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, msaaFbo.framebuffer);
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, colorFbo.framebuffer);
+
+      if (isMultipleRenderTargerts ) {
+        gl.framebufferRenderbuffer( gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, msaaFbo.attachments[i] );
+        gl.framebufferTexture2D( gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorFbo.attachments[i] , 0 );
+      }
+      gl.blitFramebuffer(
+        0, 0, canvas.width, canvas.height,
+        0, 0, canvas.width, canvas.height,
+        gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
+        gl.NEAREST
+      );
+    }
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+
+
+    if ( isMultipleRenderTargerts ) {
+
+      for ( let i = 0; i < msaaFbo.attachments.length-1; i ++ ) {
+
+        gl.bindFramebuffer( gl.FRAMEBUFFER, msaaFbo.framebuffer );
+        gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.RENDERBUFFER, msaaFbo.attachments[i] );
+
+        gl.bindFramebuffer( gl.FRAMEBUFFER, colorFbo.framebuffer );
+        gl.framebufferTexture2D( gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, colorFbo.attachments[i], 0 );
+
+      }
+
+    }
+
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, colorFbo.framebuffer);
+
   }
 
 	add(object: Model3D) {
@@ -135,7 +183,7 @@ class Scene {
 
   }
 
-	render() {
+	render(screenFbo: twgl.FramebufferInfo) {
     this.updateAndClearFrameBuffer();
 
     const gl = this.gl;
@@ -148,14 +196,14 @@ class Scene {
       }
     }
 
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
 		for (let i = 0; i < this.objects.length; i++) {
 			this.objects[i].render();
 		}
     if(this.enableMSAA){
       if(this.msaaFbo && currentFbo !== null){
-        this.msaaToFbo(this.msaaFbo, currentFbo)
+        this.msaaToFbo(this.msaaFbo, screenFbo)
       }
     }
 

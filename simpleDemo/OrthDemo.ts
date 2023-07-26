@@ -60,7 +60,7 @@ function CameraDemo() {
 
 
   const scene = new Scene(gl, canvas);
-  // scene.enableMSAA = true;
+  scene.enableMSAA = false;
   const camera = scene.camera;
 
   const model = twgl.m4.identity()
@@ -122,6 +122,9 @@ function CameraDemo() {
     new CustomBtn('printcamera', () => {
       console.log(' camera ', camera);
     })
+    new CustomBtn('msaa', ()=>{
+      scene.enableMSAA = !scene.enableMSAA;
+    })
     new CustomBtn("渲染1frame", () => {
       camera.frustum = orthFrustum;
       isRenderOrth1FrameInFbo = true;
@@ -157,6 +160,7 @@ function CameraDemo() {
 
   const fbo = twgl.createFramebufferInfo(gl, [
     { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
+    { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST },
     // depth component
     { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST }
   ], canvas.width, canvas.height)
@@ -166,6 +170,7 @@ function CameraDemo() {
 
   const screenFbo = twgl.createFramebufferInfo(gl,
     [
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
       { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
       { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST,}
     ],
@@ -177,23 +182,23 @@ function CameraDemo() {
     }
 
   const screenTexture = screenFbo.attachments[0];
-  const screenDepthTexture = screenFbo.attachments[1];
+  const screenNormal = screenFbo.attachments[1];
+  const screenDepthTexture = screenFbo.attachments[2];
   console.log(' screenFbo ----- ', screenFbo);
 
   const draw = () => {
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, screenFbo.framebuffer);
-
+    let currentFbo = screenFbo;
     if (isRenderOrth1FrameInFbo) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.framebuffer)
+      currentFbo = fbo;
     }
 
+    gl.bindFramebuffer(gl.FRAMEBUFFER, currentFbo.framebuffer)
 
-    scene.render()
+    scene.render(currentFbo)
 
     if (isRenderOrth1FrameInFbo) {
       debugRT.readFromContext('orthFbo')
-      const depthTexture = fbo.attachments[1]
+      const depthTexture = fbo.attachments[2]
       // print depth texture
       console.log(' depthTexture ', depthTexture);
       const fbo2 = twgl.createFramebufferInfo(gl, [
@@ -217,7 +222,8 @@ function CameraDemo() {
       camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
       // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
     }
-    scene.printTexToScreen(screenTexture)
+    // scene.printTexToScreen(screenTexture)
+    scene.printTexToScreen(screenNormal)
   }
 
   const render1Frame = () => {

@@ -30,6 +30,7 @@ function addWebGL2Adaptor(shaderCode: string, isFragmentShader: boolean): string
 #endif
 
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 NormalEC;
 // layout(location = 1) out float FragDepth;
 
 #define attribute in
