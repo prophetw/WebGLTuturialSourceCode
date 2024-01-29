@@ -6,6 +6,7 @@ import ZFighting from "./zFighting";
 import CameraDemo from "./cameraDemo";
 import ShadowMapDemo from "./ShadowMap";
 import OrthDemo from "./OrthDemo";
+import OrthDemo2 from "./OrthDemo2";
 
 export {
   SimpleDemoMain,
@@ -15,4 +16,5 @@ export {
   CameraDemo,
   ShadowMapDemo,
   OrthDemo,
+  OrthDemo2,
 }
