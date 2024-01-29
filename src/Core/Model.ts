@@ -6,6 +6,7 @@ import { Camera, PerspectiveFrustum } from './Camera';
 import Ray from './Ray';
 import AutomaticUniforms from './AutomaticUniforms';
 import unifromState from './UniformState';
+import Scene from './Scene';
 
 type Vector3 = twgl.v3.Vec3;
 
@@ -25,18 +26,27 @@ class Model3D {
 	camera: Camera
 	color: twgl.v3.Vec3
   programInfo: twgl.ProgramInfo | undefined
-	constructor(
-		gl: WebGL2RenderingContext | WebGLRenderingContext,
+  scene: Scene
+	constructor(opt: {
+    scene: Scene
 		camera: Camera,
+		context: WebGL2RenderingContext | WebGLRenderingContext,
 		vertics: twgl.Arrays,
-		modelMatrix: twgl.m4.Mat4 = twgl.m4.identity(),
-		vs = '',
-		fs = '',
+		modelMatrix?: twgl.m4.Mat4,
+		vs?: string,
+		fs?: string,
+  }
 	) {
+    const {context, camera, vertics, scene} = opt;
+    const modelMatrix = opt.modelMatrix || twgl.m4.identity();
+    const vs = opt.vs || ``
+    const fs = opt.fs || ``
+    this.scene = scene;
+
 		this.vertics = vertics;
 		this.fragmentShader = fs;
 		this.vertexShader = vs;
-		this.gl = gl;
+		this.gl = context;
 		this.positions = [];
 		this.numComponents = 3;
     this.programInfo = undefined;
@@ -83,7 +93,7 @@ class Model3D {
 		}
 
 		this.boundingBox = BoundingBox.fromPoints(pointAry);
-		this.bufferInfo = twgl.createBufferInfoFromArrays(gl, vertics)
+		this.bufferInfo = twgl.createBufferInfoFromArrays(this.gl, vertics)
 		this.modelMatrix = modelMatrix;
 		this.color = twgl.v3.create(Math.random(), Math.random(), Math.random());
 	}
@@ -105,7 +115,11 @@ class Model3D {
 
     // programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
     if(this.camera.frustum instanceof PerspectiveFrustum){
-      programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, ['LOG_DEPTH'])
+      if(this.scene.useLogDepth){
+        programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, ['LOG_DEPTH'])
+      }else{
+        programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
+      }
     }else{
       programInfo = shaderProgramCache.createBlinnPhongProgramInfo(gl, [''])
     }

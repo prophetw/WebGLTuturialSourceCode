@@ -71,10 +71,28 @@ function CameraDemo() {
   twgl.m4.translate(model2, [1, 1, 1], model2)
   const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
 
-  const quadModel1 = new Model3D(gl, camera, quadVerticsInfo, model);
-  const quadModel2 = new Model3D(gl, camera, quadVerticsInfo, model1);
+  const quadModel1 = new Model3D({
+    scene,
+    camera,
+    vertics: quadVerticsInfo,
+    modelMatrix: model,
+    context: gl,
+  });
+  const quadModel2 = new Model3D({
+    scene,
+    camera,
+    vertics: quadVerticsInfo,
+    modelMatrix: model1,
+    context: gl,
+  });
   const cubeVertics = twgl.primitives.createCubeVertices();
-  const cubeModel = new Model3D(gl, camera, cubeVertics, model2);
+  const cubeModel = new Model3D({
+    scene,
+    camera,
+    vertics: quadVerticsInfo,
+    modelMatrix: model1,
+    context: gl,
+  });
 
   // scene.add(quadModel1);
   // scene.add(quadModel2);
@@ -123,7 +141,7 @@ function CameraDemo() {
     new CustomBtn('printcamera', () => {
       console.log(' camera ', camera);
     })
-    new CustomBtn('msaa', ()=>{
+    new CustomBtn('msaa', () => {
       scene.enableMSAA = !scene.enableMSAA;
     })
     new CustomBtn("渲染1frame", () => {
@@ -157,28 +175,28 @@ function CameraDemo() {
       console.log(' projectionViewMatrix ', camera.projectionViewMatrix);
       const mvp = Vector4.transformMat4(vec4, camera.projectionViewMatrix)
       const ndc = Vector4.scale(mvp, 1 / mvp.w) // 归一化
-      console.log(' point, pointInClip ', vec4,  mvp);
+      console.log(' point, pointInClip ', vec4, mvp);
       console.log(' 透视除法 ndc ', ndc);
       const vec42 = new Vector4(1, 1, 1, 1);
       const mvp2 = Vector4.transformMat4(vec42, camera.projectionViewMatrix)
       const vp2 = Vector4.transformMat4(vec42, camera.viewMatrix)
       const ndc2 = Vector4.scale(mvp2, 1 / mvp2.w) // 归一化
-      console.log(' point, pointInClip ', vec42, vp2,  mvp2);
+      console.log(' point, pointInClip ', vec42, vp2, mvp2);
       console.log(' 透视除法 ndc ', ndc2);
       const vec43 = new Vector4(0, 0, -1, 1);
       const mvp3 = Vector4.transformMat4(vec43, camera.projectionViewMatrix)
       const ndc3 = Vector4.scale(mvp3, 1 / mvp3.w) // 归一化
-      console.log(' point, pointInClip ', vec43,  mvp3);
+      console.log(' point, pointInClip ', vec43, mvp3);
       console.log(' 透视除法 ndc ', ndc3);
       const vec44 = new Vector4(0, 0, 2.5, 1);
       const mvp4 = Vector4.transformMat4(vec44, camera.projectionViewMatrix)
       const ndc4 = Vector4.scale(mvp4, 1 / mvp4.w) // 归一化
-      console.log(' point, pointInClip ', vec44,  mvp4);
+      console.log(' point, pointInClip ', vec44, mvp4);
       console.log(' 透视除法 ndc ', ndc4);
       const vec45 = new Vector4(4, 4, 4, 1);
       const mvp5 = Vector4.transformMat4(vec45, camera.projectionViewMatrix)
       const ndc5 = Vector4.scale(mvp5, 1 / mvp5.w) // 归一化
-      console.log(' point, pointInClip ', vec45,  mvp5);
+      console.log(' point, pointInClip ', vec45, mvp5);
       console.log(' 透视除法 ndc ', ndc5);
 
       console.log(twgl.v3.distance([1, 1, 1], [0, 0, 3]));
@@ -212,16 +230,16 @@ function CameraDemo() {
 
   const screenFbo = twgl.createFramebufferInfo(gl,
     [
-      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
-      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
-      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST,}
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST, },
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST, },
+      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST, }
     ],
     canvas.width, canvas.height)
 
-    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-      console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER))
-      console.log(" fbo 帧缓冲不完整");
-    }
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+    console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER))
+    console.log(" fbo 帧缓冲不完整");
+  }
 
   const screenTexture = screenFbo.attachments[0];
   const screenNormal = screenFbo.attachments[1];

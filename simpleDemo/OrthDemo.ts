@@ -15,7 +15,10 @@ import Ray from '../src/Core/Ray'
 function CameraDemo() {
 
   const canvas = document.getElementById('webgl') as HTMLCanvasElement
-  const gl = canvas.getContext('webgl2')
+  const gl = canvas.getContext('webgl2', {
+    alpha: false,
+    antialias: true,
+  })
   if (gl === null) {
     console.error(' gl is null ');
     return
@@ -35,6 +38,7 @@ function CameraDemo() {
   }, 'right-bottom', 30)
 
   gl.enable(gl.DEPTH_TEST)
+  gl.enable(gl.BLEND)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
   gl.clearDepth(1.0)
 
@@ -70,10 +74,29 @@ function CameraDemo() {
   twgl.m4.translate(model2, [1, 1, 1], model2)
   const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
 
-  const quadModel1 = new Model3D(gl, camera, quadVerticsInfo, model);
-  const quadModel2 = new Model3D(gl, camera, quadVerticsInfo, model1);
+  const quadModel1 = new Model3D({
+    scene,
+    camera,
+    vertics: quadVerticsInfo,
+    modelMatrix: model,
+    context: gl,
+  });
+  const quadModel2 = new Model3D({
+    scene,
+    camera,
+    vertics: quadVerticsInfo,
+    modelMatrix: model1,
+    context: gl,
+  });
   const cubeVertics = twgl.primitives.createCubeVertices();
-  const cubeModel = new Model3D(gl, camera, cubeVertics, model2);
+  const cubeModel = new Model3D({
+    scene,
+    camera,
+    vertics: quadVerticsInfo,
+    modelMatrix: model2,
+    context: gl,
+  });
+  console.log(cubeModel);
 
   // scene.add(quadModel1);
   // scene.add(quadModel2);
@@ -122,8 +145,17 @@ function CameraDemo() {
     new CustomBtn('printcamera', () => {
       console.log(' camera ', camera);
     })
-    new CustomBtn('msaa', ()=>{
+    new CustomBtn('msaa', () => {
       scene.enableMSAA = !scene.enableMSAA;
+    })
+    new CustomBtn('4', () => {
+      scene.msaaSamples = 4;
+    })
+    new CustomBtn('8', () => {
+      scene.msaaSamples = 8;
+    })
+    new CustomBtn('16', () => {
+      scene.msaaSamples = 16;
     })
     new CustomBtn("渲染1frame", () => {
       camera.frustum = orthFrustum;
@@ -170,16 +202,16 @@ function CameraDemo() {
 
   const screenFbo = twgl.createFramebufferInfo(gl,
     [
-      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
-      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST,},
-      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST,}
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST, },
+      { internalFormat: gl.RGBA, format: gl.RGBA, type: gl.UNSIGNED_BYTE, minMag: gl.NEAREST, },
+      { internalFormat: gl.DEPTH_COMPONENT16, format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, minMag: gl.NEAREST, }
     ],
     canvas.width, canvas.height)
 
-    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-      console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER))
-      console.log(" fbo 帧缓冲不完整");
-    }
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+    console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER))
+    console.log(" fbo 帧缓冲不完整");
+  }
 
   const screenTexture = screenFbo.attachments[0];
   const screenNormal = screenFbo.attachments[1];
@@ -193,6 +225,7 @@ function CameraDemo() {
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, currentFbo.framebuffer)
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
     scene.render(currentFbo)
 
@@ -222,8 +255,8 @@ function CameraDemo() {
       camera.frustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
       // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
     }
-    // scene.printTexToScreen(screenTexture)
-    scene.printTexToScreen(screenNormal)
+    scene.printTexToScreen(screenTexture)
+    // scene.printTexToScreen(screenNormal)
   }
 
   const render1Frame = () => {

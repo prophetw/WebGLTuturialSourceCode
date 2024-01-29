@@ -12,23 +12,53 @@ class Scene {
 	camera: Camera
 	screenSpaceEvt: ScreenSpaceEventHandler
   msaaFbo?: twgl.FramebufferInfo
-  msaaSamples: number
-  enableMSAA: boolean
+  _msaaSamples: number
+  _enableMSAA: boolean
+  _useLogDepth: boolean
 	constructor(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement) {
 		this.gl = gl;
 		this.canvas = canvas;
 		this.objects = [];
 		this.camera = new Camera(canvas, this)
   	this.screenSpaceEvt = new ScreenSpaceEventHandler(canvas, this.camera)
-    this.msaaSamples = 4;
-    this.enableMSAA = false;
+    this._msaaSamples = 16;
+    this._enableMSAA = false;
+    this._useLogDepth = false;
     this.createMSAAFbo();
 	}
+
+  get useLogDepth(){
+    return this._useLogDepth;
+  }
+  set useLogDepth(use: boolean){
+    this._useLogDepth = use;
+  }
+
+  get enableMSAA(){
+    return this._enableMSAA;
+  }
+
+  set enableMSAA(enable: boolean){
+    this._enableMSAA = enable;
+    this.msaaSamples = this._msaaSamples;
+  }
+
+  get msaaSamples(){
+    return this._msaaSamples;
+  }
+
+  set msaaSamples(samples: number){
+    this._msaaSamples = samples;
+    this.createMSAAFbo();
+  }
 
   createMSAAFbo(){
     // if(this.msaaFbo){
     //   return this.msaaFbo;
     // }
+    if(this._msaaSamples === 1){
+      return
+    }
     const gl = this.gl as WebGL2RenderingContext;
 
     // 创建并绑定帧缓冲
@@ -81,7 +111,7 @@ class Scene {
         target: this.gl.RENDERBUFFER,
         width: this.gl.drawingBufferWidth,
         height: this.gl.drawingBufferHeight,
-        samples: 4,
+        samples: this.msaaSamples,
       },
       {
         format: this.gl.RGBA8, // internal format must be  gl.RGBA8 not gl.RGBA not same
@@ -91,7 +121,7 @@ class Scene {
         target: this.gl.RENDERBUFFER,
         width: this.gl.drawingBufferWidth,
         height: this.gl.drawingBufferHeight,
-        samples: 4,
+        samples: this.msaaSamples,
       },
       {
         format: this.gl.DEPTH_COMPONENT16,
@@ -103,9 +133,12 @@ class Scene {
         // target: this.gl.TEXTURE_2D,
         width: this.gl.drawingBufferWidth,
         height: this.gl.drawingBufferHeight,
-        samples: 4,
+        samples: this.msaaSamples,
       }
     ]
+    if(this.msaaFbo){
+      this.msaaFbo = undefined;
+    }
     const fbo = twgl.createFramebufferInfo(gl, attachments, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
     // // 检查帧缓冲的状态
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {

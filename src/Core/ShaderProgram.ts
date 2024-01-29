@@ -55,6 +55,7 @@ void main() {
   vec3 halfVector = normalize(lightDirection + viewDirection);
   float specular = pow(max(dot(normal, halfVector), 0.0), glb_shininess);
   gl_FragColor = vec4(diffuse + ambient + specular, 1.0);
+  // gl_FragColor = vec4(u_color, 1.0);
   NormalEC = vec4(1.0);
 }
 		`;
