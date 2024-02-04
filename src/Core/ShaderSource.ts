@@ -21,13 +21,13 @@ ${injectedCode}
 function addWebGL2Adaptor(shaderCode: string, isFragmentShader: boolean): string{
   if(isFragmentShader){
     shaderCode = `#version 300 es
-#ifdef GL_FRAGMENT_PRECISION_HIGH
+// #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
     precision highp sampler2D;
-#else
-    precision mediump float;
-    precision mediump sampler2D;
-#endif
+// #else
+//     precision mediump float;
+//     precision mediump sampler2D;
+// #endif
 
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 NormalEC;
@@ -38,7 +38,7 @@ layout(location = 1) out vec4 NormalEC;
 #define texture2D texture
 #define gl_FragColor FragColor
 // #define gl_FragDepth FragDepth
-#define gl_FragCoord FragCoord
+// #define gl_FragCoord FragCoord
 #define gl_FragData FragData
 
 ${shaderCode}
@@ -47,14 +47,13 @@ ${shaderCode}
 
     shaderCode = `#version 300 es
 
-#ifdef GL_FRAGMENT_PRECISION_HIGH
+// #ifdef GL_FRAGMENT_PRECISION_HIGH
     precision highp float;
     precision highp sampler2D;
-#else
-    precision mediump float;
-    precision mediump sampler2D;
-#endif
-precision mediump float;
+// #else
+//     precision mediump float;
+//     precision mediump sampler2D;
+// #endif
 out float FragDepth;
 
 #define attribute in

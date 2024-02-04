@@ -99,6 +99,7 @@ import Space from '../Space/Space'
 
 import {EnvironmentMap, MultiCamera, Shadow as ShadowMap, Projection, SkyboxWFM, TextureDemo, VirtualCamera} from '../WebglFundemental/index'
 import { CameraDemo, MRTDemo, OrthDemo, OrthDemo2, SimpleDemoMain, WaterDemo, ZFighting  } from '../simpleDemo'
+import PathTracing from './PathTracing/index'
 
 
 const initSpector = (callback = () => {
@@ -181,6 +182,7 @@ ExampleFn = Projection
 ExampleFn = OrthDemo
 ExampleFn = OrthDemo2
 // ExampleFn = CameraDemo
+ExampleFn = PathTracing
 
 
 // const ExampleFn = LOGLTexturesTriangle

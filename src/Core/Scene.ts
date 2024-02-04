@@ -216,7 +216,7 @@ class Scene {
 
   }
 
-	render(screenFbo: twgl.FramebufferInfo) {
+	render(screenFbo?: twgl.FramebufferInfo) {
     this.updateAndClearFrameBuffer();
 
     const gl = this.gl;
@@ -229,13 +229,15 @@ class Scene {
       }
     }
 
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    if(!!screenFbo){
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    }
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		for (let i = 0; i < this.objects.length; i++) {
 			this.objects[i].render();
 		}
     if(this.enableMSAA){
-      if(this.msaaFbo && currentFbo !== null){
+      if(this.msaaFbo && currentFbo !== null && !!screenFbo){
         this.msaaToFbo(this.msaaFbo, screenFbo)
       }
     }
