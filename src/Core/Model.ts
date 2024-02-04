@@ -104,6 +104,10 @@ class Model3D {
 		return BoundingBox.fromPoints([...transformdPointAry]);
 	}
 
+  get worldBox2(): BoundingBox {
+    return this.boundingBox.multiplyByMatrix(this.modelMatrix);
+  }
+
 	setModelMatrix(modelMatrix: twgl.m4.Mat4) {
 		this.modelMatrix = modelMatrix
 	}
