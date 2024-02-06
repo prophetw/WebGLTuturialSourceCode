@@ -7,6 +7,7 @@ import { VisualState } from '../src/utils/visualState'
 import Model3D from '../src/Core/Model'
 import Scene from '../src/Core/Scene'
 import Ray from '../src/Core/Ray'
+import unifromState from '../src/Core/UniformState'
 
 // 透视相机 + 正交相机
 
@@ -40,7 +41,11 @@ function CameraDemo() {
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.BLEND)
   gl.clearColor(0.2, 0.2, 0.2, 1.0)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+  gl.clearColor(1, 1, 1, 1.0)
   gl.clearDepth(1.0)
+
 
   const quadBufInfo2 = twgl.primitives.createXYQuadBufferInfo(gl)
   const vertics1 = twgl.primitives.createSphereVertices(1, 32, 32)
@@ -69,7 +74,7 @@ function CameraDemo() {
 
   const model = twgl.m4.identity()
   // const model = twgl.m4.translate(twgl.m4.identity(), [0.0, 0.0, -1.000001])
-  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 0.000001])
+  const model1 = twgl.m4.translate(twgl.m4.identity(), [0.3, 0.4, 1.00001])
   const model2 = twgl.m4.rotationY(toRadias(45))
   twgl.m4.translate(model2, [1, 1, 1], model2)
   const quadVerticsInfo = twgl.primitives.createXYQuadVertices();
@@ -77,26 +82,29 @@ function CameraDemo() {
   const quadModel1 = new Model3D({
     scene,
     camera,
+    context: gl,
     vertics: quadVerticsInfo,
     modelMatrix: model,
-    context: gl,
+    color: twgl.v3.create(1, 0, 0),
   });
+
   const quadModel2 = new Model3D({
     scene,
     camera,
+    context: gl,
     vertics: quadVerticsInfo,
     modelMatrix: model1,
-    context: gl,
+    color: twgl.v3.create(1, 0, 1),
   });
   const cubeVertics = twgl.primitives.createCubeVertices();
   const cubeModel = new Model3D({
     scene,
     camera,
-    vertics: quadVerticsInfo,
-    modelMatrix: model2,
     context: gl,
+    vertics: cubeVertics,
+    modelMatrix: model2,
+    color: twgl.v3.create(1, 1, 0),
   });
-  console.log(cubeModel);
 
   // scene.add(quadModel1);
   // scene.add(quadModel2);
@@ -109,7 +117,7 @@ function CameraDemo() {
   camera.up = [0, 1, 0];
   // camera.frustum.near = 0.1
   // camera.frustum.far = 100
-  const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.1, 1000000000.0)
+  const perspectiveFrustum = new PerspectiveFrustum(60, 1, 0.01, 100.0)
   perspectiveFrustum.initWireframe(gl);
   const orthFrustum = new OrthographicFrustum(-3, 3, -3, 3, 0.1, 5000.0)
   orthFrustum.initWireframe(gl);
@@ -130,6 +138,10 @@ function CameraDemo() {
   const initBtnOptions = () => {
     new CustomBtn('reset view', () => {
       camera.setViewToBoundingBox(boundingBox);
+    })
+    new CustomBtn('viewToLight', ()=>{
+      // camera.direction
+      unifromState.lightDirectionWC = twgl.v3.create(-camera.direction[0], -camera.direction[1], -camera.direction[2]);
     })
     new CustomBtn('orth', () => {
       // camera.switchToOrthographicFrustum();
@@ -226,8 +238,11 @@ function CameraDemo() {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, currentFbo.framebuffer)
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, currentFbo.framebuffer)
+    // scene.render(currentFbo)
 
-    scene.render(currentFbo)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    scene.render(undefined)
 
     if (isRenderOrth1FrameInFbo) {
       debugRT.readFromContext('orthFbo')
@@ -256,6 +271,7 @@ function CameraDemo() {
       // orthFrustum.debugWireframe(camera.viewMatrix, camera.frustum.projectionMatrix);
     }
     scene.printTexToScreen(screenTexture)
+    // scene.printTexToScreen(screenTexture)
     // scene.printTexToScreen(screenNormal)
   }
 

@@ -75,10 +75,12 @@ class ScreenSpaceEventHandler {
       const x = event.clientX;
       const y = event.clientY;
       // const NDC = this.camera.convertScreenCoordToNDC(x, y);
-      const delta = event.deltaY * 0.01;
+      const delta = event.deltaY * 0.001;
       const rayPoint = this.camera.scene?.pick([x, y]);
       if (rayPoint) {
         this.camera.anchor = rayPoint;
+        const cameraToRayPoint = twgl.v3.distance(rayPoint, this.camera.position);
+        console.log(' distance ', cameraToRayPoint);
       }
       this.camera.moveForward(-delta, rayPoint);
     });
@@ -174,7 +176,7 @@ class Camera {
     this.viewMatrix = twgl.m4.identity();
     this.inverseViewMatrix = twgl.m4.identity(); // camera matrix
     this.projectionViewMatrix = twgl.m4.identity();
-    this._frustum = new PerspectiveFrustum(60, 1, 0.1, 100.0);
+    this._frustum = new PerspectiveFrustum(60, 1, 0.01, 100.0);
     this._heading = 0
     this._pitch = 0
     this._roll = 0

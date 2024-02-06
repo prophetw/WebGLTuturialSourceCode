@@ -35,6 +35,7 @@ class Model3D {
 		modelMatrix?: twgl.m4.Mat4,
 		vs?: string,
 		fs?: string,
+    color?: twgl.v3.Vec3
   }
 	) {
     const {context, camera, vertics, scene} = opt;
@@ -42,7 +43,8 @@ class Model3D {
     const vs = opt.vs || ``
     const fs = opt.fs || ``
     this.scene = scene;
-
+    const color = opt.color ? opt.color : twgl.v3.create(Math.random(), Math.random(), Math.random());
+		this.color = color;
 		this.vertics = vertics;
 		this.fragmentShader = fs;
 		this.vertexShader = vs;
@@ -95,7 +97,6 @@ class Model3D {
 		this.boundingBox = BoundingBox.fromPoints(pointAry);
 		this.bufferInfo = twgl.createBufferInfoFromArrays(this.gl, vertics)
 		this.modelMatrix = modelMatrix;
-		this.color = twgl.v3.create(Math.random(), Math.random(), Math.random());
 	}
 
 	get worldBox(): BoundingBox {

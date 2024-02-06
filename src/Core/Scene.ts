@@ -154,7 +154,7 @@ class Scene {
   msaaToFbo(msaaFbo: twgl.FramebufferInfo, colorFbo: twgl.FramebufferInfo){
     const gl = this.gl as WebGL2RenderingContext;
     const canvas = this.canvas;
-    const isMultipleRenderTargerts = true; // color_attachment > 1
+    const isMultipleRenderTargerts = false; // color_attachment > 1
 
     if ( isMultipleRenderTargerts ) {
 
@@ -216,26 +216,28 @@ class Scene {
 
   }
 
-	render(screenFbo: twgl.FramebufferInfo) {
+	render(screenFbo?: twgl.FramebufferInfo) {
     this.updateAndClearFrameBuffer();
 
     const gl = this.gl;
 
-    const currentFbo = this.gl.getParameter(this.gl.FRAMEBUFFER_BINDING);
     // console.log(' currentFbo ', currentFbo);
     if(this.enableMSAA){
-      if(this.msaaFbo && currentFbo !== null){
+      if(this.msaaFbo && screenFbo){
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.msaaFbo.framebuffer);
       }
     }
 
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    if(screenFbo){
+      // console.log(' currentFbo ', screenFbo);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    }
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		for (let i = 0; i < this.objects.length; i++) {
 			this.objects[i].render();
 		}
     if(this.enableMSAA){
-      if(this.msaaFbo && currentFbo !== null){
+      if(this.msaaFbo && screenFbo){
         this.msaaToFbo(this.msaaFbo, screenFbo)
       }
     }

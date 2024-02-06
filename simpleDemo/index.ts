@@ -7,6 +7,7 @@ import CameraDemo from "./cameraDemo";
 import ShadowMapDemo from "./ShadowMap";
 import OrthDemo from "./OrthDemo";
 import OrthDemo2 from "./OrthDemo2";
+import SphereDemo from "./SphereDemo";
 
 export {
   SimpleDemoMain,
@@ -17,4 +18,5 @@ export {
   ShadowMapDemo,
   OrthDemo,
   OrthDemo2,
+  SphereDemo,
 }
