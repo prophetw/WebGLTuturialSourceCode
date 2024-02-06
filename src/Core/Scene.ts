@@ -21,7 +21,7 @@ class Scene {
 		this.objects = [];
 		this.camera = new Camera(canvas, this)
   	this.screenSpaceEvt = new ScreenSpaceEventHandler(canvas, this.camera)
-    this._msaaSamples = 16;
+    this._msaaSamples = 8;
     this._enableMSAA = false;
     this._useLogDepth = false;
     this.createMSAAFbo();
@@ -40,7 +40,11 @@ class Scene {
 
   set enableMSAA(enable: boolean){
     this._enableMSAA = enable;
-    this.msaaSamples = this._msaaSamples;
+    if(enable){
+      this.msaaSamples = this._msaaSamples;
+    }else{
+      this.msaaSamples = 1;
+    }
   }
 
   get msaaSamples(){
@@ -49,7 +53,9 @@ class Scene {
 
   set msaaSamples(samples: number){
     this._msaaSamples = samples;
-    this.createMSAAFbo();
+    if(samples > 1){
+      this.createMSAAFbo();
+    }
   }
 
   createMSAAFbo(){

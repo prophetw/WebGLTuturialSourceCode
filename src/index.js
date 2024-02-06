@@ -164,11 +164,6 @@ ExampleFn = LOGLSkyBox
 ExampleFn = TextureDemo
 ExampleFn = EnvironmentMap
 ExampleFn = SkyboxWFM
-ExampleFn = PBRWithTex
-ExampleFn = PBR
-ExampleFn = PBRSKYBOX
-ExampleFn = PBRSKYBOXIBL
-ExampleFn = PBRSKYBOXIBLTEX
 ExampleFn = TextureLab
 ExampleFn = SimpleDemoMain
 ExampleFn = MRTDemo
@@ -183,6 +178,11 @@ ExampleFn = CameraDemo
 ExampleFn = SphereDemo
 ExampleFn = OrthDemo
 ExampleFn = OrthDemo2
+ExampleFn = PBRWithTex
+ExampleFn = PBRSKYBOXIBLTEX
+ExampleFn = PBR
+ExampleFn = PBRSKYBOX
+ExampleFn = PBRSKYBOXIBL
 ExampleFn = PathTracing
 
 

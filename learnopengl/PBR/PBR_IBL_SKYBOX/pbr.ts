@@ -109,15 +109,15 @@ async function main() {
   const debugRt = new VisualState({
     context: gl,
     contextVersion: 2
-  }, 'right-top', 100)
+  }, 'right-top', 10)
   const debugRm = new VisualState({
     context: gl,
     contextVersion: 2
-  }, 'right-mid', 100)
+  }, 'right-mid', 10)
   const debugRb = new VisualState({
     context: gl,
     contextVersion: 2
-  }, 'right-bottom', 100)
+  }, 'right-bottom', 10)
 
   gl.enable(gl.DEPTH_TEST)
   gl.depthFunc(gl.LEQUAL); // set depth function to less than AND equal for skybox depth trick.
@@ -194,7 +194,7 @@ async function main() {
         height: hdrImageData.canvas.height,
 
         src: hdrImageData.dataFloat,
-        internalFormat: gl.RGB16F,
+        internalFormat: gl.RGB32F,
         format: gl.RGB,
         type: gl.FLOAT,
 
