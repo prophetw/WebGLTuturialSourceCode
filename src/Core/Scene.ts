@@ -221,6 +221,7 @@ class Scene {
 
     const gl = this.gl;
 
+    const currentFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
     // console.log(' currentFbo ', currentFbo);
     if(this.enableMSAA){
       if(this.msaaFbo && screenFbo){
@@ -228,8 +229,7 @@ class Scene {
       }
     }
 
-    if(screenFbo){
-      // console.log(' currentFbo ', screenFbo);
+    if(!!screenFbo){
       gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
     }
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -237,7 +237,7 @@ class Scene {
 			this.objects[i].render();
 		}
     if(this.enableMSAA){
-      if(this.msaaFbo && screenFbo){
+      if(this.msaaFbo && currentFbo !== null && !!screenFbo){
         this.msaaToFbo(this.msaaFbo, screenFbo)
       }
     }
