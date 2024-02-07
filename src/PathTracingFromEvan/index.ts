@@ -49,18 +49,35 @@ async function PathTracingEvan() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
   const textureObj = await createTextures(gl, {
-    brdfLUT: {
+    texture1: {
       // level: 0,
       auto: true,
-      src: `./resources/pbr/brdfLUTTexture.png`,
-      format: gl.RGBA8,
+      // src: `./resources/pbr/brdfLUTTexture.png`,
+      format: gl.RGB,
       // internalFormat: gl.R8,
+      width: 500,
+      height: 500,
       type: gl.UNSIGNED_BYTE,
       wrapS: gl.REPEAT,
       wrapT: gl.REPEAT,
       min: gl.LINEAR_MIPMAP_LINEAR,
       max: gl.LINEAR,
     },
+    texture2: {
+      // level: 0,
+      auto: true,
+      // src: `./resources/pbr/brdfLUTTexture.png`,
+      format: gl.RGB,
+      // internalFormat: gl.R8,
+      width: 500,
+      height: 500,
+      type: gl.UNSIGNED_BYTE,
+      wrapS: gl.REPEAT,
+      wrapT: gl.REPEAT,
+      min: gl.LINEAR_MIPMAP_LINEAR,
+      max: gl.LINEAR,
+
+    }
   })
   console.log(' texObj ', textureObj);
 
@@ -81,20 +98,23 @@ async function PathTracingEvan() {
     sphereRadius2: 0.25,
     sphereCenter3: twgl.v3.create(0.0, -0.75, 0.0),
     sphereRadius3: 0.25,
-    texture: textureObj.brdfLUT,
+    texture1: textureObj.texture1,
+    texture2: textureObj.texture2,
   }
 
-  gl.useProgram(pInfo.program)
-  twgl.setUniforms(pInfo, {
-    ...uniformObj
-  })
-  twgl.setBuffersAndAttributes(gl, pInfo, quadBufInfo)
   const render = () => {
+    // render to fbo
+    gl.useProgram(pInfo.program)
+    twgl.setUniforms(pInfo, {
+      ...uniformObj
+    })
+    twgl.setBuffersAndAttributes(gl, pInfo, quadBufInfo)
     twgl.drawBufferInfo(gl, quadBufInfo)
+
+    // render to canvas
     requestAnimationFrame(render)
   }
   requestAnimationFrame(render)
-
 }
 
 export default PathTracingEvan
