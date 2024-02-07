@@ -1,5 +1,6 @@
 import * as twgl from 'twgl.js'
-import PathTracingFS from './pathTracing.frag'
+import PathTracingFS1 from './pathTracingDirectLightOnly.frag'
+import PathTracingFS from './pathTracingDirectAndIndirect.frag'
 import quadVS from './quad.vert'
 import Scene from '../Core/Scene'
 import { OrthographicFrustum, PerspectiveFrustum } from '../Core/Camera'
