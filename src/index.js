@@ -100,6 +100,7 @@ import Space from '../Space/Space'
 import {EnvironmentMap, MultiCamera, Shadow as ShadowMap, Projection, SkyboxWFM, TextureDemo, VirtualCamera} from '../WebglFundemental/index'
 import { CameraDemo, MRTDemo, OrthDemo, OrthDemo2, SimpleDemoMain, SphereDemo, WaterDemo, ZFighting  } from '../simpleDemo'
 import PathTracing from './PathTracing/index'
+import PathTracingEvan from './PathTracingFromEvan/index'
 
 
 const initSpector = (callback = () => {
@@ -184,6 +185,7 @@ ExampleFn = PBR
 ExampleFn = PBRSKYBOX
 ExampleFn = PBRSKYBOXIBL
 ExampleFn = PathTracing
+ExampleFn = PathTracingEvan
 
 
 // const ExampleFn = LOGLTexturesTriangle

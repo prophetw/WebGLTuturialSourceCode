@@ -7,7 +7,6 @@ uniform sampler2D brdfLUT; // 画布大小
 
 
 const float PI = 3.14159265359;
-
 struct Light {
     vec3 position;
     vec3 color;
@@ -197,25 +196,36 @@ struct FragLightColor {
   vec3 indirectColor;
 };
 
-const int MAX_RECURSION_DEPTH = 3;
+// #define DEBUG_MODE // 调试模式开关
+#define MAX_POINTS 1000
+struct PathPoint {
+    vec3 position;
+    vec3 color;
+};
+// 在 pathTrace 函数中添加调试信息
+PathPoint points[MAX_POINTS];
+int numPoints = 0;
+
+
+const int MAX_RECURSION_DEPTH = 100;
 FragLightColor pathTrace(Ray ray){
      FragLightColor fragLightColor;
     vec3 rayOrigin = ray.origin;
     vec3 rayDir = ray.direction;
 
-    vec3 sphereCenter = vec3(1.0, 0.0, 0.0); // 球心位置
+    vec3 sphereCenter = vec3(2.0, 0.0, 0.0); // 球心位置
     float sphereRadius = 0.8; // 球半径
 
-    vec3 boxMin = vec3(-1.5, -0.5, -0.5);
-    vec3 boxMax = vec3(-0.5, 0.5, 0.5);
+    vec3 boxMin = vec3(-2.3, -0.5, -0.5);
+    vec3 boxMax = vec3(-1.3, 0.5, 0.5);
 
-    float metallic = 0.0; // 金属度
-    float roughness = 0.4; // 粗糙度
+    float metallic = 0.2; // 金属度
+    float roughness = 0.0; // 粗糙度
     vec3 baseColor = vec3(0.4, 0.7, 1.0); // 球体颜色
     vec3 sphereColor = baseColor;
-    vec3 boxColor = vec3(1.0, 0.0, 0.0); // 箱子颜色
+    vec3 boxColor = vec3(1.0, 1.0, 0.0); // 箱子颜色
     vec3 lightColor = vec3(3.0, 3.0, 3.0); // 光源颜色
-    vec3 lightPos = vec3(10.0, 10.0, 10.0); // 假设光源方向
+    vec3 lightPos = vec3(10.0, 4.0, 0.0); // 假设光源方向
 
     vec3 finalColor = vec3(0.0);
     vec3 accumulatorFactor = vec3(1.0); // 初始贡献因子
@@ -237,13 +247,20 @@ FragLightColor pathTrace(Ray ray){
           vec3 V = normalize(rayOrigin - hitPoint);
           vec3 pbrColor = pbr(N, lightDir, V, sphereColor, lightColor, metallic, roughness);
           finalColor += accumulatorFactor * pbrColor;
-          if(i == 0){
-            fragLightColor.directColor = finalColor;
-          }else{
-            fragLightColor.indirectColor += accumulatorFactor * pbrColor;
-          }
+          #ifdef DEBUG_MODE
+            fragLightColor.directColor = hitPoint * 0.5 + 0.5;
+            points[numPoints++] = PathPoint(hitPoint, vec3(1.0, 0.0, 0.0)); // 红色
+          #else
+            if(i == 0){
+              fragLightColor.directColor = finalColor;
+            }else{
+              fragLightColor.indirectColor += accumulatorFactor * pbrColor;
+            }
+          #endif
           accumulatorFactor *= 0.5;
           // indirect lighting
+          lightColor *= pbrColor;
+          // lightColor *= sphereColor;
           Ray reflectedRay = reflectRay(hitPoint, normal, -ray.direction);
           ray.direction = reflectedRay.direction;
           ray.origin = reflectedRay.origin;
@@ -260,14 +277,23 @@ FragLightColor pathTrace(Ray ray){
           // PBR
           vec3 pbrColor = pbr(N, lightDir, V, boxColor, lightColor, metallic, roughness);
           finalColor += accumulatorFactor * pbrColor;
-          if(i == 0){
-            fragLightColor.directColor = finalColor;
-          }else{
-            fragLightColor.indirectColor += accumulatorFactor * pbrColor;
-          }
+          #ifdef DEBUG_MODE
+            // fragLightColor.directColor = hitPoint * 0.5 + 0.5;
+            fragLightColor.directColor = vec3(1.0, 0.0, 0.0);
+            points[numPoints++] = PathPoint(hitPoint, vec3(0.0, 1.0, 0.0)); // 绿色
+          #else
+            if(i == 0){
+              fragLightColor.directColor = finalColor;
+            }else{
+              fragLightColor.indirectColor += accumulatorFactor * pbrColor;
+            }
+          #endif
           accumulatorFactor *= 0.5;
 
           // indirect lighting
+
+          lightColor *= pbrColor;
+          // lightColor *= boxColor;
           Ray reflectedRay = reflectRay(hitPoint, normal, -ray.direction);
           ray.direction = reflectedRay.direction;
           ray.origin = reflectedRay.origin;
@@ -281,14 +307,45 @@ FragLightColor pathTrace(Ray ray){
     return fragLightColor;
 }
 
+vec3 getRayDirection(vec2 fragCoord, vec2 resolution, vec3 camPos, vec3 camTarget, float fov, float aspectRatio) {
+    // 构建一个基于相机朝向的局部坐标系
+    vec3 forward = normalize(camTarget - camPos);
+    vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0))); // 假设世界的“上”方向为Y轴
+    vec3 up = cross(right, forward);
+
+    // 将片段坐标转换为NDC（归一化设备坐标）
+    vec2 ndc = (fragCoord / resolution.xy) * 2.0 - 1.0;
+    ndc.x *= aspectRatio; // 考虑纵横比
+
+    // 根据FOV和NDC计算射线方向
+    float tanFov = tan(radians(fov) / 2.0);
+    vec3 rayDir = normalize(ndc.x * right * tanFov + ndc.y * up * tanFov + forward);
+
+    return rayDir;
+}
+
+
 void main() {
 
-    vec3 rayOrigin = vec3(0.0, 0.0, 5.0); // 相机位置
+  // 几乎无法完成 间接光照的贡献度因为 片元着色器是针对每个像素的， 除非间接光照的颜色又返回到当前的像素上。
+
+    vec3 cameraPos = vec3(5.0, 2.0, 0.0);
+    vec3 rayOrigin = cameraPos;
+    vec3 cameraTarget = vec3(0.0, 0.0, 0.0);
     float fov = 45.0; // 视场角度
-    vec3 rayDir = getRayDir(fov, u_resolution, gl_FragCoord.xy);
+    vec3 rayDir = getRayDirection(gl_FragCoord.xy, u_resolution, cameraPos, cameraTarget, fov, u_resolution.x / u_resolution.y);
     // vec3 rayOrigin = glb_cameraPosition; // 相机位置
     Ray ray = Ray(rayOrigin, rayDir);
     FragLightColor fragColor = pathTrace(ray);
-    gl_FragColor = vec4(fragColor.directColor, 1.0);
-    gl_FragColor = vec4(fragColor.indirectColor, 1.0);
+
+    #ifdef DEBUG_MODE
+      // 绘制路径线条
+
+
+    #else
+      vec3 finalColor = fragColor.directColor + fragColor.indirectColor;
+      gl_FragColor = vec4(fragColor.directColor, 1.0);
+      gl_FragColor = vec4(fragColor.indirectColor, 1.0);
+      gl_FragColor = vec4(finalColor, 1.0);
+    #endif
 }
