@@ -1,6 +1,10 @@
 import * as twgl from 'twgl.js'
 import PathTracingFS from './pathTracingDirectAndIndirect.frag'
 import quadVS from './quad.vert'
+
+
+import CanvasFrag from './canvasFrag.frag'
+import CanvasQuad from './canvasQuad.vert'
 import Scene from '../Core/Scene'
 import { OrthographicFrustum, PerspectiveFrustum } from '../Core/Camera'
 import Model3D from '../Core/Model'
@@ -31,6 +35,9 @@ async function PathTracingEvan() {
   // twgl.setAttributePrefix('a_')
   // const pInfo = quadVS, PathTracingFS
   const pInfo = shaderProgramCache.getProgramInfo(gl, quadVS, PathTracingFS)
+
+  const canvasPInfo = shaderProgramCache.getProgramInfo(gl, CanvasQuad, CanvasFrag)
+  console.log(' canvas canvasPInfo', canvasPInfo);
 
   console.log(' program info ', pInfo);
   const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl, 2)
