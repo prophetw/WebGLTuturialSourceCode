@@ -23,6 +23,7 @@ async function PathTracing() {
   canvas.width = 500
   canvas.height = 500
   const gl = canvas.getContext('webgl2')
+  gl.viewport(0, 0, canvas.width, canvas.height);
   if (gl === null) {
     console.error(' gl is null ');
     return
@@ -32,7 +33,7 @@ async function PathTracing() {
   const pInfo = shaderProgramCache.getProgramInfo(gl, quadVS, PathTracingFS)
 
   console.log(' program info ', pInfo);
-  const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl, 1)
+  const quadBufInfo = twgl.primitives.createXYQuadBufferInfo(gl, 2)
   console.log(' triBufInfo  ', quadBufInfo);
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.BLEND)

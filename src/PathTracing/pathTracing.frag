@@ -69,9 +69,12 @@ bool intersectSphere(vec3 rayOrigin, vec3 rayDir, vec3 sphereCenter, float spher
 
 // 生成光线方向
 vec3 getRayDir(float fov, vec2 size, vec2 fragCoord) {
-    vec2 xy = fragCoord - size / 2.0;
-    float z = size.y / tan(radians(fov) / 2.0);
-    return normalize(vec3(xy, -z));
+
+     // 将 fragCoord 从 [0, width] 和 [0, height] 映射到 [-1, 1]
+    vec2 ndc = (fragCoord / size) * 2.0 - 1.0; // 归一化设备坐标
+    ndc.x *= size.x / size.y; // 考虑纵横比
+    float z = -1.0 / tan(radians(fov) / 2.0);
+    return normalize(vec3(ndc, z));
 }
 
 void main() {
@@ -82,7 +85,7 @@ void main() {
 
     float t;
     vec3 sphereCenter = vec3(0.0, 0.0, -5.0); // 球心位置
-    float sphereRadius = 0.8; // 球半径
+    float sphereRadius = 2.8; // 球半径
     float metallic = 0.0; // 金属度
     float roughness = 0.5; // 粗糙度
     vec3 baseColor = vec3(0.4, 0.7, 1.0); // 球体颜色
@@ -95,7 +98,7 @@ void main() {
         // 光线击中球体，计算简单的光照效果
         vec3 hitPoint = rayOrigin + rayDir * t;
         vec3 normal = normalize(hitPoint - sphereCenter);
-        vec3 lightPos = vec3(5.0, 8.0, -6.0); // 假设光源方向
+        vec3 lightPos = vec3(10.0, 10.0, 10.0); // 假设光源方向
         vec3 lightDir = normalize(lightPos); // 假设光源方向
         // vec3 lightDir = normalize(vec3(0.0039, 0.0039, 0.0039)); // 假设光源方向
 
@@ -153,15 +156,18 @@ void main() {
         // gl_FragColor = vec4(vec3(attenuation), 1.0);
 
 
-        // 通用算法
+        // Blinn-Phong
         float diff = max(dot(normal, lightDir), 0.0);
         vec3 diffuseColor = baseColor * diff; // 简单漫反射
         vec3 specularColor = vec3(1.0, 1.0, 1.0) * pow(max(dot(reflect(-lightDir, normal), V), 0.0), 64.0); // 镜面反射
         vec3 finalColor = diffuseColor + specularColor;
 
+        // PBR
         gl_FragColor = vec4(Lo, 1.0);
         // gl_FragColor = vec4(specularColor1, 1.0);
         // gl_FragColor = vec4(diffuseColor1, 1.0);
+
+        // Blinn-Phong
         // gl_FragColor = vec4(finalColor, 1.0);
 
     } else {
