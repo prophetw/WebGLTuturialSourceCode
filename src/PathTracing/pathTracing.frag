@@ -5,7 +5,39 @@ uniform float u_time; // 动画时间
 // uniform vec2 u_resolution; // 画布大小
 uniform sampler2D brdfLUT; // 画布大小
 
+
 const float PI = 3.14159265359;
+
+struct Light {
+    vec3 position;
+    vec3 color;
+};
+
+struct Material {
+    vec3 albedo;
+    float metallic;
+    float roughness;
+};
+
+struct Sphere {
+    vec3 center;
+    float radius;
+    Material material;
+};
+
+struct Ray {
+    vec3 origin;
+    vec3 direction;
+};
+
+struct Hit {
+    float t;
+    vec3 position;
+    vec3 normal;
+    Material material;
+};
+
+
 // ----------------------------------------------------------------------------
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -54,6 +86,43 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 vec2 u_resolution = vec2(500.0, 500.0);
 
+bool intersectBox(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax, out float t) {
+    vec3 invDir = 1.0 / rayDir;
+    vec3 tMin = (boxMin - rayOrigin) * invDir;
+    vec3 tMax = (boxMax - rayOrigin) * invDir;
+
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+
+    float tNear = max(max(t1.x, t1.y), t1.z);
+    float tFar = min(min(t2.x, t2.y), t2.z);
+
+    if (tNear > tFar || tFar < 0.0) {
+        return false;
+    }
+
+    t = tNear > 0.0 ? tNear : tFar;
+    return true;
+}
+
+vec3 calculateNormal(vec3 rayOrigin, vec3 rayDir, float t, vec3 boxMin, vec3 boxMax) {
+    vec3 hitPoint = rayOrigin + t * rayDir; // 计算交点
+    vec3 normal = vec3(0.0);
+
+    float bias = 1e-4; // 用于避免浮点精度问题的小偏移量
+    if (abs(hitPoint.x - boxMin.x) < bias) normal = vec3(-1.0, 0.0, 0.0);
+    else if (abs(hitPoint.x - boxMax.x) < bias) normal = vec3(1.0, 0.0, 0.0);
+    else if (abs(hitPoint.y - boxMin.y) < bias) normal = vec3(0.0, -1.0, 0.0);
+    else if (abs(hitPoint.y - boxMax.y) < bias) normal = vec3(0.0, 1.0, 0.0);
+    else if (abs(hitPoint.z - boxMin.z) < bias) normal = vec3(0.0, 0.0, -1.0);
+    else if (abs(hitPoint.z - boxMax.z) < bias) normal = vec3(0.0, 0.0, 1.0);
+
+    return normal;
+}
+
+// ray = O + tD
+// (P-C)·(P-C) = r^2
+//
 // 简单的光线与球体相交测试
 bool intersectSphere(vec3 rayOrigin, vec3 rayDir, vec3 sphereCenter, float sphereRadius, out float t) {
     vec3 oc = rayOrigin - sphereCenter;
@@ -77,6 +146,46 @@ vec3 getRayDir(float fov, vec2 size, vec2 fragCoord) {
     return normalize(vec3(ndc, z));
 }
 
+vec3 blindsPhong(vec3 normal, vec3 lightDir, vec3 viewDir, vec3 albedo, vec3 lightColor) {
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuseColor = albedo * diff; // 简单漫反射
+    vec3 specularColor = vec3(1.0, 1.0, 1.0) * pow(max(dot(reflect(-lightDir, normal), viewDir), 0.0), 64.0); // 镜面反射
+    return diffuseColor + specularColor;
+}
+
+vec3 pbr(vec3 normal, vec3 lightDir, vec3 viewDir, vec3 albedo, vec3 lightColor, float metallic, float roughness) {
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
+
+    vec3 H = normalize(viewDir + lightDir);
+    float NDF = DistributionGGX(normal, H, roughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
+
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+
+    float NdotL = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = (kD * albedo / PI) * lightColor * NdotL;
+    vec3 specular = (NDF * G * F) / (4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.001) * lightColor * NdotL;
+
+    return diffuse + specular;
+}
+
+struct PreCalcLightParams {
+    vec3 viewDir;
+    vec3 lightDir;
+    vec3 lightColor;
+
+    vec3 point;
+    vec3 albedo;
+    float metallic;
+    float roughness;
+    vec3 normal;
+};
+
+
 void main() {
     // vec3 rayOrigin = glb_cameraPosition; // 相机位置
     vec3 rayOrigin = vec3(0.0, 0.0, 5.0); // 相机位置
@@ -84,94 +193,68 @@ void main() {
     vec3 rayDir = getRayDir(fov, u_resolution, gl_FragCoord.xy);
 
     float t;
-    vec3 sphereCenter = vec3(0.0, 0.0, -5.0); // 球心位置
-    float sphereRadius = 2.8; // 球半径
+    vec3 sphereCenter = vec3(2.0, 2.0, -5.0); // 球心位置
+    float sphereRadius = 1.8; // 球半径
+
+
+    float t1;
+    vec3 boxMin = vec3(-2.0, -2.0, -2.0);
+    vec3 boxMax = vec3(-1.0, -1.0, -1.0);
+
     float metallic = 0.0; // 金属度
-    float roughness = 0.5; // 粗糙度
+    float roughness = 0.4; // 粗糙度
     vec3 baseColor = vec3(0.4, 0.7, 1.0); // 球体颜色
-    vec3 albedo = baseColor;
+    vec3 sphereColor = baseColor;
+    vec3 boxColor = vec3(1.0, 0.0, 0.0); // 箱子颜色
     vec3 lightColor = vec3(3.0, 3.0, 3.0); // 光源颜色
+    vec3 lightPos = vec3(10.0, 5.0, 3.0); // 假设光源方向
+    vec3 lightDir = normalize(lightPos); // 假设光源方向
 
 
+    bool hit = false;
 
     if (intersectSphere(rayOrigin, rayDir, sphereCenter, sphereRadius, t)) {
         // 光线击中球体，计算简单的光照效果
         vec3 hitPoint = rayOrigin + rayDir * t;
         vec3 normal = normalize(hitPoint - sphereCenter);
-        vec3 lightPos = vec3(10.0, 10.0, 10.0); // 假设光源方向
-        vec3 lightDir = normalize(lightPos); // 假设光源方向
         // vec3 lightDir = normalize(vec3(0.0039, 0.0039, 0.0039)); // 假设光源方向
 
         // PBR brdf
         vec3 N = normal;
         vec3 V = normalize(rayOrigin - hitPoint);
-        vec3 R = reflect(-V, N);
-
-        // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0
-        // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
-        vec3 F0 = vec3(0.04);
-        F0 = mix(F0, albedo, metallic);
-
-        // reflectance equation
-        vec3 Lo = vec3(0.0);
-    // for(int i = 0; i < 4; ++i)
-    // {
-        // calculate per-light radiance
-        vec3 L = normalize(lightDir);
-        vec3 H = normalize(V + L);
-        float distance = length(lightPos - hitPoint);
-        // float attenuation = 1.0 / (distance * distance);
-        float attenuation = 1.0;
-        vec3 radiance = lightColor * attenuation;
-
-        // Cook-Torrance BRDF
-        float NDF = DistributionGGX(N, H, roughness);
-        float G   = GeometrySmith(N, V, L, roughness);
-        vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-        vec3 numerator    = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
-        vec3 specular = numerator / denominator;
-
-         // kS is equal to Fresnel
-        vec3 kS = F;
-        // for energy conservation, the diffuse and specular light can't
-        // be above 1.0 (unless the surface emits light); to preserve this
-        // relationship the diffuse component (kD) should equal 1.0 - kS.
-        vec3 kD = vec3(1.0) - kS;
-        // multiply kD by the inverse metalness such that only non-metals
-        // have diffuse lighting, or a linear blend if partly metal (pure metals
-        // have no diffuse light).
-        kD *= 1.0 - metallic;
-
-        // scale light by NdotL
-        float NdotL = max(dot(N, L), 0.0);
-
-        // add to outgoing radiance Lo
-        vec3 diffuseColor1 = (kD * albedo / PI ) * radiance * NdotL;
-        vec3 specularColor1 = specular  * radiance * NdotL;
-        Lo += diffuseColor1 + specularColor1; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
-    // }
-
-        // gl_FragColor = vec4(vec3(attenuation), 1.0);
-
-
-        // Blinn-Phong
-        float diff = max(dot(normal, lightDir), 0.0);
-        vec3 diffuseColor = baseColor * diff; // 简单漫反射
-        vec3 specularColor = vec3(1.0, 1.0, 1.0) * pow(max(dot(reflect(-lightDir, normal), V), 0.0), 64.0); // 镜面反射
-        vec3 finalColor = diffuseColor + specularColor;
 
         // PBR
-        gl_FragColor = vec4(Lo, 1.0);
-        // gl_FragColor = vec4(specularColor1, 1.0);
-        // gl_FragColor = vec4(diffuseColor1, 1.0);
+        vec3 pbrColor = pbr(N, lightDir, V, sphereColor, lightColor, metallic, roughness);
+        gl_FragColor = vec4(pbrColor, 1.0);
 
         // Blinn-Phong
-        // gl_FragColor = vec4(finalColor, 1.0);
+        // vec3 blinPhongResult = blindsPhong(normal, lightDir, V, albedo, lightColor);  // Blinn-Phong
+        // gl_FragColor = vec4(blinPhongResult, 1.0);
+        hit = true;
+    }
 
-    } else {
-        // 光线未击中球体，显示背景色
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    if(intersectBox(rayOrigin, rayDir, boxMin, boxMax, t1)) {
+        // 光线击中球体，计算简单的光照效果
+        vec3 hitPoint = rayOrigin + rayDir * t1;
+        vec3 normal = calculateNormal(rayOrigin, rayDir, t1, boxMin, boxMax);
+
+        // PBR brdf
+        vec3 N = normal;
+        vec3 V = normalize(rayOrigin - hitPoint);
+
+        // PBR
+        vec3 pbrColor = pbr(N, lightDir, V, boxColor, lightColor, metallic, roughness);
+        gl_FragColor = vec4(pbrColor, 1.0);
+
+        // Blinn-Phong
+        // vec3 blinPhongResult = blindsPhong(normal, lightDir, V, albedo, lightColor);  // Blinn-Phong
+        // gl_FragColor = vec4(blinPhongResult, 1.0);
+
+        hit = true;
+    }
+
+
+    if(hit == false){
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
 }
