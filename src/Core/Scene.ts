@@ -233,9 +233,6 @@ class Scene {
 
   }
 
-<<<<<<< Updated upstream
-	render(screenFbo?: twgl.FramebufferInfo) {
-=======
   fboDepth2fbo(sourceFramebuffer: WebGLFramebuffer, sourceDepthTexture: WebGLTexture, targetFramebuffer: WebGLFramebuffer, targetDepthTexture: WebGLTexture){
     const gl = this.gl;
     // 首先，我们需要将sourceFramebuffer绑定到当前的Framebuffer
