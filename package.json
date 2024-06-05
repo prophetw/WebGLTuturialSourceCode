@@ -22,8 +22,10 @@
   },
   "homepage": "https://github.com/prophetw/WebGLTuturialSourceCode#readme",
   "dependencies": {
+    "@parcel/config-default": "2.3.2",
     "axios": "^1.2.1",
     "fast-png": "^6.1.0",
+    "gl-matrix": "^3.4.3",
     "parcel": "^2.3.2",
     "spectorjs": "^0.9.27",
     "ts-node": "^10.9.1",

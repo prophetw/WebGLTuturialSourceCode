@@ -84,14 +84,14 @@ import { LOGLDirectionLight, LOGLPointLight, LOGLSpotLight } from '../learnopeng
 import { LOGLCubuInSkyBox, LOGLSkyBox } from '../learnopengl/SkyBox'
 import { LOGLTexLetter, LOGLTexLetter2, LOGLTexRingWithLetter } from '../learnopengl/textures'
 import { LOGLCircle, LOGLPick, LOGLPickComplete, LOGLPickCube, LOGLPickCubeRing, LOGLPickCubeRingTex, LOGLPickV2 } from "../learnopengl/Pick"
-import { TWGLPrimitive, TWGLTexRing } from "../learnopengl/TWGLAPI"
+import { TWGLTexRing } from "../learnopengl/TWGLAPI"
 import { TWGLBlendedPlane, TWGLBlendedPlane2, Primitives, MRT } from "../TWGLeg"
 import {TextureLab} from '../TextureLab'
 
 import {TWGLOIT} from '../webgl2examples/OIT'
 import {TWGLOITDDP, TWGLOITPlane} from '../webgl2examples/OITDualDepthPeeling'
 import {Defer} from '../webgl2examples/Deffer'
-import {ComputeShader, DepthOfField, SSAO} from '../webgl2examples'
+import {ComputeShader, DepthOfField, HDRGenerator, SSAO} from '../webgl2examples'
 
 import Space from '../Space/Space'
 // import * as SPECTOR from "spectorjs"
@@ -186,7 +186,7 @@ ExampleFn = PBRSKYBOX
 ExampleFn = PBRSKYBOXIBL
 ExampleFn = PathTracing
 ExampleFn = PathTracingEvan
-
+ExampleFn = HDRGenerator
 
 // const ExampleFn = LOGLTexturesTriangle
 initSpector(ExampleFn)
