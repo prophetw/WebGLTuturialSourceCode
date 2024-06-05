@@ -274,8 +274,10 @@ class Scene {
 
     const gl = this.gl;
 
-    const currentFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-    const currentFbo = screenFbo;
+    let currentFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+    if(screenFbo){
+       currentFbo = screenFbo;
+    }
     if(this.enableMSAA){
       if(this.msaaFbo && screenFbo){
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.msaaFbo.framebuffer);
