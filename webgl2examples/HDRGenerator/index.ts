@@ -166,13 +166,14 @@ function HDRGenerator() {
 
   function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
     // 渲染
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     if (isRenderEnvMap) {
       if (hdrTexture) {
-        envMapTexture = gEnvMap(hdrTexture, gl, 512)
+        if(!envMapTexture){
+          envMapTexture = gEnvMap(hdrTexture, gl, 512)
+        }
         if (envMapTexture) {
           console.log(' here --- ');
           const {
