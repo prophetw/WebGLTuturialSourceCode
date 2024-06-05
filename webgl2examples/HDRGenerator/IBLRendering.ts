@@ -5,6 +5,7 @@ import { mat4 } from 'gl-matrix';
 
 const shaderCache = new Map<string, WebGLShader>();
 const shaderProgramCache = new Map<string, WebGLProgram>();
+const textureCache = new Map<string, WebGLTexture>()
 
 
 function createShader(gl: WebGL2RenderingContext, type: number, source: string) {
@@ -57,7 +58,14 @@ function createProgram(gl: WebGL2RenderingContext, vertexShader: string, fragmen
 
 function gEnvMap(hdrTexture: WebGLTexture, gl: WebGL2RenderingContext, size: number = 256) {
   // 创建一个立方体贴图用于环境贴图
-  const envMap = gl.createTexture();
+  let envMap: WebGLTexture | null | undefined = textureCache.get('envMap');
+  if(!envMap){
+    envMap = gl.createTexture();
+    if(envMap){
+      textureCache.set('envMap', envMap);
+    }
+  }
+
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, envMap);
   for (let i = 0; i < 6; i++) {
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, null);
@@ -190,7 +198,6 @@ function gEnvMap(hdrTexture: WebGLTexture, gl: WebGL2RenderingContext, size: num
 }
 
 const prepareEnvMapDrawCall = (gl: WebGL2RenderingContext, envMap: WebGLTexture) => {
-  const canvas = gl.canvas as HTMLCanvasElement;
 
   const vsSource = `
   attribute vec3 aPosition;
